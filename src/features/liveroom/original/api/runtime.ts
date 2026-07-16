@@ -430,23 +430,40 @@ export async function liveRoomApiFetch(
     }
 
     const blueprint = path.match(/^\/launch\/([^/]+)\/blueprint$/);
-    if (blueprint && method === 'POST') {
-      const body = await parseJson(init);
-      const technicalAnswers = Object.fromEntries(
-        (body.answers || []).map((item: any) => [item.questionId, item.answer]),
-      );
-      const session = await backendJson(
-        `/liveroom/launch/${blueprint[1]}/phase/BLUEPRINT`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ technicalAnswers }),
-        },
-      );
-      return jsonResponse({
-        session: transformSession(session),
-        blueprint: session.blueprint,
-        phase2Status: 'ready',
-      });
+    if (blueprint) {
+      if (method === 'POST') {
+        const body = await parseJson(init);
+        const technicalAnswers = Object.fromEntries(
+          (body.answers || []).map((item: any) => [
+            item.questionId,
+            item.answer,
+          ]),
+        );
+        const session = await backendJson(
+          `/liveroom/launch/${blueprint[1]}/phase/BLUEPRINT`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({ technicalAnswers }),
+          },
+        );
+        return jsonResponse({
+          session: transformSession(session),
+          blueprint: session.blueprint,
+          phase2Status: 'ready',
+        });
+      }
+
+      if (method === 'PUT') {
+        const body = await parseJson(init);
+        const data = await backendJson(
+          `/liveroom/launch/${blueprint[1]}/blueprint`,
+          {
+            method: 'PUT',
+            body: JSON.stringify(body),
+          },
+        );
+        return jsonResponse(data);
+      }
     }
 
     const recommendations = path.match(

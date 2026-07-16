@@ -17,6 +17,7 @@ import {
   ArrowUp,
   X,
   Globe,
+  Edit3,
   Layers,
   Cpu,
   FileText,
@@ -31,8 +32,17 @@ import {
   Check,
   Clock,
   Github,
+  Trash2,
+  Plus,
+  Hash,
+  Database,
+  Code2,
+  Server,
+  GripVertical,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 import { useLocation } from '../adapters/wouter';
 import { liveRoomApiFetch as fetch } from '../api/runtime';
@@ -200,12 +210,6 @@ type ChatMessage = {
   createdAt?: string | Date;
 };
 
-const EXAMPLE_PROMPTS = [
-  'A platform that helps small restaurants predict daily ingredient demand, reduce food waste, and auto-create purchase lists for suppliers.',
-  'A marketplace where local fitness coaches can sell short video programs, manage paid communities, and track client progress.',
-  'An AI assistant for real estate agents that qualifies leads, writes listing descriptions, schedules visits, and keeps client follow-ups organized.',
-];
-
 const SCORE_LABELS: Record<string, string> = {
   market_opportunity: 'Market opportunity',
   problem_clarity: 'Problem clarity',
@@ -290,8 +294,246 @@ function isPrimitive(value: unknown) {
   );
 }
 
-function formatPrimitive(value: unknown) {
+function formatObjectToString(obj: unknown, depth = 0): string {
+  if (obj === null || obj === undefined) return 'Not available';
+  if (typeof obj !== 'object') return String(obj);
+
+  if (Array.isArray(obj)) {
+    return obj
+      .map((item) =>
+        typeof item === 'object'
+          ? formatObjectToString(item, depth)
+          : String(item),
+      )
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  const indent = '  '.repeat(depth);
+  return Object.entries(obj as Record<string, unknown>)
+    .map(([k, v]) => {
+      const humanKey = k
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+      if (typeof v === 'object' && v !== null) {
+        return `${indent}${humanKey}:\n${formatObjectToString(v, depth + 1)}`;
+      }
+      return `${indent}${humanKey}: ${String(v)}`;
+    })
+    .join('\n');
+}
+
+function formatPrimitive(value: unknown): string {
   if (value === null || value === undefined) return 'Not available';
+  if (typeof value === 'object') {
+    return formatObjectToString(value);
+  }
+  return String(value);
+}
+
+function formatCostEstimationToParagraph(value: unknown): string {
+  if (!value) return 'Not available';
+  if (typeof value === 'string') return value;
+
+  if (typeof value === 'object' && value !== null) {
+    const cost = value as Record<string, any>;
+
+    // 1. Budget extraction
+    let budgetStr = '';
+    const budgetRange =
+      cost.total_mvp_budget_range_usd ||
+      cost.mvp_budget_range ||
+      cost.budget_range;
+    const singleBudget = cost.estimated_cost || cost.mvp_budget || cost.budget;
+
+    if (budgetRange && typeof budgetRange === 'object') {
+      const min = budgetRange.min ?? budgetRange.minimum;
+      const max = budgetRange.max ?? budgetRange.maximum;
+      if (min !== undefined && max !== undefined) {
+        budgetStr = `The estimated MVP development budget is projected to range from $${Number(min).toLocaleString()} to $${Number(max).toLocaleString()} USD`;
+      }
+    } else if (singleBudget) {
+      budgetStr = `The estimated MVP development budget is approximately $${String(singleBudget)} USD`;
+    } else {
+      budgetStr = 'The estimated MVP development budget';
+    }
+
+    // 2. Timeline extraction
+    let timelineStr = '';
+    const weeks =
+      cost.timeline_weeks_estimate ||
+      cost.timeline_weeks ||
+      cost.weeks ||
+      cost.duration_weeks ||
+      cost.timeline;
+    if (weeks) {
+      timelineStr = `, spanning a timeline of approximately ${weeks} weeks`;
+    }
+
+    // 3. Roles extraction
+    let rolesStr = '';
+    const rolesRaw =
+      cost.roles_required || cost.roles || cost.team_composition || cost.team;
+    if (Array.isArray(rolesRaw) && rolesRaw.length > 0) {
+      const roleTitles = rolesRaw
+        .map((r: any) => {
+          if (typeof r === 'string') return r;
+          if (typeof r === 'object' && r !== null) {
+            return r.role_title || r.title || r.role || r.name;
+          }
+          return '';
+        })
+        .filter(Boolean);
+
+      if (roleTitles.length > 0) {
+        if (roleTitles.length === 1) {
+          rolesStr = ` The primary role required for this project is a ${roleTitles[0]}.`;
+        } else if (roleTitles.length === 2) {
+          rolesStr = ` Key roles required for this project include a ${roleTitles[0]} and a ${roleTitles[1]}.`;
+        } else {
+          const last = roleTitles.pop();
+          rolesStr = ` Key roles required for this project include a ${roleTitles.join(', ')}, and a ${last}.`;
+        }
+      }
+    }
+
+    // Combine everything into a paragraph
+    const combined = `${budgetStr}${timelineStr}.${rolesStr}`.trim();
+    if (combined) return combined;
+  }
+
+  return String(value);
+}
+
+function formatBlueprintSectionToMarkdown(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+
+  if (typeof value === 'object') {
+    // Let's check if it is an MVP definition
+    const rec = value as Record<string, any>;
+    if (
+      rec.must_have_features !== undefined ||
+      rec.should_have_features !== undefined
+    ) {
+      let md = '';
+      if (Array.isArray(rec.must_have_features)) {
+        md += `### Must-Have Features (Core V1)\n`;
+        rec.must_have_features.forEach((item: any) => {
+          if (typeof item === 'string') md += `- ${item}\n`;
+          else if (item && typeof item === 'object') {
+            md += `- **${item.feature || item.name || ''}**: ${item.purpose || item.description || ''}\n`;
+          }
+        });
+        md += `\n`;
+      }
+      if (Array.isArray(rec.should_have_features)) {
+        md += `### Should-Have Features (Next V2)\n`;
+        rec.should_have_features.forEach((item: any) => {
+          if (typeof item === 'string') md += `- ${item}\n`;
+          else if (item && typeof item === 'object') {
+            md += `- **${item.feature || item.name || ''}**: ${item.purpose || item.description || ''}\n`;
+          }
+        });
+        md += `\n`;
+      }
+      if (Array.isArray(rec.future_features)) {
+        md += `### Nice-to-Have Features (Future V3)\n`;
+        rec.future_features.forEach((item: any) => {
+          if (typeof item === 'string') md += `- ${item}\n`;
+          else if (item && typeof item === 'object') {
+            md += `- **${item.feature || item.name || ''}**: ${item.purpose || item.description || ''}\n`;
+          }
+        });
+        md += `\n`;
+      }
+      if (Array.isArray(rec.excluded_from_mvp)) {
+        md += `### Deliberately Excluded\n`;
+        rec.excluded_from_mvp.forEach((item: any) => {
+          md += `- ${item}\n`;
+        });
+      }
+      return md.trim();
+    }
+
+    // Check if it is Technical Architecture
+    if (rec.recommended_stack !== undefined || rec.api_modules !== undefined) {
+      let md = '';
+      if (rec.recommended_stack) {
+        md += `### Recommended Technology Stack\n`;
+        Object.entries(rec.recommended_stack).forEach(([k, v]) => {
+          const keyLabel = k
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+          md += `- **${keyLabel}**: ${Array.isArray(v) ? v.join(', ') : String(v)}\n`;
+        });
+        md += `\n`;
+      }
+      if (Array.isArray(rec.api_modules)) {
+        md += `### Key API Modules\n`;
+        rec.api_modules.forEach((item: any) => {
+          if (typeof item === 'string') md += `- ${item}\n`;
+          else if (item && typeof item === 'object') {
+            md += `- **${item.module || item.name || ''}**: ${item.purpose || item.description || ''}\n`;
+          }
+        });
+        md += `\n`;
+      }
+      if (Array.isArray(rec.data_models)) {
+        md += `### Core Data Models\n`;
+        rec.data_models.forEach((item: any) => {
+          if (typeof item === 'string') md += `- ${item}\n`;
+          else if (item && typeof item === 'object') {
+            md += `- **${item.model || item.name || ''}**: ${item.fields ? item.fields.join(', ') : ''} - ${item.description || ''}\n`;
+          }
+        });
+      }
+      return md.trim();
+    }
+
+    // Check if it is Roadmap
+    if (Array.isArray(rec.phases) || Array.isArray(rec.steps)) {
+      let md = '';
+      const phases = rec.phases || rec.steps || [];
+      phases.forEach((p: any) => {
+        md += `### ${p.phase_name || p.name || 'Phase'}\n`;
+        if (p.duration) md += `*Duration: ${p.duration}*\n\n`;
+        if (Array.isArray(p.tasks)) {
+          p.tasks.forEach((t: any) => {
+            md += `- ${t}\n`;
+          });
+        }
+        md += `\n`;
+      });
+      return md.trim();
+    }
+
+    // Check if it is Team Requirements
+    if (rec.recommended_team !== undefined || rec.minimum_team !== undefined) {
+      let md = '';
+      if (Array.isArray(rec.recommended_team)) {
+        md += `### Recommended Team Composition\n`;
+        rec.recommended_team.forEach((item: any) => {
+          if (typeof item === 'string') md += `- ${item}\n`;
+          else if (item && typeof item === 'object') {
+            md += `- **${item.role || item.title || ''}** (${item.priority || 'Medium priority'}): ${item.purpose || ''}\n`;
+          }
+        });
+        md += `\n`;
+      }
+      if (Array.isArray(rec.minimum_team)) {
+        md += `### Minimum Viable Team\n`;
+        rec.minimum_team.forEach((item: any) => {
+          md += `- ${item}\n`;
+        });
+      }
+      return md.trim();
+    }
+
+    // Default fallback: format as clean outline string
+    return formatObjectToString(value);
+  }
+
   return String(value);
 }
 
@@ -319,9 +561,12 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 function asStringList(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.map((item) => formatPrimitive(item)).filter(Boolean)
-    : [];
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (item === null || item === undefined) return '';
+    if (typeof item === 'object') return formatObjectToString(item);
+    return String(item);
+  });
 }
 
 function asRecordList(value: unknown): Array<Record<string, unknown>> {
@@ -494,15 +739,30 @@ function ReportReader({
   sections,
   initialSectionId,
   onSectionChange,
+  isEditable = false,
+  onSaveSection,
+  onRefineSection,
+  refineLoading = false,
+  rawValues,
 }: {
   sections: ReportSection[];
   initialSectionId?: string;
   onSectionChange?: (section: ActiveReportSection) => void;
+  isEditable?: boolean;
+  onSaveSection?: (sectionId: string, updatedValue: any) => void;
+  onRefineSection?: (sectionId: string, instruction: string) => Promise<void>;
+  refineLoading?: boolean;
+  rawValues?: Record<string, any>;
 }) {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(
     initialSectionId ?? sections[0]?.id ?? '',
   );
+  const [isEditing, setIsEditing] = useState(false);
+  const [editVal, setEditVal] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
+  const [refinePrompt, setRefinePrompt] = useState('');
+
   const normalizedQuery = query.trim().toLowerCase();
   const filteredSections = normalizedQuery
     ? sections.filter((section) =>
@@ -516,6 +776,11 @@ function ReportReader({
     filteredSections.find((section) => section.id === selectedId) ??
     filteredSections[0] ??
     sections[0];
+
+  useEffect(() => {
+    setIsEditing(false);
+    setIsRefining(false);
+  }, [selectedId]);
 
   useEffect(() => {
     if (selectedSection) {
@@ -633,28 +898,140 @@ function ReportReader({
 
         {selectedSection ? (
           <div className="space-y-6 relative z-10">
-            <div className="border-b border-border/40 pb-5 mb-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-[10px] font-bold uppercase tracking-wider mb-3 animate-fade-in">
-                {getSectionIcon(selectedSection.id)}
-                <span>Active Document Details</span>
-              </div>
-              <h2 className="text-3xl font-extrabold text-foreground tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text">
-                {selectedSection.title}
-              </h2>
-              {selectedSection.description && (
-                <div className="relative mt-4 p-4 rounded-xl border border-primary/15 bg-primary/5/20 backdrop-blur-sm">
-                  <span className="absolute top-2 left-2 text-primary/15 text-4xl font-serif leading-none select-none">
-                    “
-                  </span>
-                  <p className="pl-6 text-xs text-muted-foreground leading-relaxed italic relative z-10">
+            <div className="border-b border-border/40 pb-5 mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-[10px] font-bold uppercase tracking-wider mb-3 animate-fade-in">
+                  {getSectionIcon(selectedSection.id)}
+                  <span>Active Document Details</span>
+                </div>
+                <h2 className="text-3xl font-extrabold text-foreground tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text">
+                  {selectedSection.title}
+                </h2>
+                {selectedSection.description && (
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed italic">
                     {selectedSection.description}
                   </p>
+                )}
+              </div>
+
+              {isEditable && !isEditing && !isRefining && (
+                <div className="flex gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs font-bold h-9 gap-1.5"
+                    onClick={() => {
+                      setEditVal(
+                        formatBlueprintSectionToMarkdown(
+                          rawValues?.[selectedSection.id],
+                        ),
+                      );
+                      setIsEditing(true);
+                    }}
+                    disabled={refineLoading}
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs font-bold h-9 gap-1.5 bg-primary/15 border-primary/20 text-primary hover:bg-primary/25"
+                    onClick={() => {
+                      setRefinePrompt('');
+                      setIsRefining(true);
+                    }}
+                    disabled={refineLoading}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Refine with AI
+                  </Button>
                 </div>
               )}
             </div>
-            <div className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300 text-foreground/90 leading-relaxed text-sm">
-              {selectedSection.body}
-            </div>
+
+            {isEditing ? (
+              <div className="space-y-4 animate-in fade-in duration-200">
+                <div className="text-xs text-muted-foreground mb-1 leading-relaxed">
+                  Edit the section content below in normal language:
+                </div>
+                <textarea
+                  value={editVal}
+                  onChange={(e) => setEditVal(e.target.value)}
+                  className="w-full min-h-[300px] font-sans text-xs bg-background/55 text-foreground placeholder:text-muted-foreground/45 p-4 rounded-xl border border-border/40 outline-none focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all leading-relaxed whitespace-pre-wrap"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onSaveSection?.(selectedSection.id, editVal);
+                      setIsEditing(false);
+                      toast.success('Section updated successfully!');
+                    }}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            ) : isRefining ? (
+              <div className="space-y-4 animate-in fade-in duration-200 bg-primary/5 border border-primary/15 rounded-2xl p-6">
+                <div className="flex items-center gap-2 text-primary">
+                  <Sparkles className="h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Refine with AI assistant
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  Describe what details you want to add, subtract, or rewrite in
+                  this section (e.g., "Add user email verification to MVP, and
+                  specify Node.js / PostgreSQL in stack").
+                </div>
+                <textarea
+                  value={refinePrompt}
+                  onChange={(e) => setRefinePrompt(e.target.value)}
+                  placeholder="Enter details to modify..."
+                  className="w-full min-h-[100px] bg-background/55 text-foreground placeholder:text-muted-foreground/45 p-3 rounded-lg border border-border/40 outline-none text-sm focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsRefining(false)}
+                    disabled={refineLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={!refinePrompt.trim() || refineLoading}
+                    onClick={async () => {
+                      await onRefineSection?.(selectedSection.id, refinePrompt);
+                      setIsRefining(false);
+                    }}
+                  >
+                    {refineLoading ? (
+                      <>
+                        <span className="w-3.5 h-3.5 rounded-full border border-primary-foreground/40 border-t-primary-foreground animate-spin mr-1.5" />
+                        Refining...
+                      </>
+                    ) : (
+                      'Refine section'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300 text-foreground/90 leading-relaxed text-sm">
+                {selectedSection.body}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center relative z-10">
@@ -1139,13 +1516,13 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
   return null;
 }
 
-function renderRoadmap(value: unknown) {
+function renderRoadmap(value: unknown): ReactNode {
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value);
-      if (parsed) value = parsed;
+      if (parsed) return renderRoadmap(parsed);
     } catch (e) {
-      // Ignore JSON parsing failure
+      return <MarkdownMini text={value} />;
     }
   }
 
@@ -1213,7 +1590,7 @@ function renderRoadmap(value: unknown) {
               </div>
               {phase.duration !== undefined && (
                 <span className="w-fit rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                  ⏱️ {formatPrimitive(phase.duration)}{' '}
+                  â±ï¸ {formatPrimitive(phase.duration)}{' '}
                   {typeof phase.duration === 'number' ||
                   !isNaN(Number(phase.duration))
                     ? 'weeks'
@@ -1245,7 +1622,7 @@ function CostEstimationViewer({
       regLower.includes('india') ||
       regLower.includes('inr') ||
       regLower.includes('rupee') ||
-      regLower.includes('₹')
+      regLower.includes('â‚¹')
     ) {
       return 'INR';
     }
@@ -1277,9 +1654,9 @@ function CostEstimationViewer({
 
   const CURRENCIES = {
     USD: { symbol: '$', rate: 1.0 },
-    INR: { symbol: '₹', rate: 83.5 },
-    EUR: { symbol: '€', rate: 0.92 },
-    GBP: { symbol: '£', rate: 0.79 },
+    INR: { symbol: 'â‚¹', rate: 83.5 },
+    EUR: { symbol: 'â‚¬', rate: 0.92 },
+    GBP: { symbol: 'Â£', rate: 0.79 },
   };
 
   function parseAndConvert(
@@ -1295,7 +1672,7 @@ function CostEstimationViewer({
     const regLower = region.toLowerCase();
 
     if (
-      strLower.includes('₹') ||
+      strLower.includes('â‚¹') ||
       strLower.includes('inr') ||
       strLower.includes('rupee') ||
       strLower.includes('lakh') ||
@@ -1303,13 +1680,13 @@ function CostEstimationViewer({
     ) {
       baseCurrency = 'INR';
     } else if (
-      strLower.includes('€') ||
+      strLower.includes('â‚¬') ||
       strLower.includes('eur') ||
       strLower.includes('euro')
     ) {
       baseCurrency = 'EUR';
     } else if (
-      strLower.includes('£') ||
+      strLower.includes('Â£') ||
       strLower.includes('gbp') ||
       strLower.includes('pound')
     ) {
@@ -1320,7 +1697,7 @@ function CostEstimationViewer({
         regLower.includes('india') ||
         regLower.includes('inr') ||
         regLower.includes('rupee') ||
-        regLower.includes('₹')
+        regLower.includes('â‚¹')
       ) {
         baseCurrency = 'INR';
       } else if (
@@ -1408,7 +1785,7 @@ function CostEstimationViewer({
     });
 
     let cleaned = result;
-    cleaned = cleaned.replace(/[$₹€£]\s*([$₹€£])/g, '$1');
+    cleaned = cleaned.replace(/[$â‚¹â‚¬Â£]\s*([$â‚¹â‚¬Â£])/g, '$1');
 
     if (targetCurrency === 'USD') {
       cleaned = cleaned
@@ -1531,6 +1908,9 @@ function CostEstimationViewer({
 }
 
 function renderCostEstimation(value: unknown, region: string) {
+  if (typeof value === 'string') {
+    return <MarkdownMini text={value} />;
+  }
   return <CostEstimationViewer value={value} region={region} />;
 }
 
@@ -1548,8 +1928,54 @@ function renderTeamRequirements(value: unknown) {
   const recommended = asRecordList(recommendedTeamRaw);
 
   const minimumTeamRaw =
-    team.minimum_team ?? team.minimum ?? team.min_team ?? team.viable_size;
-  const minimum = asStringList(minimumTeamRaw);
+    team.minimum_team ??
+    team.minimum ??
+    team.min_team ??
+    team.viable_size ??
+    team.minimum_viable_team ??
+    team.core_team ??
+    team.viable_team ??
+    team.minimum_viable_team_size ??
+    team.viable_team_size ??
+    team.core_personnel ??
+    team.key_personnel ??
+    team.core_roles ??
+    team.key_roles ??
+    team.minimum_team_requirements ??
+    team.essential_roles ??
+    team.essential_team ??
+    team.minimum_squad ??
+    team.viable_squad;
+
+  const minimum = Array.isArray(minimumTeamRaw)
+    ? minimumTeamRaw
+        .map((item: any) => {
+          if (!item) return '';
+          if (typeof item === 'string') return item;
+          if (typeof item === 'object') {
+            const title = String(
+              item.role ||
+                item.role_title ||
+                item.title ||
+                item.name ||
+                item.position ||
+                '',
+            );
+            const purpose = String(
+              item.purpose || item.description || item.responsibilities || '',
+            );
+            const countVal = item.count ?? item.quantity ?? item.size;
+            const countStr = countVal ? ` (Count: ${countVal})` : '';
+            if (title && purpose) return `${title}${countStr} - ${purpose}`;
+            if (title) return `${title}${countStr}`;
+            if (purpose) return purpose;
+          }
+          return String(item);
+        })
+        .filter(Boolean)
+    : minimumTeamRaw
+      ? [String(minimumTeamRaw)]
+      : [];
 
   if (recommended.length === 0 && minimum.length === 0) {
     if (value) {
@@ -2177,6 +2603,9 @@ function renderBlueprintSection(
   value: unknown,
   region: string,
 ): ReactNode {
+  if (typeof value === 'string') {
+    return <MarkdownMini text={value} />;
+  }
   if (key === 'mvp_definition') return renderMvpDefinition(value);
   if (key === 'target_users') return renderTargetUsers(value);
   if (key === 'technical_architecture')
@@ -2221,14 +2650,2957 @@ const BLUEPRINT_SECTION_DESCRIPTIONS: Record<string, string> = {
   final_verdict: 'Build decision and confidence signal.',
 };
 
+function getBlueprintFieldValue(
+  blueprint: any,
+  sectionId: string,
+  fieldKey: string,
+): string {
+  if (!blueprint) return '';
+  const section = blueprint[sectionId];
+  if (section === null || section === undefined) return '';
+
+  if (fieldKey === sectionId) {
+    if (typeof section === 'string') return section;
+    return formatBlueprintSectionToMarkdown(section);
+  }
+
+  if (typeof section === 'string') {
+    return '';
+  }
+
+  const val = section[fieldKey];
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val;
+
+  if (typeof val === 'object') {
+    if (fieldKey === 'recommended_stack') {
+      return Object.entries(val)
+        .map(
+          ([k, v]) =>
+            `${k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}: ${Array.isArray(v) ? v.join(', ') : String(v)}`,
+        )
+        .join('\n');
+    }
+    if (fieldKey === 'mvp_budget' || fieldKey === 'monthly_operational_cost') {
+      return Object.entries(val)
+        .map(
+          ([k, v]) =>
+            `${k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}: ${String(v)}`,
+        )
+        .join('\n');
+    }
+    if (Array.isArray(val)) {
+      return val
+        .map((item) => {
+          if (typeof item === 'string') return `- ${item}`;
+          if (typeof item === 'object' && item !== null) {
+            const title =
+              item.feature ||
+              item.name ||
+              item.role ||
+              item.title ||
+              item.model ||
+              '';
+            const desc =
+              item.purpose || item.description || item.fields?.join(', ') || '';
+            const priority = item.priority ? ` (${item.priority})` : '';
+            return `- **${title}**${priority}: ${desc}`;
+          }
+          return `- ${String(item)}`;
+        })
+        .join('\n');
+    }
+    return formatObjectToString(val);
+  }
+
+  return String(val);
+}
+
+function BlueprintReviewSection({
+  blueprint,
+  region,
+  onUpdateField,
+  onRefineField,
+  isRefining,
+  suggestingId,
+  onConfirmFinal,
+  setSuggestingId,
+  setIsRefiningBlueprintSection,
+  sessionData,
+  activeTab,
+  setActiveTab,
+}: {
+  blueprint: BlueprintResult;
+  region: string;
+  onUpdateField: (sectionId: string, fieldKey: string, newValue: any) => void;
+  onRefineField: (
+    sectionId: string,
+    fieldKey: string,
+    prompt: string,
+  ) => Promise<void>;
+  isRefining: boolean;
+  suggestingId: string | null;
+  onConfirmFinal: () => void;
+  setSuggestingId: (id: string | null) => void;
+  setIsRefiningBlueprintSection: (val: boolean) => void;
+  sessionData: any;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) {
+  const [refineTarget, setRefineTarget] = useState<{
+    sectionId: string;
+    fieldKey: string;
+    label: string;
+  } | null>(null);
+  const [refinePromptText, setRefinePromptText] = useState('');
+
+  const cardCls =
+    'rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-5 shadow-sm hover:shadow-md transition-all duration-200';
+  const labelCls = 'text-xs font-semibold text-muted-foreground tracking-wide';
+  const inputCls =
+    'w-full rounded-xl bg-background/60 border border-border/40 px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/40';
+  const textareaCls = `${inputCls} resize-none leading-relaxed`;
+  const sectionTitleCls = 'text-sm font-bold text-foreground tracking-tight';
+
+  const getAutoRows = (text: string, min = 2, max = 12) => {
+    if (!text) return min;
+    const lines = text.split('\n').length;
+    const chars = Math.ceil(text.length / 70);
+    return Math.max(min, Math.min(max, Math.max(lines, chars)));
+  };
+
+  const baseTabs = [
+    {
+      id: 'executive_summary',
+      title: 'Executive Summary',
+      icon: <FileText className="h-4 w-4" />,
+    },
+    {
+      id: 'target_users',
+      title: 'Target Users',
+      icon: <Users className="h-4 w-4" />,
+    },
+    {
+      id: 'mvp_definition',
+      title: 'MVP Definition',
+      icon: <Layout className="h-4 w-4" />,
+    },
+    {
+      id: 'technical_architecture',
+      title: 'Technical Architecture',
+      icon: <Cpu className="h-4 w-4" />,
+    },
+    {
+      id: 'development_roadmap',
+      title: 'Development Roadmap',
+      icon: <Clock className="h-4 w-4" />,
+    },
+    {
+      id: 'team_requirements',
+      title: 'Team Requirements',
+      icon: <Users className="h-4 w-4" />,
+    },
+    {
+      id: 'business_model',
+      title: 'Business Model',
+      icon: <Coins className="h-4 w-4" />,
+    },
+    {
+      id: 'go_to_market',
+      title: 'Go-To-Market',
+      icon: <Globe className="h-4 w-4" />,
+    },
+  ];
+
+  const existingTabIds = baseTabs.map((t) => t.id);
+  const TABS = [...baseTabs];
+  Object.keys(blueprint).forEach((key) => {
+    if (
+      key !== 'step' &&
+      key !== 'final_verdict' &&
+      key !== 'cost_estimation' &&
+      !existingTabIds.includes(key) &&
+      blueprint[key] !== undefined &&
+      blueprint[key] !== null
+    ) {
+      TABS.push({
+        id: key,
+        title: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        icon: <FileText className="h-4 w-4" />,
+      });
+    }
+  });
+
+  const sectionHasContent = (id: string): boolean => {
+    const val = blueprint[id];
+    if (!val) return false;
+    if (typeof val === 'string') return val.trim().length > 0;
+    if (typeof val === 'object') return Object.keys(val).length > 0;
+    return true;
+  };
+
+  const renderRefinePanel = (sectionId: string, fieldKey: string) => {
+    const isTarget =
+      refineTarget?.sectionId === sectionId &&
+      refineTarget?.fieldKey === fieldKey;
+    if (!isTarget) return null;
+
+    return (
+      <div className="space-y-2 bg-card border border-border/40 rounded-lg p-2.5 mt-2 transition-all animate-in slide-in-from-top-1 duration-200">
+        <textarea
+          value={refinePromptText}
+          onChange={(e) => {
+            setRefinePromptText(e.target.value);
+            e.target.style.height = 'auto';
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
+          ref={(el) => {
+            if (el) {
+              el.style.height = 'auto';
+              el.style.height = `${el.scrollHeight}px`;
+            }
+          }}
+          placeholder="Refine text (e.g., 'make it B2B model', 'add competitor X')"
+          rows={1}
+          className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/45 outline-none px-2 resize-none min-h-[32px] leading-relaxed overflow-hidden"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (refinePromptText.trim()) {
+                setIsRefiningBlueprintSection(true);
+                setSuggestingId(`${sectionId}_${fieldKey}`);
+                onRefineField(sectionId, fieldKey, refinePromptText)
+                  .then(() => {
+                    toast.success('Field refined successfully!');
+                    setRefineTarget(null);
+                    setRefinePromptText('');
+                  })
+                  .catch(() => toast.error('Refinement failed'))
+                  .finally(() => {
+                    setIsRefiningBlueprintSection(false);
+                    setSuggestingId(null);
+                  });
+              }
+            }
+          }}
+        />
+        <div className="flex justify-end border-t border-border/20 pt-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-7 px-3 text-xs text-primary bg-primary/5 hover:bg-primary/10 gap-1"
+            onClick={() => {
+              if (refinePromptText.trim()) {
+                setIsRefiningBlueprintSection(true);
+                setSuggestingId(`${sectionId}_${fieldKey}`);
+                onRefineField(sectionId, fieldKey, refinePromptText)
+                  .then(() => {
+                    toast.success('Field refined successfully!');
+                    setRefineTarget(null);
+                    setRefinePromptText('');
+                  })
+                  .catch(() => toast.error('Refinement failed'))
+                  .finally(() => {
+                    setIsRefiningBlueprintSection(false);
+                    setSuggestingId(null);
+                  });
+              }
+            }}
+            disabled={isRefining || !refinePromptText.trim()}
+          >
+            {isRefining && suggestingId === `${sectionId}_${fieldKey}` ? (
+              <>
+                <span className="w-3 h-3 rounded-full border border-primary/40 border-t-primary animate-spin" />
+                Refining...
+              </>
+            ) : (
+              <>Refine</>
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRefineBtn = (
+    sectionId: string,
+    fieldKey: string,
+    label: string,
+  ) => {
+    const isOpen =
+      refineTarget?.sectionId === sectionId &&
+      refineTarget?.fieldKey === fieldKey;
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className={`h-7 px-2.5 text-xs gap-1.5 transition-all ${
+          isOpen
+            ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-primary/20'
+            : 'bg-primary/5 text-primary hover:bg-primary/10'
+        }`}
+        onClick={() => {
+          if (isOpen) {
+            setRefineTarget(null);
+            setRefinePromptText('');
+          } else {
+            setRefineTarget({ sectionId, fieldKey, label });
+            setRefinePromptText('');
+          }
+        }}
+      >
+        <Sparkles className="h-3 w-3" />
+        {isOpen ? 'Close Refine' : 'Refine'}
+      </Button>
+    );
+  };
+
+  const DeleteBtn = ({ onClick }: { onClick: () => void }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+      title="Remove"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </button>
+  );
+
+  const AddBtn = ({
+    onClick,
+    label,
+  }: {
+    onClick: () => void;
+    label: string;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl border-2 border-dashed border-border/50 hover:border-primary/40 bg-transparent hover:bg-primary/[0.03] py-4 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-all duration-200"
+    >
+      <Plus className="h-4 w-4" />
+      {label}
+    </button>
+  );
+
+  const SectionHeader = ({
+    title,
+    count,
+  }: {
+    title: string;
+    count?: number;
+  }) => (
+    <div className="flex items-center gap-3 pb-2 mb-1">
+      <h3 className={sectionTitleCls}>{title}</h3>
+      {count !== undefined && (
+        <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+          {count}
+        </span>
+      )}
+      <div className="flex-1 h-px bg-gradient-to-r from-border/40 to-transparent" />
+    </div>
+  );
+
+  const NumberBadge = ({ num }: { num: number }) => (
+    <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0">
+      {num}
+    </div>
+  );
+
+  const isScoreField = (key: string): boolean => {
+    return /score|rating|confidence|viability/i.test(key);
+  };
+
+  const renderExecutiveSummaryReview = () => {
+    const summary = asRecord(blueprint.executive_summary);
+    const fields: Array<{ key: string; label: string; refine: boolean }> = [
+      {
+        key: 'one_line_description',
+        label: 'One-Line Description',
+        refine: true,
+      },
+      { key: 'business_goal', label: 'Business Goal', refine: true },
+      { key: 'target_market', label: 'Target Market', refine: true },
+      {
+        key: 'recommended_launch_strategy',
+        label: 'Recommended Launch Strategy',
+        refine: true,
+      },
+    ];
+
+    return (
+      <div className="space-y-5">
+        <div className={cardCls}>
+          <label className={labelCls}>Idea Name</label>
+          <input
+            value={String(summary.idea_name ?? '')}
+            onChange={(e) =>
+              onUpdateField('executive_summary', 'idea_name', e.target.value)
+            }
+            className={`${inputCls} mt-2 text-lg font-semibold`}
+            placeholder="Your project name..."
+          />
+        </div>
+
+        {fields.map(({ key, label, refine }) => {
+          const val = String(summary[key] ?? '');
+          return (
+            <div key={key} className={cardCls}>
+              <div className="flex items-center justify-between mb-2">
+                <label className={labelCls}>{label}</label>
+                {refine &&
+                  val.trim() &&
+                  renderRefineBtn('executive_summary', key, label)}
+              </div>
+              <textarea
+                value={val}
+                onChange={(e) =>
+                  onUpdateField('executive_summary', key, e.target.value)
+                }
+                rows={getAutoRows(val)}
+                className={textareaCls}
+              />
+              {renderRefinePanel('executive_summary', key)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderTargetUsersReview = () => {
+    const users = asRecord(blueprint.target_users);
+    const primary = asRecordList(users.primary_users);
+    const secondary = asRecordList(users.secondary_users);
+
+    const updatePersona = (
+      field: 'primary_users' | 'secondary_users',
+      idx: number,
+      key: string,
+      val: string,
+    ) => {
+      const list = asRecordList(users[field]);
+      const updated = list.map((item, i) =>
+        i === idx ? { ...item, [key]: val } : item,
+      );
+      onUpdateField('target_users', field, updated);
+    };
+
+    const addPersona = (field: 'primary_users' | 'secondary_users') => {
+      const list = asRecordList(users[field]);
+      onUpdateField('target_users', field, [
+        ...list,
+        { persona: 'New Persona', description: '', pain_points: '', goals: '' },
+      ]);
+    };
+
+    const removePersona = (
+      field: 'primary_users' | 'secondary_users',
+      idx: number,
+    ) => {
+      const list = asRecordList(users[field]);
+      onUpdateField(
+        'target_users',
+        field,
+        list.filter((_, i) => i !== idx),
+      );
+    };
+
+    const renderPersonaList = (
+      field: 'primary_users' | 'secondary_users',
+      label: string,
+    ) => {
+      const list = asRecordList(users[field]);
+      return (
+        <div className="space-y-4">
+          <SectionHeader title={label} count={list.length} />
+          {list.length === 0 ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No personas defined yet.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {list.map((item, idx) => {
+                const persona = String(item.persona ?? '');
+                const desc = String(item.description ?? '');
+                const painPoints = String(item.pain_points ?? '');
+                const goals = String(item.goals ?? '');
+
+                return (
+                  <div key={idx} className={`${cardCls} relative`}>
+                    <div className="absolute top-4 right-4">
+                      <DeleteBtn onClick={() => removePersona(field, idx)} />
+                    </div>
+                    <div className="space-y-3 pr-8">
+                      <div>
+                        <label className={labelCls}>Persona Name</label>
+                        <input
+                          value={persona}
+                          onChange={(e) =>
+                            updatePersona(field, idx, 'persona', e.target.value)
+                          }
+                          className={`${inputCls} mt-1 font-semibold`}
+                          placeholder="e.g. Busy Office Managers"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className={labelCls}>Description</label>
+                          {desc.trim() &&
+                            renderRefineBtn(
+                              'target_users',
+                              `${field}__${idx}__description`,
+                              `${persona} Description`,
+                            )}
+                        </div>
+                        <textarea
+                          value={desc}
+                          onChange={(e) =>
+                            updatePersona(
+                              field,
+                              idx,
+                              'description',
+                              e.target.value,
+                            )
+                          }
+                          rows={getAutoRows(desc)}
+                          className={`${textareaCls} mt-1`}
+                          placeholder="Describe the target user..."
+                        />
+                        {renderRefinePanel(
+                          'target_users',
+                          `${field}__${idx}__description`,
+                        )}
+                      </div>
+                      {field === 'primary_users' && (
+                        <div className="grid gap-3 grid-cols-1">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className={labelCls}>Pain Points</label>
+                              {painPoints.trim() &&
+                                renderRefineBtn(
+                                  'target_users',
+                                  `${field}__${idx}__pain_points`,
+                                  `${persona} Pain Points`,
+                                )}
+                            </div>
+                            <textarea
+                              value={painPoints}
+                              onChange={(e) =>
+                                updatePersona(
+                                  field,
+                                  idx,
+                                  'pain_points',
+                                  e.target.value,
+                                )
+                              }
+                              rows={getAutoRows(painPoints)}
+                              className={textareaCls}
+                              placeholder="Pain points..."
+                            />
+                            {renderRefinePanel(
+                              'target_users',
+                              `${field}__${idx}__pain_points`,
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className={labelCls}>
+                                Goals / Motivations
+                              </label>
+                              {goals.trim() &&
+                                renderRefineBtn(
+                                  'target_users',
+                                  `${field}__${idx}__goals`,
+                                  `${persona} Goals`,
+                                )}
+                            </div>
+                            <textarea
+                              value={goals}
+                              onChange={(e) =>
+                                updatePersona(
+                                  field,
+                                  idx,
+                                  'goals',
+                                  e.target.value,
+                                )
+                              }
+                              rows={getAutoRows(goals)}
+                              className={textareaCls}
+                              placeholder="Goals..."
+                            />
+                            {renderRefinePanel(
+                              'target_users',
+                              `${field}__${idx}__goals`,
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <AddBtn
+            onClick={() => addPersona(field)}
+            label={`Add ${field === 'primary_users' ? 'Primary' : 'Secondary'} Persona`}
+          />
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-10">
+        {renderPersonaList('primary_users', 'Primary Target Users')}
+        {renderPersonaList('secondary_users', 'Secondary Target Users')}
+      </div>
+    );
+  };
+
+  const renderMvpDefinitionReview = () => {
+    const mvp = asRecord(blueprint.mvp_definition);
+    const excludedKey = mvp.excluded_from_mvp
+      ? 'excluded_from_mvp'
+      : mvp.excluded
+        ? 'excluded'
+        : mvp.out_of_scope
+          ? 'out_of_scope'
+          : 'excluded_from_mvp';
+    const excluded = asStringList(mvp[excludedKey]);
+
+    const updateFeature = (
+      field: string,
+      idx: number,
+      key: string,
+      val: string,
+    ) => {
+      const list = asRecordList(mvp[field]);
+      const updated = list.map((item, i) =>
+        i === idx ? { ...item, [key]: val } : item,
+      );
+      onUpdateField('mvp_definition', field, updated);
+    };
+
+    const removeFeature = (field: string, idx: number) => {
+      const list = asRecordList(mvp[field]);
+      onUpdateField(
+        'mvp_definition',
+        field,
+        list.filter((_, i) => i !== idx),
+      );
+    };
+
+    const renderFeatureList = (field: string, label: string) => {
+      const rawList = mvp[field];
+      if (
+        Array.isArray(rawList) &&
+        rawList.every((x) => typeof x === 'string')
+      ) {
+        return (
+          <div className="space-y-4">
+            <SectionHeader title={label} count={rawList.length} />
+            {rawList.length === 0 ? (
+              <p className="text-sm text-muted-foreground/60 italic pl-1">
+                No features defined yet.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {rawList.map((str, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-primary/30 shrink-0" />
+                    <textarea
+                      value={String(str)}
+                      onChange={(e) => {
+                        const updated = [...rawList];
+                        updated[idx] = e.target.value;
+                        onUpdateField('mvp_definition', field, updated);
+                      }}
+                      rows={getAutoRows(String(str), 1, 4)}
+                      className={`${textareaCls} flex-1`}
+                      placeholder="Feature description..."
+                    />
+                    <DeleteBtn
+                      onClick={() => {
+                        onUpdateField(
+                          'mvp_definition',
+                          field,
+                          rawList.filter((_, i) => i !== idx),
+                        );
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            <AddBtn
+              onClick={() =>
+                onUpdateField('mvp_definition', field, [
+                  ...(rawList || []),
+                  'New Feature',
+                ])
+              }
+              label="Add Feature"
+            />
+          </div>
+        );
+      }
+
+      const list = asRecordList(rawList);
+      return (
+        <div className="space-y-4">
+          <SectionHeader title={label} count={list.length} />
+          {list.length === 0 ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No features defined yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {list.map((item, idx) => {
+                const featureVal = String(
+                  item.feature || item.name || item.title || '',
+                );
+                const purposeVal = String(
+                  item.purpose ||
+                    item.description ||
+                    item.feature_description ||
+                    item.rationale ||
+                    item.benefit ||
+                    item.details ||
+                    item.value ||
+                    Object.entries(item).find(
+                      ([k, v]) =>
+                        k !== 'feature' &&
+                        k !== 'name' &&
+                        k !== 'title' &&
+                        typeof v === 'string',
+                    )?.[1] ||
+                    '',
+                );
+
+                const descKey =
+                  item.purpose !== undefined
+                    ? 'purpose'
+                    : item.description !== undefined
+                      ? 'description'
+                      : item.feature_description !== undefined
+                        ? 'feature_description'
+                        : item.rationale !== undefined
+                          ? 'rationale'
+                          : item.benefit !== undefined
+                            ? 'benefit'
+                            : item.details !== undefined
+                              ? 'details'
+                              : 'purpose';
+
+                return (
+                  <div key={idx} className={`${cardCls} relative group`}>
+                    <div className="flex items-start gap-3.5">
+                      <NumberBadge num={idx + 1} />
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={featureVal}
+                            onChange={(e) =>
+                              updateFeature(
+                                field,
+                                idx,
+                                item.feature !== undefined
+                                  ? 'feature'
+                                  : item.name !== undefined
+                                    ? 'name'
+                                    : 'title',
+                                e.target.value,
+                              )
+                            }
+                            className={`${inputCls} font-semibold text-sm`}
+                            placeholder="Feature name..."
+                          />
+                          <DeleteBtn
+                            onClick={() => removeFeature(field, idx)}
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className={`${labelCls} text-[11px]`}>
+                              Description
+                            </label>
+                            {purposeVal.trim() &&
+                              renderRefineBtn(
+                                'mvp_definition',
+                                `${field}__${idx}__${descKey}`,
+                                `${featureVal} Description`,
+                              )}
+                          </div>
+                          <textarea
+                            value={purposeVal}
+                            onChange={(e) =>
+                              updateFeature(field, idx, descKey, e.target.value)
+                            }
+                            rows={getAutoRows(purposeVal, 2, 6)}
+                            className={textareaCls}
+                            placeholder="What does this feature do..."
+                          />
+                          {renderRefinePanel(
+                            'mvp_definition',
+                            `${field}__${idx}__${descKey}`,
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <AddBtn
+            onClick={() =>
+              onUpdateField('mvp_definition', field, [
+                ...list,
+                {
+                  feature: 'New Feature',
+                  purpose: 'Describe what this feature does...',
+                },
+              ])
+            }
+            label={`Add Feature`}
+          />
+        </div>
+      );
+    };
+
+    const updateExcludedString = (idx: number, val: string) => {
+      const list = [...excluded];
+      list[idx] = val;
+      onUpdateField('mvp_definition', excludedKey, list);
+    };
+    const addExcludedString = () =>
+      onUpdateField('mvp_definition', excludedKey, [...excluded, '']);
+    const removeExcludedString = (idx: number) =>
+      onUpdateField(
+        'mvp_definition',
+        excludedKey,
+        excluded.filter((_, i) => i !== idx),
+      );
+
+    return (
+      <div className="space-y-10">
+        {renderFeatureList(
+          'must_have_features',
+          'Must-Have Features (Core V1)',
+        )}
+        {renderFeatureList('should_have_features', 'Should-Have Features (V2)')}
+        {renderFeatureList('future_features', 'Future Iterations (V2+)')}
+
+        <div className="space-y-4">
+          <SectionHeader
+            title="Deliberately Excluded"
+            count={excluded.length}
+          />
+          <div className="space-y-2.5">
+            {excluded.map((item, idx) => (
+              <div key={idx} className="flex items-start gap-2">
+                <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+                <textarea
+                  value={item}
+                  onChange={(e) => updateExcludedString(idx, e.target.value)}
+                  rows={getAutoRows(item, 1, 4)}
+                  className={`${textareaCls} flex-1`}
+                  placeholder="Feature excluded from MVP..."
+                />
+                <DeleteBtn onClick={() => removeExcludedString(idx)} />
+              </div>
+            ))}
+          </div>
+          <AddBtn onClick={addExcludedString} label="Add Excluded Feature" />
+        </div>
+      </div>
+    );
+  };
+
+  const renderTechnicalArchitectureReview = () => {
+    const arch = asRecord(blueprint.technical_architecture);
+    const stack = asRecord(arch.recommended_stack);
+
+    // Key API modules: can be array of strings or array of records
+    const apis = asRecordList(
+      arch.api_modules || arch.key_api_modules || arch.apis,
+    );
+    const apiIsObjectList =
+      apis.length > 0 && apis.some((item) => Object.keys(item).length > 0);
+    const apiStringList = asStringList(
+      arch.api_modules || arch.key_api_modules || arch.apis,
+    );
+
+    // Database entities: can be array of strings or array of records
+    const dbEntities = asRecordList(
+      arch.database_entities || arch.data_models || arch.core_data_models,
+    );
+    const dbIsObjectList =
+      dbEntities.length > 0 &&
+      dbEntities.some((item) => Object.keys(item).length > 0);
+    const dbStringList = asStringList(
+      arch.database_entities || arch.data_models || arch.core_data_models,
+    );
+
+    // System components
+    const sysComponents = asRecordList(
+      arch.system_components || arch.components || arch.key_components,
+    );
+
+    const updateStackKey = (key: string, val: string) => {
+      onUpdateField('technical_architecture', 'recommended_stack', {
+        ...stack,
+        [key]: val,
+      });
+    };
+
+    const apiFieldName = arch.api_modules
+      ? 'api_modules'
+      : arch.key_api_modules
+        ? 'key_api_modules'
+        : 'apis';
+    const updateApiObject = (idx: number, key: string, val: string) => {
+      const updated = apis.map((item, i) =>
+        i === idx ? { ...item, [key]: val } : item,
+      );
+      onUpdateField('technical_architecture', apiFieldName, updated);
+    };
+    const updateApiString = (idx: number, val: string) => {
+      const updated = [...apiStringList];
+      updated[idx] = val;
+      onUpdateField('technical_architecture', apiFieldName, updated);
+    };
+
+    const dbFieldName = arch.database_entities
+      ? 'database_entities'
+      : arch.data_models
+        ? 'data_models'
+        : 'core_data_models';
+    const updateDbObject = (idx: number, key: string, val: any) => {
+      const updated = dbEntities.map((item, i) =>
+        i === idx ? { ...item, [key]: val } : item,
+      );
+      onUpdateField('technical_architecture', dbFieldName, updated);
+    };
+    const updateDbString = (idx: number, val: string) => {
+      const updated = [...dbStringList];
+      updated[idx] = val;
+      onUpdateField('technical_architecture', dbFieldName, updated);
+    };
+
+    const sysComponentsFieldName = arch.system_components
+      ? 'system_components'
+      : arch.components
+        ? 'components'
+        : 'key_components';
+    const updateSysComponent = (idx: number, key: string, val: string) => {
+      const updated = sysComponents.map((item, i) =>
+        i === idx ? { ...item, [key]: val } : item,
+      );
+      onUpdateField('technical_architecture', sysComponentsFieldName, updated);
+    };
+
+    const stackIconMap: Record<string, ReactNode> = {
+      frontend: <Layout className="h-3.5 w-3.5" />,
+      backend: <Server className="h-3.5 w-3.5" />,
+      database: <Database className="h-3.5 w-3.5" />,
+      hosting: <Globe className="h-3.5 w-3.5" />,
+      ai_ml: <Cpu className="h-3.5 w-3.5" />,
+      authentication: <ShieldCheck className="h-3.5 w-3.5" />,
+    };
+
+    return (
+      <div className="space-y-10">
+        {/* Recommended Stack */}
+        <div className="space-y-4">
+          <SectionHeader
+            title="Recommended Stack"
+            count={Object.keys(stack).length}
+          />
+          <div className="flex flex-col gap-3">
+            {Object.keys(stack).map((key) => {
+              const icon = stackIconMap[key] || (
+                <Code2 className="h-3.5 w-3.5" />
+              );
+              const val = Array.isArray(stack[key])
+                ? (stack[key] as string[]).join(', ')
+                : String(stack[key] ?? '');
+              return (
+                <div key={key} className={cardCls}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                        {icon}
+                      </div>
+                      <label className={`${labelCls} capitalize`}>
+                        {key.replace(/_/g, ' ')}
+                      </label>
+                    </div>
+                    {val.trim() &&
+                      renderRefineBtn(
+                        'technical_architecture',
+                        `recommended_stack__${key}`,
+                        key.replace(/_/g, ' ').toUpperCase(),
+                      )}
+                  </div>
+                  <textarea
+                    value={val}
+                    onChange={(e) => updateStackKey(key, e.target.value)}
+                    rows={getAutoRows(val, 1, 4)}
+                    className={textareaCls}
+                    placeholder={`${key.replace(/_/g, ' ')} technology...`}
+                  />
+                  {renderRefinePanel(
+                    'technical_architecture',
+                    `recommended_stack__${key}`,
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* System Components */}
+        <div className="space-y-4">
+          <SectionHeader
+            title="System Components"
+            count={sysComponents.length}
+          />
+          {sysComponents.length === 0 ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No system components defined. Add one below.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {sysComponents.map((item, idx) => {
+                const compName = String(
+                  item.component || item.name || item.title || '',
+                );
+                const compPurpose = String(
+                  item.purpose || item.description || '',
+                );
+                const nameKey =
+                  item.component !== undefined
+                    ? 'component'
+                    : item.name !== undefined
+                      ? 'name'
+                      : 'title';
+                const purposeKey =
+                  item.purpose !== undefined ? 'purpose' : 'description';
+
+                return (
+                  <div key={idx} className={`${cardCls} relative`}>
+                    <div className="flex items-start gap-3.5">
+                      <NumberBadge num={idx + 1} />
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={compName}
+                            onChange={(e) =>
+                              updateSysComponent(idx, nameKey, e.target.value)
+                            }
+                            className={`${inputCls} font-semibold`}
+                            placeholder="Component name..."
+                          />
+                          <DeleteBtn
+                            onClick={() =>
+                              onUpdateField(
+                                'technical_architecture',
+                                sysComponentsFieldName,
+                                sysComponents.filter((_, i) => i !== idx),
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className={labelCls}>
+                              Purpose / Description
+                            </label>
+                            {compPurpose.trim() &&
+                              renderRefineBtn(
+                                'technical_architecture',
+                                `${sysComponentsFieldName}__${idx}__${purposeKey}`,
+                                `${compName} Description`,
+                              )}
+                          </div>
+                          <textarea
+                            value={compPurpose}
+                            onChange={(e) =>
+                              updateSysComponent(
+                                idx,
+                                purposeKey,
+                                e.target.value,
+                              )
+                            }
+                            rows={getAutoRows(compPurpose, 2, 5)}
+                            className={textareaCls}
+                            placeholder="Describe component functionality..."
+                          />
+                          {renderRefinePanel(
+                            'technical_architecture',
+                            `${sysComponentsFieldName}__${idx}__${purposeKey}`,
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <AddBtn
+            onClick={() =>
+              onUpdateField('technical_architecture', sysComponentsFieldName, [
+                ...sysComponents,
+                { component: 'New Component', purpose: '' },
+              ])
+            }
+            label="Add System Component"
+          />
+        </div>
+
+        {/* API Modules */}
+        <div className="space-y-4">
+          <SectionHeader
+            title="Key API Modules"
+            count={apiIsObjectList ? apis.length : apiStringList.length}
+          />
+          {(!apiIsObjectList && apiStringList.length === 0) ||
+          (apiIsObjectList && apis.length === 0) ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No API modules defined. Add one below.
+            </p>
+          ) : apiIsObjectList ? (
+            <div className="space-y-3">
+              {apis.map((item, idx) => {
+                const modName = String(
+                  item.module || item.name || item.title || '',
+                );
+                const modPurpose = String(
+                  item.purpose || item.description || item.function || '',
+                );
+                const purposeKey =
+                  item.purpose !== undefined
+                    ? 'purpose'
+                    : item.description !== undefined
+                      ? 'description'
+                      : 'function';
+                const nameKey =
+                  item.module !== undefined
+                    ? 'module'
+                    : item.name !== undefined
+                      ? 'name'
+                      : 'title';
+
+                return (
+                  <div key={idx} className={`${cardCls} relative`}>
+                    <div className="flex items-start gap-3.5">
+                      <NumberBadge num={idx + 1} />
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={modName}
+                            onChange={(e) =>
+                              updateApiObject(idx, nameKey, e.target.value)
+                            }
+                            className={`${inputCls} font-semibold`}
+                            placeholder="Module name..."
+                          />
+                          <DeleteBtn
+                            onClick={() =>
+                              onUpdateField(
+                                'technical_architecture',
+                                apiFieldName,
+                                apis.filter((_, i) => i !== idx),
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className={`${labelCls} mb-1 block`}>
+                            Purpose
+                          </label>
+                          <textarea
+                            value={modPurpose}
+                            onChange={(e) =>
+                              updateApiObject(idx, purposeKey, e.target.value)
+                            }
+                            rows={getAutoRows(modPurpose, 2, 5)}
+                            className={textareaCls}
+                            placeholder="Describe API capabilities..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {apiStringList.map((apiStr, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-primary/30 shrink-0" />
+                  <textarea
+                    value={apiStr}
+                    onChange={(e) => updateApiString(idx, e.target.value)}
+                    rows={getAutoRows(apiStr, 1, 4)}
+                    className={`${textareaCls} flex-1`}
+                    placeholder="e.g. Auth Module: handles logins..."
+                  />
+                  <DeleteBtn
+                    onClick={() =>
+                      onUpdateField(
+                        'technical_architecture',
+                        apiFieldName,
+                        apiStringList.filter((_, i) => i !== idx),
+                      )
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <AddBtn
+            onClick={() => {
+              if (apiIsObjectList) {
+                onUpdateField('technical_architecture', apiFieldName, [
+                  ...apis,
+                  { module: 'New API Module', purpose: '' },
+                ]);
+              } else {
+                onUpdateField('technical_architecture', apiFieldName, [
+                  ...apiStringList,
+                  'New API Module: details...',
+                ]);
+              }
+            }}
+            label="Add API Module"
+          />
+        </div>
+
+        {/* Database Entities */}
+        <div className="space-y-4">
+          <SectionHeader
+            title="Core Data Models"
+            count={dbIsObjectList ? dbEntities.length : dbStringList.length}
+          />
+          {(!dbIsObjectList && dbStringList.length === 0) ||
+          (dbIsObjectList && dbEntities.length === 0) ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No data models defined. Add one below.
+            </p>
+          ) : dbIsObjectList ? (
+            <div className="space-y-3">
+              {dbEntities.map((item, idx) => {
+                const modelName = String(
+                  item.model || item.name || item.entity || '',
+                );
+                const modelDesc = String(
+                  item.description || item.purpose || '',
+                );
+                const descKey =
+                  item.description !== undefined ? 'description' : 'purpose';
+                const nameKey =
+                  item.model !== undefined
+                    ? 'model'
+                    : item.name !== undefined
+                      ? 'name'
+                      : 'entity';
+
+                return (
+                  <div key={idx} className={`${cardCls} relative`}>
+                    <div className="flex items-start gap-3.5">
+                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10 text-violet-500 shrink-0 mt-0.5">
+                        <Database className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={modelName}
+                            onChange={(e) =>
+                              updateDbObject(idx, nameKey, e.target.value)
+                            }
+                            className={`${inputCls} font-semibold`}
+                            placeholder="Model name..."
+                          />
+                          <DeleteBtn
+                            onClick={() =>
+                              onUpdateField(
+                                'technical_architecture',
+                                dbFieldName,
+                                dbEntities.filter((_, i) => i !== idx),
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className={labelCls}>
+                              Fields (comma-separated)
+                            </label>
+                            <input
+                              value={
+                                Array.isArray(item.fields)
+                                  ? item.fields.join(', ')
+                                  : String(item.fields ?? '')
+                              }
+                              onChange={(e) =>
+                                updateDbObject(
+                                  idx,
+                                  'fields',
+                                  e.target.value
+                                    .split(',')
+                                    .map((s: string) => s.trim()),
+                                )
+                              }
+                              className={inputCls}
+                              placeholder="id, email..."
+                            />
+                          </div>
+                          <div>
+                            <label className={`${labelCls} mb-1 block`}>
+                              Description
+                            </label>
+                            <textarea
+                              value={modelDesc}
+                              onChange={(e) =>
+                                updateDbObject(idx, descKey, e.target.value)
+                              }
+                              rows={getAutoRows(modelDesc, 1, 4)}
+                              className={textareaCls}
+                              placeholder="Model description..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {dbStringList.map((dbStr, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-violet-400/30 shrink-0" />
+                  <textarea
+                    value={dbStr}
+                    onChange={(e) => updateDbString(idx, e.target.value)}
+                    rows={getAutoRows(dbStr, 1, 4)}
+                    className={`${textareaCls} flex-1`}
+                    placeholder="e.g. Users: stores accounts..."
+                  />
+                  <DeleteBtn
+                    onClick={() =>
+                      onUpdateField(
+                        'technical_architecture',
+                        dbFieldName,
+                        dbStringList.filter((_, i) => i !== idx),
+                      )
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <AddBtn
+            onClick={() => {
+              if (dbIsObjectList) {
+                onUpdateField('technical_architecture', dbFieldName, [
+                  ...dbEntities,
+                  { model: 'NewModel', fields: [], description: '' },
+                ]);
+              } else {
+                onUpdateField('technical_architecture', dbFieldName, [
+                  ...dbStringList,
+                  'NewModel: details...',
+                ]);
+              }
+            }}
+            label="Add Data Model"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const getRoadmapPhases = (): Array<Record<string, any>> => {
+    const rawRoadmap = blueprint.development_roadmap;
+    if (!rawRoadmap) return [];
+    if (Array.isArray(rawRoadmap))
+      return rawRoadmap.map((item) => asRecord(item));
+    if (typeof rawRoadmap === 'object') {
+      const candidate =
+        (rawRoadmap as any).phases ||
+        (rawRoadmap as any).steps ||
+        (rawRoadmap as any).roadmap;
+      if (Array.isArray(candidate))
+        return candidate.map((item) => asRecord(item));
+      return Object.entries(rawRoadmap).map(([key, val]) => {
+        const rec = asRecord(val);
+        if (!rec.phase_name && !rec.name && !rec.title)
+          rec.phase_name = key
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+        return rec;
+      });
+    }
+    return [];
+  };
+
+  const updateRoadmapPhases = (updated: Array<Record<string, any>>) => {
+    const raw = blueprint.development_roadmap;
+    if (Array.isArray(raw)) {
+      onUpdateField('development_roadmap', 'development_roadmap', updated);
+    } else if (raw && typeof raw === 'object') {
+      if (Array.isArray((raw as any).phases))
+        onUpdateField('development_roadmap', 'phases', updated);
+      else if (Array.isArray((raw as any).steps))
+        onUpdateField('development_roadmap', 'steps', updated);
+      else {
+        const rebuilt: Record<string, any> = {};
+        updated.forEach((p, idx) => {
+          const key = p.phase_name
+            ? String(p.phase_name).toLowerCase().replace(/\s+/g, '_')
+            : `phase_${idx + 1}`;
+          rebuilt[key] = p;
+        });
+        onUpdateField('development_roadmap', 'development_roadmap', rebuilt);
+      }
+    } else {
+      onUpdateField('development_roadmap', 'development_roadmap', updated);
+    }
+  };
+
+  const renderDevelopmentRoadmapReview = () => {
+    const rawRoadmap = blueprint.development_roadmap;
+
+    if (typeof rawRoadmap === 'string') {
+      return (
+        <div className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <label className={labelCls}>Development Roadmap</label>
+            {renderRefineBtn(
+              'development_roadmap',
+              'development_roadmap',
+              'Development Roadmap',
+            )}
+          </div>
+          <textarea
+            value={rawRoadmap}
+            onChange={(e) =>
+              onUpdateField(
+                'development_roadmap',
+                'development_roadmap',
+                e.target.value,
+              )
+            }
+            rows={getAutoRows(rawRoadmap)}
+            className={textareaCls}
+          />
+        </div>
+      );
+    }
+
+    const parseDuration = (val: string) => {
+      const trimmed = val.trim();
+      const numMatch = trimmed.match(/^([\d\.\-]+)\s*([a-zA-Z]*)/);
+      if (numMatch) {
+        const num = numMatch[1];
+        let unit = numMatch[2].toLowerCase();
+        if (unit.startsWith('week')) unit = 'weeks';
+        else if (unit.startsWith('month')) unit = 'months';
+        else if (unit.startsWith('day')) unit = 'days';
+        else unit = 'weeks';
+        return { number: num, unit };
+      }
+      return { number: trimmed, unit: 'weeks' };
+    };
+
+    const cleanPhaseName = (rawName: string, index: number) => {
+      return rawName.replace(/^Phase\s*\d+\s*[\-\:]?\s*/i, '');
+    };
+
+    const phases = getRoadmapPhases();
+
+    const updatePhase = (idx: number, key: string, val: any) => {
+      const updated = phases.map((item, i) => {
+        if (i !== idx) return item;
+        const copy = { ...item };
+        if (key === 'phase_name') {
+          copy.phase_name = val;
+          copy.name = val;
+          copy.title = val;
+        } else if (key === 'duration') {
+          copy.estimated_weeks = val;
+          copy.duration = val;
+          copy.weeks = val;
+          copy.time = val;
+        } else if (key === 'tasks') {
+          copy.deliverables = val;
+          copy.tasks = val;
+          copy.milestones = val;
+          copy.key_tasks = val;
+        } else copy[key] = val;
+        return copy;
+      });
+      updateRoadmapPhases(updated);
+    };
+
+    const addPhase = () =>
+      updateRoadmapPhases([
+        ...phases,
+        {
+          phase_name: `Phase ${phases.length + 1}`,
+          duration: '4 weeks',
+          tasks: [],
+        },
+      ]);
+    const removePhase = (idx: number) =>
+      updateRoadmapPhases(phases.filter((_, i) => i !== idx));
+
+    return (
+      <div className="space-y-5">
+        <SectionHeader title="Development Phases" count={phases.length} />
+        {phases.length === 0 ? (
+          <p className="text-sm text-muted-foreground/60 italic pl-1">
+            No phases defined yet. Click below to add one.
+          </p>
+        ) : (
+          <div className="relative">
+            <div className="absolute left-[17px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/30 via-primary/15 to-transparent" />
+            <div className="space-y-4">
+              {phases.map((p, idx) => {
+                const name = String(
+                  p.phase_name || p.name || p.title || `Phase ${idx + 1}`,
+                );
+                const duration = String(
+                  p.estimated_weeks ?? p.duration ?? p.weeks ?? p.time ?? '',
+                );
+                const tasksList = asStringList(
+                  p.deliverables ?? p.tasks ?? p.milestones ?? p.key_tasks,
+                );
+
+                const parsed = parseDuration(duration);
+                const handleNumberChange = (num: string) => {
+                  updatePhase(idx, 'duration', `${num} ${parsed.unit}`);
+                };
+                const handleUnitChange = (unit: string) => {
+                  updatePhase(idx, 'duration', `${parsed.number} ${unit}`);
+                };
+
+                return (
+                  <div key={idx} className="relative pl-11">
+                    <div className="absolute left-[11px] top-6 h-3.5 w-3.5 rounded-full border-2 border-primary bg-background z-10" />
+                    <div className={`${cardCls} relative`}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex-1 min-w-0 flex flex-col gap-3">
+                          <div>
+                            <label
+                              className={`${labelCls} text-[11px] mb-1 block`}
+                            >
+                              Phase Name
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-muted-foreground/80 whitespace-nowrap bg-muted/40 px-2 py-1.5 rounded-lg select-none">
+                                Phase {idx}:
+                              </span>
+                              <textarea
+                                value={cleanPhaseName(name, idx)}
+                                onChange={(e) =>
+                                  updatePhase(
+                                    idx,
+                                    'phase_name',
+                                    `Phase ${idx} - ${e.target.value}`,
+                                  )
+                                }
+                                rows={getAutoRows(
+                                  cleanPhaseName(name, idx),
+                                  1,
+                                  3,
+                                )}
+                                className={`${textareaCls} font-semibold flex-1 py-1.5 min-h-[38px]`}
+                                placeholder="e.g. Discovery & template design..."
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label
+                              className={`${labelCls} text-[11px] mb-1 block`}
+                            >
+                              Duration
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                value={parsed.number}
+                                onChange={(e) =>
+                                  handleNumberChange(e.target.value)
+                                }
+                                className={`${inputCls} flex-1 min-w-[60px] text-center`}
+                                placeholder="Num"
+                              />
+                              <select
+                                value={parsed.unit}
+                                onChange={(e) =>
+                                  handleUnitChange(e.target.value)
+                                }
+                                className={`${inputCls} w-[100px] bg-background px-2 py-2.5`}
+                              >
+                                <option value="weeks">Weeks</option>
+                                <option value="months">Months</option>
+                                <option value="days">Days</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <DeleteBtn onClick={() => removePhase(idx)} />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className={`${labelCls} text-[11px]`}>
+                            Key Tasks & Deliverables
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updatePhase(idx, 'tasks', [...tasksList, ''])
+                            }
+                            className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+                          >
+                            <Plus className="h-3 w-3" /> Add Task
+                          </button>
+                        </div>
+                        <div className="space-y-1.5">
+                          {tasksList.map((t, taskIdx) => (
+                            <div
+                              key={taskIdx}
+                              className="flex items-start gap-2"
+                            >
+                              <div className="mt-3 h-1.5 w-1.5 rounded-full bg-primary/30 shrink-0" />
+                              <textarea
+                                value={t}
+                                onChange={(e) => {
+                                  const updatedTasks = [...tasksList];
+                                  updatedTasks[taskIdx] = e.target.value;
+                                  updatePhase(idx, 'tasks', updatedTasks);
+                                }}
+                                rows={getAutoRows(t, 1, 4)}
+                                className={`${inputCls} resize-none leading-relaxed flex-1 py-2`}
+                                placeholder="Task description..."
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updatePhase(
+                                    idx,
+                                    'tasks',
+                                    tasksList.filter((_, i) => i !== taskIdx),
+                                  )
+                                }
+                                className="p-1 mt-1.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        <AddBtn onClick={addPhase} label="Add Phase" />
+      </div>
+    );
+  };
+
+  const renderTeamRequirementsReview = () => {
+    const team = asRecord(blueprint.team_requirements);
+    const recommended = asRecordList(
+      team.recommended_team || team.recommended || team.roles,
+    );
+
+    let rawMin =
+      team.minimum_team ||
+      team.minimum ||
+      team.min_team ||
+      team.viable_size ||
+      team.minimum_viable_team ||
+      team.core_team ||
+      team.viable_team ||
+      team.minimum_viable_team_size ||
+      team.viable_team_size ||
+      team.core_personnel ||
+      team.key_personnel ||
+      team.core_roles ||
+      team.key_roles ||
+      team.minimum_team_requirements ||
+      team.essential_roles ||
+      team.essential_team ||
+      team.minimum_squad ||
+      team.viable_squad ||
+      // Root level fallback
+      blueprint.minimum_team ||
+      blueprint.minimum ||
+      blueprint.min_team ||
+      blueprint.viable_size ||
+      blueprint.minimum_viable_team ||
+      blueprint.core_team ||
+      blueprint.viable_team ||
+      blueprint.minimum_viable_team_size ||
+      blueprint.viable_team_size ||
+      blueprint.core_personnel ||
+      blueprint.key_personnel ||
+      blueprint.core_roles ||
+      blueprint.key_roles ||
+      blueprint.minimum_team_requirements ||
+      blueprint.essential_roles ||
+      blueprint.essential_team ||
+      blueprint.minimum_squad ||
+      blueprint.viable_squad;
+
+    if (!rawMin) {
+      const keys = Object.keys(team);
+      const excludedKeys = [
+        'recommended_team',
+        'recommended',
+        'roles',
+        'recommended_roles',
+      ];
+      const candidateKey = keys.find(
+        (k) =>
+          !excludedKeys.includes(k) &&
+          Array.isArray(team[k]) &&
+          (k.includes('min') ||
+            k.includes('viable') ||
+            k.includes('core') ||
+            k.includes('essential') ||
+            k.includes('squad') ||
+            k.includes('personnel')),
+      );
+      if (candidateKey) {
+        rawMin = team[candidateKey];
+      }
+    }
+
+    if (!rawMin) {
+      const keys = Object.keys(blueprint);
+      const excludedKeys = [
+        'team_requirements',
+        'recommended_team',
+        'recommended',
+        'roles',
+        'recommended_roles',
+      ];
+      const candidateKey = keys.find(
+        (k) =>
+          !excludedKeys.includes(k) &&
+          Array.isArray(blueprint[k]) &&
+          (k.includes('min') ||
+            k.includes('viable') ||
+            k.includes('core') ||
+            k.includes('essential') ||
+            k.includes('squad') ||
+            k.includes('personnel')),
+      );
+      if (candidateKey) {
+        rawMin = blueprint[candidateKey];
+      }
+    }
+
+    if (!rawMin) {
+      const keys = Object.keys(team);
+      const excludedKeys = [
+        'recommended_team',
+        'recommended',
+        'roles',
+        'recommended_roles',
+      ];
+      const anyOtherArrayKey = keys.find(
+        (k) => !excludedKeys.includes(k) && Array.isArray(team[k]),
+      );
+      if (anyOtherArrayKey) {
+        rawMin = team[anyOtherArrayKey];
+      }
+    }
+
+    const parseRawMin = (val: unknown): string[] => {
+      if (!val) return [];
+      if (Array.isArray(val)) {
+        return val
+          .map((item) => {
+            if (!item) return '';
+            if (typeof item === 'string') return item;
+            if (typeof item === 'object') {
+              const obj = item as Record<string, unknown>;
+              const title = String(
+                obj.role ||
+                  obj.role_title ||
+                  obj.title ||
+                  obj.name ||
+                  obj.position ||
+                  '',
+              );
+              const purpose = String(
+                obj.purpose || obj.description || obj.responsibilities || '',
+              );
+              const countVal = obj.count ?? obj.quantity ?? obj.size;
+              const countStr = countVal ? ` (Count: ${countVal})` : '';
+              if (title && purpose) return `${title}${countStr} - ${purpose}`;
+              if (title) return `${title}${countStr}`;
+              if (purpose) return purpose;
+            }
+            return String(item);
+          })
+          .filter(Boolean);
+      }
+      if (typeof val === 'object') {
+        return Object.entries(val).map(([k, v]) => `${k}: ${v}`);
+      }
+      return [String(val)];
+    };
+
+    const minimum = parseRawMin(rawMin);
+
+    const getTeamFieldKey = () => {
+      if (Array.isArray(team.recommended_team)) return 'recommended_team';
+      if (Array.isArray(team.recommended)) return 'recommended';
+      if (Array.isArray(team.roles)) return 'roles';
+      return 'recommended_team';
+    };
+
+    const getMinFieldKey = () => {
+      if (team.minimum_team !== undefined) return 'minimum_team';
+      if (team.minimum !== undefined) return 'minimum';
+      if (team.min_team !== undefined) return 'min_team';
+      if (team.viable_size !== undefined) return 'viable_size';
+      if (team.minimum_viable_team !== undefined) return 'minimum_viable_team';
+      if (team.core_team !== undefined) return 'core_team';
+      if (team.viable_team !== undefined) return 'viable_team';
+      if (team.minimum_viable_team_size !== undefined)
+        return 'minimum_viable_team_size';
+      if (team.viable_team_size !== undefined) return 'viable_team_size';
+      if (team.core_personnel !== undefined) return 'core_personnel';
+      if (team.key_personnel !== undefined) return 'key_personnel';
+      if (team.core_roles !== undefined) return 'core_roles';
+      if (team.key_roles !== undefined) return 'key_roles';
+      if (team.minimum_team_requirements !== undefined)
+        return 'minimum_team_requirements';
+      if (team.essential_roles !== undefined) return 'essential_roles';
+      if (team.essential_team !== undefined) return 'essential_team';
+      if (team.minimum_squad !== undefined) return 'minimum_squad';
+      if (team.viable_squad !== undefined) return 'viable_squad';
+
+      if (blueprint.minimum_team !== undefined) return 'minimum_team';
+      if (blueprint.minimum !== undefined) return 'minimum';
+      if (blueprint.min_team !== undefined) return 'min_team';
+      if (blueprint.viable_size !== undefined) return 'viable_size';
+      if (blueprint.minimum_viable_team !== undefined)
+        return 'minimum_viable_team';
+      if (blueprint.core_team !== undefined) return 'core_team';
+      if (blueprint.viable_team !== undefined) return 'viable_team';
+      if (blueprint.minimum_viable_team_size !== undefined)
+        return 'minimum_viable_team_size';
+      if (blueprint.viable_team_size !== undefined) return 'viable_team_size';
+      if (blueprint.minimum_team_requirements !== undefined)
+        return 'minimum_team_requirements';
+
+      const keys = Object.keys(team);
+      const excludedKeys = [
+        'recommended_team',
+        'recommended',
+        'roles',
+        'recommended_roles',
+      ];
+      const candidateKey = keys.find(
+        (k) =>
+          !excludedKeys.includes(k) &&
+          Array.isArray(team[k]) &&
+          (k.includes('min') ||
+            k.includes('viable') ||
+            k.includes('core') ||
+            k.includes('essential') ||
+            k.includes('squad') ||
+            k.includes('personnel')),
+      );
+      if (candidateKey) return candidateKey;
+
+      const anyOtherArrayKey = keys.find(
+        (k) => !excludedKeys.includes(k) && Array.isArray(team[k]),
+      );
+      if (anyOtherArrayKey) return anyOtherArrayKey;
+
+      return 'minimum_team';
+    };
+
+    const updateRole = (idx: number, key: string, val: string) => {
+      const updated = recommended.map((item, i) => {
+        if (i !== idx) return item;
+        const copy = { ...item };
+        if (key === 'role') {
+          if (copy.role !== undefined) copy.role = val;
+          if (copy.role_title !== undefined) copy.role_title = val;
+          if (copy.title !== undefined) copy.title = val;
+          if (copy.name !== undefined) copy.name = val;
+          if (copy.position !== undefined) copy.position = val;
+          if (
+            copy.role === undefined &&
+            copy.role_title === undefined &&
+            copy.title === undefined &&
+            copy.name === undefined &&
+            copy.position === undefined
+          )
+            copy.role = val;
+        } else if (key === 'purpose') {
+          if (copy.purpose !== undefined) copy.purpose = val;
+          if (copy.responsibilities !== undefined) copy.responsibilities = val;
+          if (copy.description !== undefined) copy.description = val;
+          if (
+            copy.purpose === undefined &&
+            copy.responsibilities === undefined &&
+            copy.description === undefined
+          )
+            copy.purpose = val;
+        } else {
+          copy[key] = val;
+        }
+        return copy;
+      });
+      onUpdateField('team_requirements', getTeamFieldKey(), updated);
+    };
+    const addRole = () =>
+      onUpdateField('team_requirements', getTeamFieldKey(), [
+        ...recommended,
+        { role: 'New Role', purpose: 'Role responsibilities...' },
+      ]);
+    const removeRole = (idx: number) =>
+      onUpdateField(
+        'team_requirements',
+        getTeamFieldKey(),
+        recommended.filter((_, i) => i !== idx),
+      );
+
+    const updateMinRole = (idx: number, val: string) => {
+      const list = [...minimum];
+      list[idx] = val;
+      const minKey = getMinFieldKey();
+      if (blueprint[minKey] !== undefined) {
+        onUpdateField(minKey, minKey, list);
+      } else {
+        onUpdateField('team_requirements', minKey, list);
+      }
+    };
+    const addMinRole = () => {
+      const list = [...minimum, ''];
+      const minKey = getMinFieldKey();
+      if (blueprint[minKey] !== undefined) {
+        onUpdateField(minKey, minKey, list);
+      } else {
+        onUpdateField('team_requirements', minKey, list);
+      }
+    };
+    const removeMinRole = (idx: number) => {
+      const list = minimum.filter((_, i) => i !== idx);
+      const minKey = getMinFieldKey();
+      if (blueprint[minKey] !== undefined) {
+        onUpdateField(minKey, minKey, list);
+      } else {
+        onUpdateField('team_requirements', minKey, list);
+      }
+    };
+
+    return (
+      <div className="space-y-10">
+        <div className="space-y-4">
+          <SectionHeader
+            title="Recommended Team Roles"
+            count={recommended.length}
+          />
+          {recommended.length === 0 ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No recommended team roles. Click below to add one.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {recommended.map((item, idx) => {
+                const roleName = String(
+                  item.role ||
+                    item.role_title ||
+                    item.title ||
+                    item.name ||
+                    item.position ||
+                    '',
+                );
+                const rolePurpose = String(
+                  item.purpose ||
+                    item.responsibilities ||
+                    item.description ||
+                    '',
+                );
+
+                return (
+                  <div key={idx} className={`${cardCls} relative`}>
+                    <div className="flex items-start gap-3.5">
+                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+                        <Briefcase className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={roleName}
+                            onChange={(e) =>
+                              updateRole(idx, 'role', e.target.value)
+                            }
+                            className={`${inputCls} font-semibold flex-1`}
+                            placeholder="Role title..."
+                          />
+                          <DeleteBtn onClick={() => removeRole(idx)} />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className={`${labelCls} text-[11px]`}>
+                              Responsibilities
+                            </label>
+                            {rolePurpose.trim() &&
+                              renderRefineBtn(
+                                'team_requirements',
+                                `${getTeamFieldKey()}_${idx}`,
+                                `${roleName} Responsibilities`,
+                              )}
+                          </div>
+                          <textarea
+                            value={rolePurpose}
+                            onChange={(e) =>
+                              updateRole(idx, 'purpose', e.target.value)
+                            }
+                            rows={getAutoRows(rolePurpose, 2, 6)}
+                            className={textareaCls}
+                            placeholder="What this role is responsible for..."
+                          />
+                          {renderRefinePanel(
+                            'team_requirements',
+                            `${getTeamFieldKey()}_${idx}`,
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <AddBtn onClick={addRole} label="Add Role" />
+        </div>
+      </div>
+    );
+  };
+
+  const renderCostEstimationReview = () => {
+    const cost = asRecord(blueprint.cost_estimation);
+
+    if (typeof blueprint.cost_estimation === 'string') {
+      const val = String(blueprint.cost_estimation);
+      return (
+        <div className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <label className={labelCls}>Cost Estimation</label>
+            {renderRefineBtn(
+              'cost_estimation',
+              'cost_estimation',
+              'Cost Estimation',
+            )}
+          </div>
+          <textarea
+            value={val}
+            onChange={(e) =>
+              onUpdateField(
+                'cost_estimation',
+                'cost_estimation',
+                e.target.value,
+              )
+            }
+            rows={getAutoRows(val)}
+            className={textareaCls}
+          />
+        </div>
+      );
+    }
+
+    const budget = asRecord(
+      cost.mvp_budget || cost.budget || cost.estimated_budget || cost.mvp_cost,
+    );
+    const monthly = asRecord(
+      cost.monthly_operational_cost ||
+        cost.monthly_cost ||
+        cost.operational_costs ||
+        cost.monthly_costs,
+    );
+    const drivers = asStringList(
+      cost.major_cost_drivers || cost.cost_drivers || cost.key_cost_drivers,
+    );
+
+    const budgetFieldName = cost.mvp_budget
+      ? 'mvp_budget'
+      : cost.budget
+        ? 'budget'
+        : cost.estimated_budget
+          ? 'estimated_budget'
+          : 'mvp_cost';
+    const updateBudget = (key: string, val: string) => {
+      onUpdateField('cost_estimation', budgetFieldName, {
+        ...budget,
+        [key]: val,
+      });
+    };
+
+    const monthlyFieldName = cost.monthly_operational_cost
+      ? 'monthly_operational_cost'
+      : cost.monthly_cost
+        ? 'monthly_cost'
+        : cost.operational_costs
+          ? 'operational_costs'
+          : 'monthly_costs';
+    const updateMonthly = (key: string, val: string) => {
+      onUpdateField('cost_estimation', monthlyFieldName, {
+        ...monthly,
+        [key]: val,
+      });
+    };
+
+    const driverFieldName = cost.major_cost_drivers
+      ? 'major_cost_drivers'
+      : cost.cost_drivers
+        ? 'cost_drivers'
+        : 'key_cost_drivers';
+    const updateDriver = (idx: number, val: string) => {
+      const list = [...drivers];
+      list[idx] = val;
+      onUpdateField('cost_estimation', driverFieldName, list);
+    };
+    const addDriver = () =>
+      onUpdateField('cost_estimation', driverFieldName, [...drivers, '']);
+    const removeDriver = (idx: number) =>
+      onUpdateField(
+        'cost_estimation',
+        driverFieldName,
+        drivers.filter((_, i) => i !== idx),
+      );
+
+    const budgetFields: Array<{
+      label: string;
+      key: string;
+      val: string;
+      color: string;
+      bg: string;
+    }> = [];
+    if (Object.keys(budget).length > 0) {
+      Object.entries(budget).forEach(([k, v]) => {
+        const isMin = /min|low|minimum/i.test(k);
+        const isMax = /max|high|upper/i.test(k);
+        budgetFields.push({
+          label: k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          key: k,
+          val: String(v ?? ''),
+          color: isMin
+            ? 'text-emerald-500'
+            : isMax
+              ? 'text-orange-500'
+              : 'text-blue-500',
+          bg: isMin
+            ? 'bg-emerald-500/10'
+            : isMax
+              ? 'bg-orange-500/10'
+              : 'bg-blue-500/10',
+        });
+      });
+    }
+
+    const monthlyFields: Array<{ label: string; key: string; val: string }> =
+      [];
+    if (Object.keys(monthly).length > 0) {
+      Object.entries(monthly).forEach(([k, v]) => {
+        monthlyFields.push({
+          label: k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          key: k,
+          val: String(v ?? ''),
+        });
+      });
+    }
+
+    const renderedKeys = new Set([
+      'mvp_budget',
+      'budget',
+      'estimated_budget',
+      'mvp_cost',
+      'monthly_operational_cost',
+      'monthly_cost',
+      'operational_costs',
+      'monthly_costs',
+      'major_cost_drivers',
+      'cost_drivers',
+      'key_cost_drivers',
+    ]);
+    const extraFields = Object.entries(cost).filter(
+      ([k]) => !renderedKeys.has(k),
+    );
+
+    return (
+      <div className="space-y-10">
+        {extraFields.map(([k, v]) => {
+          const label = k
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+          const strVal =
+            typeof v === 'object' ? JSON.stringify(v) : String(v ?? '');
+          return (
+            <div key={k} className={cardCls}>
+              <div className="flex items-center justify-between mb-2">
+                <label className={labelCls}>{label}</label>
+                {typeof v === 'string' &&
+                  v.length > 30 &&
+                  renderRefineBtn('cost_estimation', k, label)}
+              </div>
+              {typeof v === 'string' ? (
+                <textarea
+                  value={strVal}
+                  onChange={(e) =>
+                    onUpdateField('cost_estimation', k, e.target.value)
+                  }
+                  rows={getAutoRows(strVal)}
+                  className={textareaCls}
+                />
+              ) : (
+                <input
+                  value={strVal}
+                  onChange={(e) =>
+                    onUpdateField('cost_estimation', k, e.target.value)
+                  }
+                  className={inputCls}
+                />
+              )}
+            </div>
+          );
+        })}
+
+        {budgetFields.length > 0 && (
+          <div className="space-y-4">
+            <SectionHeader title="MVP Budget Estimates (USD)" />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {budgetFields.map(({ label, key, val, color, bg }) => (
+                <div key={key} className={cardCls}>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <div className={`p-1.5 rounded-lg ${bg}`}>
+                      <DollarSign className={`h-3.5 w-3.5 ${color}`} />
+                    </div>
+                    <label className={labelCls}>{label}</label>
+                  </div>
+                  <input
+                    value={val}
+                    onChange={(e) => updateBudget(key, e.target.value)}
+                    className={`${inputCls} font-semibold`}
+                    placeholder="$0"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {monthlyFields.length > 0 && (
+          <div className="space-y-4">
+            <SectionHeader title="Monthly Operational Costs (USD)" />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {monthlyFields.map(({ label, key, val }) => (
+                <div key={key} className={cardCls}>
+                  <label className={`${labelCls} mb-2.5 block`}>{label}</label>
+                  <input
+                    value={val}
+                    onChange={(e) => updateMonthly(key, e.target.value)}
+                    className={inputCls}
+                    placeholder="$0"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <SectionHeader title="Major Cost Drivers" count={drivers.length} />
+          {drivers.length === 0 ? (
+            <p className="text-sm text-muted-foreground/60 italic pl-1">
+              No cost drivers defined yet. Add one below.
+            </p>
+          ) : (
+            <div className="space-y-2.5">
+              {drivers.map((driverStr, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-orange-400/40 shrink-0" />
+                  <textarea
+                    value={driverStr}
+                    onChange={(e) => updateDriver(idx, e.target.value)}
+                    rows={getAutoRows(driverStr, 1, 4)}
+                    className={`${textareaCls} flex-1`}
+                    placeholder="e.g. High API costs for AI inference..."
+                  />
+                  <DeleteBtn onClick={() => removeDriver(idx)} />
+                </div>
+              ))}
+            </div>
+          )}
+          <AddBtn onClick={addDriver} label="Add Cost Driver" />
+        </div>
+      </div>
+    );
+  };
+
+  const renderDynamicReviewGroup = (
+    sectionId: 'business_model' | 'go_to_market',
+    placeholderText: string,
+  ) => {
+    const rawVal = blueprint[sectionId];
+
+    // Fallback: If it's a string, just render a single text area for the whole section
+    if (typeof rawVal === 'string') {
+      return (
+        <div className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <label className={labelCls}>
+              {sectionId.replace(/_/g, ' ').toUpperCase()}
+            </label>
+            {sectionId !== 'business_model' &&
+              rawVal.length > 40 &&
+              renderRefineBtn(
+                sectionId,
+                sectionId,
+                sectionId.replace(/_/g, ' ').toUpperCase(),
+              )}
+          </div>
+          <textarea
+            value={rawVal}
+            onChange={(e) =>
+              onUpdateField(sectionId, sectionId, e.target.value)
+            }
+            rows={getAutoRows(rawVal)}
+            className={textareaCls}
+            placeholder={placeholderText}
+          />
+          {sectionId !== 'business_model' &&
+            renderRefinePanel(sectionId, sectionId)}
+        </div>
+      );
+    }
+
+    const obj = { ...asRecord(rawVal) };
+
+    // Resolve specific keys for specific tabs
+    let primaryKey = '';
+
+    if (sectionId === 'business_model') {
+      primaryKey =
+        obj.primary_revenue_streams !== undefined
+          ? 'primary_revenue_streams'
+          : obj.primary_revenue !== undefined
+            ? 'primary_revenue'
+            : obj.revenue_model !== undefined
+              ? 'revenue_model'
+              : obj.primary_revenue_model !== undefined
+                ? 'primary_revenue_model'
+                : obj.revenue_streams !== undefined
+                  ? 'revenue_streams'
+                  : 'primary_revenue_streams';
+      if (obj[primaryKey] === undefined) obj[primaryKey] = [];
+
+      delete obj.secondary_revenue_streams;
+      delete obj.secondary_revenue;
+      delete obj.secondary_revenue_model;
+    } else if (sectionId === 'go_to_market') {
+      delete obj.acquisition_channels;
+      delete obj.acquisition;
+      delete obj.marketing_channels;
+      delete obj.early_growth_strategy;
+      delete obj.early_growth;
+      delete obj.growth_strategy;
+      delete obj.early_growth_strategies;
+    }
+
+    const orderedKeys = [primaryKey].filter((k) => k && obj[k] !== undefined);
+    const otherKeys = Object.keys(obj).filter((k) => !orderedKeys.includes(k));
+    const allKeysToRender = [...orderedKeys, ...otherKeys];
+
+    return (
+      <div className="space-y-8">
+        {allKeysToRender.map((key) => {
+          const item = obj[key];
+          const humanLabel = key
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+
+          if (Array.isArray(item) || item === undefined || item === null) {
+            const list = asStringList(item);
+            return (
+              <div key={key} className="space-y-4">
+                <SectionHeader title={humanLabel} count={list.length} />
+                {list.length === 0 ? (
+                  <p className="text-sm text-muted-foreground/60 italic pl-1">
+                    No items defined yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {list.map((str, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-primary/30 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <textarea
+                            value={str}
+                            onChange={(e) => {
+                              const updated = [...list];
+                              updated[idx] = e.target.value;
+                              onUpdateField(sectionId, key, updated);
+                            }}
+                            rows={getAutoRows(str, 1, 4)}
+                            className={`${textareaCls} w-full`}
+                            placeholder="List item..."
+                          />
+                          {sectionId !== 'business_model' &&
+                            renderRefinePanel(sectionId, `${key}__${idx}`)}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {sectionId !== 'business_model' &&
+                            str.trim() &&
+                            renderRefineBtn(
+                              sectionId,
+                              `${key}__${idx}`,
+                              `${humanLabel} Item`,
+                            )}
+                          <DeleteBtn
+                            onClick={() => {
+                              onUpdateField(
+                                sectionId,
+                                key,
+                                list.filter((_, i) => i !== idx),
+                              );
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <AddBtn
+                  onClick={() => onUpdateField(sectionId, key, [...list, ''])}
+                  label={`Add ${humanLabel} Item`}
+                />
+              </div>
+            );
+          }
+
+          // If item is string/number
+          const strVal = String(item ?? '');
+          return (
+            <div key={key} className={cardCls}>
+              <div className="flex items-center justify-between mb-2">
+                <label className={labelCls}>{humanLabel}</label>
+                {sectionId !== 'business_model' &&
+                  strVal.length > 40 &&
+                  renderRefineBtn(sectionId, key, humanLabel)}
+              </div>
+              <textarea
+                value={strVal}
+                onChange={(e) => onUpdateField(sectionId, key, e.target.value)}
+                rows={getAutoRows(strVal, 2, 6)}
+                className={textareaCls}
+                placeholder={`Enter details for ${humanLabel.toLowerCase()}...`}
+              />
+              {sectionId !== 'business_model' &&
+                renderRefinePanel(sectionId, key)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderBusinessModelReview = () => {
+    return renderDynamicReviewGroup(
+      'business_model',
+      'Describe the pricing and revenue models...',
+    );
+  };
+
+  const renderGoToMarketReview = () => {
+    return renderDynamicReviewGroup(
+      'go_to_market',
+      'Describe launch, acquisition, and early growth strategies...',
+    );
+  };
+
+  const renderGenericReview = () => {
+    const val = blueprint[activeTab];
+
+    const renderValue = (
+      sectionId: string,
+      key: string,
+      value: unknown,
+      label: string,
+      depth: number = 0,
+    ): ReactNode => {
+      if (value === null || value === undefined) return null;
+
+      if (isScoreField(key)) {
+        const displayVal =
+          typeof value === 'object' ? JSON.stringify(value) : String(value);
+        return (
+          <div key={key} className={depth === 0 ? cardCls : 'space-y-1.5'}>
+            <label className={labelCls}>{label}</label>
+            <div className="rounded-xl bg-muted/40 px-4 py-2.5 text-sm text-foreground/80 font-medium">
+              {displayVal}
+            </div>
+          </div>
+        );
+      }
+
+      if (typeof value === 'string') {
+        return (
+          <div key={key} className={depth === 0 ? cardCls : 'space-y-1.5'}>
+            <div className="flex items-center justify-between mb-2">
+              <label className={labelCls}>{label}</label>
+              {depth === 0 &&
+                value.length > 40 &&
+                renderRefineBtn(sectionId, key, label)}
+            </div>
+            <textarea
+              value={value}
+              onChange={(e) => onUpdateField(sectionId, key, e.target.value)}
+              rows={getAutoRows(value)}
+              className={textareaCls}
+            />
+            {renderRefinePanel(sectionId, key)}
+          </div>
+        );
+      }
+
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        return (
+          <div key={key} className={depth === 0 ? cardCls : 'space-y-1.5'}>
+            <label className={`${labelCls} mb-2 block`}>{label}</label>
+            <input
+              value={String(value)}
+              onChange={(e) => onUpdateField(sectionId, key, e.target.value)}
+              className={inputCls}
+            />
+          </div>
+        );
+      }
+
+      if (
+        Array.isArray(value) &&
+        value.every((v) => typeof v === 'string' || typeof v === 'number')
+      ) {
+        return (
+          <div
+            key={key}
+            className={depth === 0 ? `${cardCls} space-y-3` : 'space-y-2'}
+          >
+            <SectionHeader title={label} count={value.length} />
+            <div className="space-y-2">
+              {value.map((item, idx) => {
+                const strVal = String(item);
+                return (
+                  <div key={idx} className="flex items-start gap-2">
+                    <div className="mt-2.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+                    <textarea
+                      value={strVal}
+                      onChange={(e) => {
+                        const updated = [...value];
+                        updated[idx] = e.target.value;
+                        onUpdateField(sectionId, key, updated);
+                      }}
+                      rows={getAutoRows(strVal, 1, 6)}
+                      className={`${textareaCls} flex-1`}
+                    />
+                    <DeleteBtn
+                      onClick={() =>
+                        onUpdateField(
+                          sectionId,
+                          key,
+                          value.filter((_: any, i: number) => i !== idx),
+                        )
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <AddBtn
+              onClick={() => onUpdateField(sectionId, key, [...value, ''])}
+              label="Add Item"
+            />
+          </div>
+        );
+      }
+
+      if (Array.isArray(value)) {
+        return (
+          <div key={key} className="space-y-4">
+            <SectionHeader title={label} count={value.length} />
+            <div className="space-y-3">
+              {value.map((item, idx) => {
+                if (typeof item !== 'object' || item === null) {
+                  return (
+                    <div key={idx} className="flex items-start gap-2">
+                      <NumberBadge num={idx + 1} />
+                      <textarea
+                        value={String(item)}
+                        onChange={(e) => {
+                          const u = [...value];
+                          u[idx] = e.target.value;
+                          onUpdateField(sectionId, key, u);
+                        }}
+                        rows={getAutoRows(String(item), 1, 4)}
+                        className={`${textareaCls} flex-1`}
+                      />
+                      <DeleteBtn
+                        onClick={() =>
+                          onUpdateField(
+                            sectionId,
+                            key,
+                            value.filter((_: any, i: number) => i !== idx),
+                          )
+                        }
+                      />
+                    </div>
+                  );
+                }
+                return (
+                  <div key={idx} className={`${cardCls} relative`}>
+                    <div className="flex items-start gap-3.5">
+                      <NumberBadge num={idx + 1} />
+                      <div className="flex-1 min-w-0 space-y-3">
+                        {Object.entries(item as Record<string, unknown>).map(
+                          ([subKey, subVal]) => {
+                            const subLabel = subKey
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c) => c.toUpperCase());
+                            if (isScoreField(subKey)) {
+                              return (
+                                <div key={subKey}>
+                                  <label
+                                    className={`${labelCls} text-[11px] mb-1 block`}
+                                  >
+                                    {subLabel}
+                                  </label>
+                                  <div className="rounded-xl bg-muted/40 px-4 py-2 text-sm text-foreground/80">
+                                    {String(subVal)}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            if (
+                              typeof subVal === 'string' ||
+                              typeof subVal === 'number'
+                            ) {
+                              const strSub = String(subVal);
+                              return (
+                                <div key={subKey}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <label
+                                      className={`${labelCls} text-[11px]`}
+                                    >
+                                      {subLabel}
+                                    </label>
+                                    {strSub.length > 20 &&
+                                      renderRefineBtn(
+                                        sectionId,
+                                        `${key}__${idx}__${subKey}`,
+                                        `${label.replace(/s$/, '')} ${subLabel}`,
+                                      )}
+                                  </div>
+                                  <textarea
+                                    value={strSub}
+                                    onChange={(e) => {
+                                      const u = [...value];
+                                      u[idx] = {
+                                        ...item,
+                                        [subKey]: e.target.value,
+                                      };
+                                      onUpdateField(sectionId, key, u);
+                                    }}
+                                    rows={getAutoRows(strSub, 1, 6)}
+                                    className={textareaCls}
+                                  />
+                                  {renderRefinePanel(
+                                    sectionId,
+                                    `${key}__${idx}__${subKey}`,
+                                  )}
+                                </div>
+                              );
+                            }
+                            if (Array.isArray(subVal)) {
+                              return (
+                                <div key={subKey}>
+                                  <label
+                                    className={`${labelCls} text-[11px] mb-1 block`}
+                                  >
+                                    {subLabel}
+                                  </label>
+                                  <textarea
+                                    value={(subVal as any[])
+                                      .map((v) =>
+                                        typeof v === 'string'
+                                          ? v
+                                          : JSON.stringify(v),
+                                      )
+                                      .join('\n')}
+                                    onChange={(e) => {
+                                      const u = [...value];
+                                      u[idx] = {
+                                        ...item,
+                                        [subKey]: e.target.value.split('\n'),
+                                      };
+                                      onUpdateField(sectionId, key, u);
+                                    }}
+                                    rows={getAutoRows(
+                                      (subVal as any[]).join('\n'),
+                                      2,
+                                      6,
+                                    )}
+                                    className={textareaCls}
+                                    placeholder="One item per line..."
+                                  />
+                                </div>
+                              );
+                            }
+                            return null;
+                          },
+                        )}
+                      </div>
+                      <DeleteBtn
+                        onClick={() =>
+                          onUpdateField(
+                            sectionId,
+                            key,
+                            value.filter((_: any, i: number) => i !== idx),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <AddBtn
+              onClick={() => {
+                const sample = value[0];
+                const template =
+                  sample && typeof sample === 'object' && !Array.isArray(sample)
+                    ? Object.keys(sample).reduce(
+                        (acc, k) => ({ ...acc, [k]: '' }),
+                        {},
+                      )
+                    : key.includes('risk')
+                      ? { risk: '', mitigation: '' }
+                      : {};
+                onUpdateField(sectionId, key, [...value, template]);
+              }}
+              label={`Add ${label.replace(/s$/, '')}`}
+            />
+          </div>
+        );
+      }
+
+      if (typeof value === 'object') {
+        const entries = Object.entries(value as Record<string, unknown>);
+        return (
+          <div
+            key={key}
+            className={
+              depth === 0
+                ? `${cardCls} space-y-4`
+                : 'space-y-3 pl-3 border-l-2 border-border/20'
+            }
+          >
+            {depth === 0 && <h4 className={sectionTitleCls}>{label}</h4>}
+            {entries.map(([subKey, subVal]) => {
+              const subLabel = subKey
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (c) => c.toUpperCase());
+              return renderValue(
+                sectionId,
+                subKey,
+                subVal,
+                subLabel,
+                depth + 1,
+              );
+            })}
+          </div>
+        );
+      }
+      return null;
+    };
+
+    if (typeof val === 'string') {
+      return (
+        <div className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <label className={labelCls}>Section Content</label>
+            {val.length > 40 &&
+              renderRefineBtn(
+                activeTab,
+                activeTab,
+                activeTab
+                  .replace(/_/g, ' ')
+                  .replace(/\b\w/g, (c) => c.toUpperCase()),
+              )}
+          </div>
+          <textarea
+            value={val}
+            onChange={(e) =>
+              onUpdateField(activeTab, activeTab, e.target.value)
+            }
+            rows={getAutoRows(val)}
+            className={textareaCls}
+          />
+        </div>
+      );
+    }
+
+    if (val && typeof val === 'object') {
+      const entries = Object.entries(val as Record<string, unknown>);
+      return (
+        <div className="space-y-5">
+          {entries.map(([k, v]) => {
+            const label = k
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+            return renderValue(activeTab, k, v, label, 0);
+          })}
+        </div>
+      );
+    }
+
+    return (
+      <div className={cardCls}>
+        <label className={`${labelCls} mb-2 block`}>Section Content</label>
+        <input
+          value={String(val ?? '')}
+          onChange={(e) => onUpdateField(activeTab, activeTab, e.target.value)}
+          className={inputCls}
+        />
+      </div>
+    );
+  };
+
+  const renderActiveTabContent = () => {
+    if (activeTab === 'executive_summary')
+      return renderExecutiveSummaryReview();
+    if (activeTab === 'target_users') return renderTargetUsersReview();
+    if (activeTab === 'mvp_definition') return renderMvpDefinitionReview();
+    if (activeTab === 'technical_architecture')
+      return renderTechnicalArchitectureReview();
+    if (activeTab === 'development_roadmap')
+      return renderDevelopmentRoadmapReview();
+    if (activeTab === 'team_requirements')
+      return renderTeamRequirementsReview();
+    if (activeTab === 'cost_estimation') return renderCostEstimationReview();
+    if (activeTab === 'business_model') return renderBusinessModelReview();
+    if (activeTab === 'go_to_market') return renderGoToMarketReview();
+    return renderGenericReview();
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="rounded-2xl border border-border/40 bg-card/60 backdrop-blur-md p-4 lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto shadow-lg">
+          <div className="flex items-center gap-2 mb-4 px-2">
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              Blueprint Sections
+            </span>
+          </div>
+          <nav className="space-y-1">
+            {TABS.map((tab) => {
+              const active = activeTab === tab.id;
+              const hasContent = sectionHasContent(tab.id);
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 text-[13px] font-semibold group ${
+                    active
+                      ? 'bg-gradient-to-r from-primary/15 via-primary/10 to-transparent text-primary shadow-sm ring-1 ring-primary/15'
+                      : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                  }`}
+                >
+                  <div
+                    className={`p-1.5 rounded-lg transition-colors ${active ? 'bg-primary/20 text-primary' : 'bg-muted/60 text-muted-foreground/60 group-hover:bg-muted group-hover:text-muted-foreground'}`}
+                  >
+                    {tab.icon}
+                  </div>
+                  <span className="truncate flex-1">{tab.title}</span>
+                  {hasContent && (
+                    <div
+                      className={`h-2 w-2 rounded-full shrink-0 ${active ? 'bg-primary' : 'bg-emerald-500/60'}`}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <section className="min-w-0 space-y-6">
+          <div className="pb-5 border-b border-border/30">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
+                <Edit3 className="h-3 w-3" />
+                Phase 3 - Review
+              </span>
+            </div>
+            <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
+              Review & Edit Blueprint
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed max-w-xl">
+              Edit any field below in plain language. Use the{' '}
+              <span className="inline-flex items-center gap-0.5 text-primary font-medium">
+                <Sparkles className="h-3 w-3" />
+                Refine
+              </span>{' '}
+              buttons to improve content with AI.
+            </p>
+          </div>
+
+          <div className="space-y-5">{renderActiveTabContent()}</div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 function BlueprintReport({
   blueprint,
   onSectionChange,
   region,
+  onUpdateBlueprint,
+  isRefining,
+  onRefineSection,
+  isEditable = true,
 }: {
   blueprint: BlueprintResult;
   onSectionChange?: (section: ActiveReportSection) => void;
   region: string;
+  onUpdateBlueprint?: (updated: BlueprintResult) => void;
+  isRefining?: boolean;
+  onRefineSection?: (sectionId: string, prompt: string) => Promise<void>;
+  isEditable?: boolean;
 }) {
   const orderedSections = BLUEPRINT_SECTION_ORDER.filter(
     (key) => blueprint[key] !== undefined,
@@ -2249,11 +5621,23 @@ function BlueprintReport({
     body: renderBlueprintSection(key, value, region),
   }));
 
+  const handleSaveSection = (sectionId: string, updatedValue: any) => {
+    onUpdateBlueprint?.({
+      ...blueprint,
+      [sectionId]: updatedValue,
+    });
+  };
+
   return (
     <ReportReader
       sections={sections}
-      initialSectionId="executive_summary"
+      initialSectionId="mvp_definition"
       onSectionChange={onSectionChange}
+      isEditable={isEditable}
+      onSaveSection={handleSaveSection}
+      onRefineSection={onRefineSection}
+      refineLoading={isRefining}
+      rawValues={blueprint}
     />
   );
 }
@@ -2417,7 +5801,9 @@ function AnalysisDetails({
           data={{
             revenue_model: research?.revenue_model,
             unit_economics: research?.unit_economics,
-            cost_estimation: research?.cost_estimation,
+            cost_estimation: formatCostEstimationToParagraph(
+              research?.cost_estimation,
+            ),
           }}
         />
       ),
@@ -2601,6 +5987,82 @@ function buildSmartSuggestions({
       ];
     }
 
+    if (sectionId.includes('user') || sectionId.includes('target')) {
+      return [
+        {
+          label: 'Validate personas',
+          prompt: `${base}\n\nSuggest 3 quick ways to validate these primary and secondary user personas in the real market.`,
+        },
+        {
+          label: 'User pain points',
+          prompt: `${base}\n\nAre there any critical pain points or objections for these personas that we have missed?`,
+        },
+        {
+          label: 'Persona marketing',
+          prompt: `${base}\n\nHow can we tailor our messaging to appeal to these specific user personas?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('arch') || sectionId.includes('technical')) {
+      return [
+        {
+          label: 'Scale stack',
+          prompt: `${base}\n\nHow well does this recommended tech stack scale, and what bottleneck should we monitor?`,
+        },
+        {
+          label: 'Security review',
+          prompt: `${base}\n\nWhat are the key security and privacy practices we should implement for this architecture?`,
+        },
+        {
+          label: 'Simplify build',
+          prompt: `${base}\n\nAre there components or technologies in this stack we can simplify to speed up launch?`,
+        },
+      ];
+    }
+
+    if (
+      sectionId.includes('business') ||
+      sectionId.includes('model') ||
+      sectionId.includes('revenue')
+    ) {
+      return [
+        {
+          label: 'Price strategy',
+          prompt: `${base}\n\nRecommend a starting pricing structure or tier based on these revenue streams.`,
+        },
+        {
+          label: 'LTV/CAC analysis',
+          prompt: `${base}\n\nWhat are the biggest assumptions regarding user acquisition cost (CAC) and lifetime value (LTV) here?`,
+        },
+        {
+          label: 'Alternative models',
+          prompt: `${base}\n\nSuggest 2 alternative monetization strategies that could work alongside these.`,
+        },
+      ];
+    }
+
+    if (
+      sectionId.includes('market') ||
+      sectionId.includes('go_to') ||
+      sectionId.includes('gtm')
+    ) {
+      return [
+        {
+          label: 'Growth hack ideas',
+          prompt: `${base}\n\nSuggest 3 low-cost growth hacks or viral loops for early acquisition.`,
+        },
+        {
+          label: 'First 100 users',
+          prompt: `${base}\n\nGive me a step-by-step launch playbook to acquire our first 100 paying customers.`,
+        },
+        {
+          label: 'Challenger channels',
+          prompt: `${base}\n\nWhich acquisition channels are secondary or experimental but worth testing?`,
+        },
+      ];
+    }
+
     return [
       {
         label: `Summarize ${sectionName}`,
@@ -2669,6 +6131,7 @@ export default function CreateRoom() {
   );
   const [phase1ReviewTouched, setPhase1ReviewTouched] = useState(false);
   const [blueprint, setBlueprint] = useState<BlueprintResult | null>(null);
+  const [activeTab, setActiveTab] = useState('executive_summary');
   const [mandatoryQuestions, setMandatoryQuestions] = useState<Question[]>([]);
   const [optionalQuestions, setOptionalQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -2680,8 +6143,13 @@ export default function CreateRoom() {
   const [launchJob, setLaunchJob] = useState<LaunchJob | null>(null);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
   const [downloadingBlueprintPdf, setDownloadingBlueprintPdf] = useState(false);
+  const [isFinalBlueprint, setIsFinalBlueprint] = useState(false);
+  const [showFinalConfirmation, setShowFinalConfirmation] = useState(false);
+  const [isRefiningBlueprintSection, setIsRefiningBlueprintSection] =
+    useState(false);
+  const [finalizingBlueprint, setFinalizingBlueprint] = useState(false);
   const [talentRecommendationReport, setTalentRecommendationReport] =
     useState<TalentRecommendationReport | null>(null);
   const [selectedTalentKeys, setSelectedTalentKeys] = useState<
@@ -2697,6 +6165,7 @@ export default function CreateRoom() {
     null,
   );
   const [suggestingId, setSuggestingId] = useState<string | null>(null);
+  const [suggestingAll, setSuggestingAll] = useState(false);
   const [usedAiSuggest, setUsedAiSuggest] = useState<Record<string, boolean>>(
     {},
   );
@@ -2708,6 +6177,7 @@ export default function CreateRoom() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const blueprintReportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // Auto-resize all textareas when values change to eliminate scrollbars
@@ -2769,6 +6239,317 @@ Please return ONLY the recommended answer itself, without any introductory or co
       toast.error(err?.message || 'Failed to generate suggestion');
     } finally {
       setSuggestingId(null);
+    }
+  };
+
+  const handleAiSuggestForAll = async () => {
+    if (suggestingId || suggestingAll) return;
+    setSuggestingAll(true);
+    toast.info('Generating suggestions for all unanswered questions...');
+    try {
+      const allQuestions = [...mandatoryQuestions, ...optionalQuestions];
+      const unanswered = allQuestions.filter((q) => !answers[q._id]?.trim());
+      if (unanswered.length === 0) {
+        toast.info('All questions are already answered.');
+        setSuggestingAll(false);
+        return;
+      }
+
+      await Promise.all(
+        unanswered.map(async (question) => {
+          try {
+            const prompt = `Recommend a strong, practical answer for this business idea.
+Question: "${question.question}"
+Please return ONLY the recommended answer itself, without any introductory or conversational text (no "Here is...", no markdown code blocks), so it can be inserted directly into the text input.`;
+
+            const res = await fetch('/api/ai/chat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getToken()}`,
+              },
+              body: JSON.stringify({
+                message: prompt,
+                launchSessionId: sessionData?._id,
+                clientContext: `Business idea: ${sessionData?.rawIdea || ''}`,
+              }),
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              let reply = data.reply || '';
+              reply = reply
+                .replace(/```[a-zA-Z]*\n?/g, '')
+                .replace(/\n?```/g, '')
+                .trim();
+
+              setAnswers((prev) => ({
+                ...prev,
+                [question._id]: reply,
+              }));
+              setUsedAiSuggest((prev) => ({
+                ...prev,
+                [question._id]: true,
+              }));
+            }
+          } catch (e) {
+            console.error(
+              `Failed to suggest answer for question ${question._id}:`,
+              e,
+            );
+          }
+        }),
+      );
+      toast.success('Suggested answers generated for all questions!');
+    } catch (err: any) {
+      toast.error('Failed to generate suggestions for all');
+    } finally {
+      setSuggestingAll(false);
+    }
+  };
+
+  const handleRefineBlueprintSection = async (
+    sectionId: string,
+    promptText: string,
+  ) => {
+    if (!blueprint) return;
+    setIsRefiningBlueprintSection(true);
+    try {
+      const sectionValue = blueprint[sectionId];
+      const prompt = `You are a technical product assistant. Here is the current JSON data for the blueprint section "${sectionId}":
+${JSON.stringify(sectionValue, null, 2)}
+
+The user wants to refine this specific section based on this instruction: "${promptText}"
+
+Return ONLY a valid raw JSON object matching the exact schema as the original object above. Do not wrap in markdown code blocks, do not include any other conversational text or explanations.`;
+
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          message: prompt,
+          launchSessionId: sessionData?._id,
+        }),
+      });
+
+      if (!res.ok) throw new Error('AI request failed');
+      const data = await res.json();
+      let text = data.reply || '';
+      text = text
+        .replace(/^```json\s*/i, '')
+        .replace(/```$/, '')
+        .trim();
+      const updatedValue = JSON.parse(text);
+
+      setBlueprint((prev) => {
+        if (!prev) return null;
+        const updated = {
+          ...prev,
+          [sectionId]: updatedValue,
+        };
+        return updated;
+      });
+      toast.success('Section refined successfully!');
+      setShowFinalConfirmation(true);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to refine section');
+    } finally {
+      setIsRefiningBlueprintSection(false);
+    }
+  };
+
+  const saveBlueprintToServer = async (updatedBlueprint: any) => {
+    setBlueprint(updatedBlueprint);
+  };
+
+  const handleUpdateBlueprintField = (
+    sectionId: string,
+    fieldKey: string,
+    newValue: any,
+  ) => {
+    if (!blueprint) return;
+    let nextBlueprint: any = null;
+    if (fieldKey === sectionId) {
+      nextBlueprint = {
+        ...blueprint,
+        [sectionId]: newValue,
+      };
+    } else {
+      const section = (blueprint as any)[sectionId];
+      const sectionObj =
+        section && typeof section === 'object' && !Array.isArray(section)
+          ? { ...section }
+          : ({} as any);
+      sectionObj[fieldKey] = newValue;
+      nextBlueprint = {
+        ...blueprint,
+        [sectionId]: sectionObj,
+      };
+    }
+    setBlueprint(nextBlueprint);
+  };
+
+  const handleRefineBlueprintField = async (
+    sectionId: string,
+    fieldKey: string,
+    promptText: string,
+  ) => {
+    if (!blueprint) return;
+    setSuggestingId(`${sectionId}_${fieldKey}`);
+    setIsRefiningBlueprintSection(true);
+    try {
+      const currentSection = ((blueprint as any)[sectionId] ?? {}) as any;
+
+      let currentValue: any = currentSection;
+      let pathParts: string[] = [];
+      if (fieldKey.includes('__')) {
+        pathParts = fieldKey.split('__');
+        if (pathParts.length === 2) {
+          const [parentKey, childKey] = pathParts;
+          if (!isNaN(Number(childKey))) {
+            const idx = parseInt(childKey, 10);
+            currentValue = Array.isArray(currentSection[parentKey])
+              ? currentSection[parentKey][idx]
+              : undefined;
+          } else {
+            currentValue = currentSection[parentKey]
+              ? currentSection[parentKey][childKey]
+              : undefined;
+          }
+        } else if (pathParts.length === 3) {
+          const [parentKey, idxStr, childKey] = pathParts;
+          const idx = parseInt(idxStr, 10);
+          const item = Array.isArray(currentSection[parentKey])
+            ? currentSection[parentKey][idx]
+            : {};
+          currentValue = item ? item[childKey] : undefined;
+        }
+      } else {
+        currentValue =
+          typeof currentSection === 'object' && currentSection !== null
+            ? currentSection[fieldKey]
+            : currentSection;
+      }
+
+      const prompt = `You are a technical product assistant. Here is the current value of the blueprint section "${sectionId}" under the field "${fieldKey}":
+${typeof currentValue === 'object' ? JSON.stringify(currentValue, null, 2) : String(currentValue ?? '')}
+
+The user wants to refine/modify this specific field value based on this instruction: "${promptText}"
+
+Please return ONLY the refined value.
+- If the original value was a simple string list or paragraph, return the refined text/markdown directly (no code blocks).
+- If the original value was a JSON object/array, return ONLY a valid raw JSON object/array matching the schema, with NO conversational text or code block markdown wrappers.`;
+
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          message: prompt,
+          launchSessionId: sessionData?._id,
+        }),
+      });
+
+      if (!res.ok) throw new Error('AI request failed');
+      const data = await res.json();
+      let text = data.reply || '';
+      text = text
+        .replace(/^```json\s*/i, '')
+        .replace(/```$/, '')
+        .trim();
+
+      let parsedValue: any = text;
+      try {
+        if (text.startsWith('[') || text.startsWith('{')) {
+          parsedValue = JSON.parse(text);
+        }
+      } catch (e) {
+        // Fallback to string if JSON parsing fails
+      }
+
+      const nextBlueprint = { ...blueprint } as any;
+      const section = nextBlueprint[sectionId];
+      const sectionObj =
+        section && typeof section === 'object' && !Array.isArray(section)
+          ? { ...section }
+          : ({} as any);
+
+      if (pathParts.length > 0) {
+        if (pathParts.length === 2) {
+          const [parentKey, childKey] = pathParts;
+          if (!isNaN(Number(childKey))) {
+            const idx = parseInt(childKey, 10);
+            const list = Array.isArray(sectionObj[parentKey])
+              ? [...sectionObj[parentKey]]
+              : [];
+            list[idx] = parsedValue;
+            sectionObj[parentKey] = list;
+          } else {
+            const obj =
+              typeof sectionObj[parentKey] === 'object' &&
+              sectionObj[parentKey] !== null
+                ? { ...sectionObj[parentKey] }
+                : {};
+            obj[childKey] = parsedValue;
+            sectionObj[parentKey] = obj;
+          }
+        } else if (pathParts.length === 3) {
+          const [parentKey, idxStr, childKey] = pathParts;
+          const idx = parseInt(idxStr, 10);
+          const list = Array.isArray(sectionObj[parentKey])
+            ? [...sectionObj[parentKey]]
+            : [];
+          const item =
+            typeof list[idx] === 'object' && list[idx] !== null
+              ? { ...list[idx] }
+              : {};
+          item[childKey] = parsedValue;
+          list[idx] = item;
+          sectionObj[parentKey] = list;
+        }
+      } else {
+        if (fieldKey === sectionId) {
+          nextBlueprint[sectionId] = parsedValue;
+        } else {
+          sectionObj[fieldKey] = parsedValue;
+          nextBlueprint[sectionId] = sectionObj;
+        }
+      }
+
+      if (fieldKey !== sectionId && pathParts.length === 0) {
+        nextBlueprint[sectionId] = sectionObj;
+      }
+
+      setBlueprint(nextBlueprint);
+      toast.success('Field refined successfully!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to refine field');
+    } finally {
+      setIsRefiningBlueprintSection(false);
+      setSuggestingId(null);
+    }
+  };
+
+  const handleConfirmFinal = async () => {
+    if (!sessionData?._id || !blueprint || finalizingBlueprint) return;
+    setFinalizingBlueprint(true);
+    try {
+      setIsFinalBlueprint(true);
+      setShowFinalConfirmation(false);
+      toast.success(
+        'Blueprint finalized successfully! PDF is synchronized and download is now active.',
+      );
+    } catch (err: any) {
+      toast.error(
+        err?.message || 'Failed to finalize blueprint. Please try again.',
+      );
+    } finally {
+      setFinalizingBlueprint(false);
     }
   };
 
@@ -3328,65 +7109,89 @@ Please return ONLY the modified text itself, without any introductory or convers
     }
   };
 
-  const downloadValidationPdf = async () => {
-    if (!sessionData?._id || downloadingPdf) return;
-    setDownloadingPdf(true);
-    setError('');
-    try {
-      const res = await fetch(
-        `/api/launch/${sessionData._id}/business-validation.pdf`,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        },
-      );
-      if (!res.ok) {
-        throw new Error(
-          await readApiError(res, 'Failed to download analysis PDF'),
-        );
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const link = window.document.createElement('a');
-      link.href = url;
-      link.download = `business-analysis-${sessionData._id}.pdf`;
-      window.document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err: any) {
-      const msg = err?.message ?? 'Failed to download analysis PDF';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
-
   const downloadBlueprintPdf = async () => {
-    if (!sessionData?._id || downloadingBlueprintPdf) return;
+    if (!blueprintReportRef.current || downloadingBlueprintPdf) return;
     setDownloadingBlueprintPdf(true);
     setError('');
     try {
-      const res = await fetch(
-        `/api/launch/${sessionData._id}/business-blueprint.pdf`,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        },
-      );
-      if (!res.ok) {
-        throw new Error(
-          await readApiError(res, 'Failed to download blueprint PDF'),
-        );
+      if ((document as any).fonts?.ready) {
+        await (document as any).fonts.ready;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const link = window.document.createElement('a');
-      link.href = url;
-      link.download = `business-blueprint-${sessionData._id}.pdf`;
-      window.document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+
+      const element = blueprintReportRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: true,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: document.documentElement.offsetWidth,
+        windowHeight: element.scrollHeight,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector(
+            '[data-blueprint-report-capture]',
+          ) as HTMLElement | null;
+          if (clonedElement) {
+            clonedElement.style.boxShadow = 'none';
+            clonedElement.style.margin = '0';
+            clonedElement.style.transform = 'none';
+          }
+        },
+      });
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
+        precision: 16,
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = pdfWidth / imgWidth;
+      const pageHeightPx = Math.floor(pdfHeight / ratio);
+
+      let renderedHeight = 0;
+      while (renderedHeight < imgHeight) {
+        const sliceHeight = Math.min(pageHeightPx, imgHeight - renderedHeight);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = imgWidth;
+        pageCanvas.height = sliceHeight;
+
+        const context = pageCanvas.getContext('2d');
+        if (!context) {
+          throw new Error('Failed to prepare blueprint PDF canvas');
+        }
+
+        context.drawImage(
+          canvas,
+          0,
+          renderedHeight,
+          imgWidth,
+          sliceHeight,
+          0,
+          0,
+          imgWidth,
+          sliceHeight,
+        );
+
+        const imgData = pageCanvas.toDataURL('image/png', 1.0);
+        if (renderedHeight > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, sliceHeight * ratio);
+        renderedHeight += sliceHeight;
+      }
+
+      pdf.save(
+        `business-blueprint-${sessionData?._id || new Date().toISOString().slice(0, 10)}.pdf`,
+      );
     } catch (err: any) {
       const msg = err?.message ?? 'Failed to download blueprint PDF';
       setError(msg);
@@ -3740,9 +7545,27 @@ Please return ONLY the modified text itself, without any introductory or convers
     }
   };
   const research = analysis?.research_analysis;
+  const allQuestionsList = [...mandatoryQuestions, ...optionalQuestions];
+  const allSuggestedOrAnswered =
+    allQuestionsList.length > 0 &&
+    allQuestionsList.every(
+      (q) =>
+        usedAiSuggest[q._id] ||
+        (answers[q._id] && String(answers[q._id]).trim().length > 0),
+    );
+  const activeReportSectionForSuggestions =
+    phase === 'blueprint' && activeTab
+      ? {
+          id: activeTab,
+          title: activeTab
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase()),
+        }
+      : activeReportSection;
+
   const smartSuggestions = buildSmartSuggestions({
     phase,
-    activeReportSection,
+    activeReportSection: activeReportSectionForSuggestions,
     activeQuestion,
   });
 
@@ -3797,7 +7620,11 @@ Please return ONLY the modified text itself, without any introductory or convers
       </div>
 
       <div
-        className={`${phase === 'idea' || !isChatOpen ? 'max-w-5xl' : 'max-w-[1400px] grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]'} mx-auto px-6 py-10 transition-all duration-300`}
+        className={`${
+          phase === 'idea' || !isChatOpen
+            ? 'max-w-5xl'
+            : 'max-w-[1400px] grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]'
+        } mx-auto px-6 py-10 transition-all duration-300`}
       >
         <main className="min-w-0">
           <div className="mb-8 grid gap-2 text-xs sm:grid-cols-4">
@@ -3844,12 +7671,13 @@ Please return ONLY the modified text itself, without any introductory or convers
                     Phase 1
                   </div>
                   <h1 className="text-3xl font-bold tracking-tight mb-3">
-                    Analyze the business idea first
+                    Shape your project vision
                   </h1>
-                  <p className="text-muted-foreground max-w-2xl">
-                    Describe the idea in normal language. Gemini AI will only
-                    analyze the business side here: market, audience,
-                    competitors, revenue, risks, score, and verdict.
+                  <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                    Describe your business idea or product vision in your own
+                    words. We will evaluate the market potential, define target
+                    personas, map competitors, and frame the initial business
+                    model to kickstart your launch room.
                   </p>
                 </div>
 
@@ -3876,23 +7704,6 @@ Please return ONLY the modified text itself, without any introductory or convers
                     >
                       Analyze business
                     </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-xs text-muted-foreground/60 mb-2 uppercase tracking-wider font-medium">
-                    Try an example
-                  </div>
-                  <div className="grid gap-2">
-                    {EXAMPLE_PROMPTS.map((prompt, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setDescription(prompt)}
-                        className="w-full text-left text-xs text-muted-foreground/70 hover:text-muted-foreground border border-border/30 hover:border-border/60 rounded-lg px-4 py-3 transition-all leading-relaxed"
-                      >
-                        {prompt}
-                      </button>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -3938,16 +7749,9 @@ Please return ONLY the modified text itself, without any introductory or convers
                     <Button
                       variant="outline"
                       onClick={() => setPhase('idea')}
-                      disabled={loadingQuestions || downloadingPdf}
+                      disabled={loadingQuestions}
                     >
                       Edit idea
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={downloadValidationPdf}
-                      disabled={downloadingPdf}
-                    >
-                      {downloadingPdf ? 'Preparing...' : 'Download PDF'}
                     </Button>
                   </div>
                 </div>
@@ -4098,9 +7902,9 @@ Please return ONLY the modified text itself, without any introductory or convers
                         Confirm Phase 2 Inputs & Assumptions
                       </h2>
                       <p className="mt-1 max-w-2xl text-xs text-muted-foreground leading-relaxed">
-                        We&apos;ve generated the business requirements based on your
-                        idea. Use the fields below to customize, adjust, or use
-                        AI to refine specific values before generating the
+                        We&apos;ve generated the business requirements based on
+                        your idea. Use the fields below to customize, adjust, or
+                        use AI to refine specific values before generating the
                         technical blueprint.
                       </p>
                     </div>
@@ -4201,18 +8005,52 @@ Please return ONLY the modified text itself, without any introductory or convers
               />
             ) : (
               <div className="space-y-8 animate-in fade-in duration-300">
-                <div>
-                  <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                    Phase 3 intake
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
+                  <div>
+                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                      Phase 3 intake
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight mb-1">
+                      Answer blueprint questions
+                    </h1>
+                    <p className="text-muted-foreground max-w-2xl text-xs leading-relaxed">
+                      The fixed questions are mandatory. The optional questions
+                      are generated from the business idea and make the final
+                      blueprint more specific.
+                    </p>
                   </div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-3">
-                    Answer blueprint questions
-                  </h1>
-                  <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                    The fixed questions are mandatory. The optional questions
-                    are generated from the business idea and make the final
-                    blueprint more specific.
-                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={`shrink-0 h-10 px-4 text-xs font-bold gap-2 self-start sm:self-center transition-all ${
+                      allSuggestedOrAnswered
+                        ? 'bg-muted border border-border text-muted-foreground opacity-75'
+                        : 'bg-primary/10 border border-primary/25 text-primary hover:bg-primary/25'
+                    }`}
+                    onClick={handleAiSuggestForAll}
+                    disabled={
+                      suggestingId !== null ||
+                      suggestingAll ||
+                      allSuggestedOrAnswered
+                    }
+                  >
+                    {suggestingAll ? (
+                      <>
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
+                        Generating all...
+                      </>
+                    ) : allSuggestedOrAnswered ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-green-500" />
+                        Suggested for All
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" />
+                        AI Suggest for All
+                      </>
+                    )}
+                  </Button>
                 </div>
 
                 <div className="space-y-6">
@@ -4588,6 +8426,59 @@ Please return ONLY the modified text itself, without any introductory or convers
                     : 'Scanning verified developer profiles, evaluating skill matches, reputation scores, budget fits, and availability...'
                 }
               />
+            ) : !isFinalBlueprint ? (
+              <div className="space-y-7 animate-in fade-in duration-300">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
+                  <div className="text-xs text-primary font-medium uppercase tracking-wider">
+                    Phase 3 Review
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPhase('analysis')}
+                      disabled={creatingRoom || loadingRecommendations}
+                    >
+                      Edit Phase 2
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setPhase('technical')}
+                      disabled={creatingRoom || loadingRecommendations}
+                    >
+                      Edit answers
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleConfirmFinal}
+                      disabled={
+                        creatingRoom ||
+                        loadingRecommendations ||
+                        finalizingBlueprint
+                      }
+                      className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold"
+                    >
+                      {finalizingBlueprint
+                        ? 'Finalizing...'
+                        : 'Confirm as Final'}
+                    </Button>
+                  </div>
+                </div>
+
+                <BlueprintReviewSection
+                  blueprint={blueprint}
+                  region={phase1Review.region}
+                  onUpdateField={handleUpdateBlueprintField}
+                  onRefineField={handleRefineBlueprintField}
+                  isRefining={isRefiningBlueprintSection}
+                  suggestingId={suggestingId}
+                  onConfirmFinal={handleConfirmFinal}
+                  setSuggestingId={setSuggestingId}
+                  setIsRefiningBlueprintSection={setIsRefiningBlueprintSection}
+                  sessionData={sessionData}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                />
+              </div>
             ) : (
               <div className="space-y-7 animate-in fade-in duration-300">
                 <div className="flex flex-col gap-5">
@@ -4598,38 +8489,24 @@ Please return ONLY the modified text itself, without any introductory or convers
                     <div className="flex flex-wrap gap-2 shrink-0">
                       <Button
                         variant="outline"
-                        onClick={() => setPhase('analysis')}
-                        disabled={
-                          downloadingBlueprintPdf ||
-                          creatingRoom ||
-                          loadingRecommendations
-                        }
-                      >
-                        Edit Phase 2
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setPhase('technical')}
-                        disabled={
-                          downloadingBlueprintPdf ||
-                          creatingRoom ||
-                          loadingRecommendations
-                        }
-                      >
-                        Edit answers
-                      </Button>
-                      <Button
-                        variant="outline"
                         onClick={downloadBlueprintPdf}
                         disabled={
                           downloadingBlueprintPdf ||
                           creatingRoom ||
                           loadingRecommendations
                         }
+                        className="bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20 font-bold"
                       >
                         {downloadingBlueprintPdf
                           ? 'Preparing...'
                           : 'Download PDF'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsFinalBlueprint(false)}
+                        disabled={creatingRoom || loadingRecommendations}
+                      >
+                        Make changes
                       </Button>
                       <Button
                         variant="outline"
@@ -4663,6 +8540,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                   blueprint={blueprint}
                   onSectionChange={setActiveReportSection}
                   region={phase1Review.region}
+                  isEditable={false}
                 />
               </div>
             ))}
@@ -5302,6 +9180,16 @@ Please return ONLY the modified text itself, without any introductory or convers
                     </div>
                   )
                 )}
+                {blueprint && (
+                  <div data-blueprint-report-capture ref={blueprintReportRef}>
+                    <BlueprintReport
+                      blueprint={blueprint!}
+                      onSectionChange={setActiveReportSection}
+                      region={phase1Review.region}
+                      isEditable={false}
+                    />
+                  </div>
+                )}
               </div>
             ))}
         </main>
@@ -5512,6 +9400,57 @@ Please return ONLY the modified text itself, without any introductory or convers
         >
           <ArrowUp className="h-5 w-5" />
         </Button>
+      )}
+      {showFinalConfirmation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-border/80 bg-gradient-to-b from-card to-background p-6 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex flex-col gap-4 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">
+                    Confirm Blueprint Report
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Action required to unlock download options
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-sm text-foreground/80 leading-relaxed bg-muted/40 rounded-xl p-4 border border-border/40">
+                Is this the final blueprint? Confirming will lock the blueprint
+                version and enable the PDF download option. You can always
+                revert to make changes later.
+              </div>
+
+              <div className="flex gap-2.5 justify-end mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsFinalBlueprint(false);
+                    setShowFinalConfirmation(false);
+                  }}
+                  className="font-medium text-xs h-9 px-4"
+                >
+                  No, not yet
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleConfirmFinal}
+                  disabled={finalizingBlueprint}
+                  className="font-bold text-xs h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {finalizingBlueprint ? 'Finalizing...' : 'Yes, this is final'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

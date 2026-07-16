@@ -3700,10 +3700,11 @@ export default function LiveRoomPage() {
                   Signing Terms & Conditions:
                 </p>
                 <p>
-                  By checking the consent box below and clicking &quot;Sign &amp; Accept
-                  Agreement&quot;, you are applying your electronic signature to this
-                  document, binding yourself to all the terms, confidentiality
-                  regulations, and IP transfer conditions defined above.
+                  By checking the consent box below and clicking &quot;Sign
+                  &amp; Accept Agreement&quot;, you are applying your electronic
+                  signature to this document, binding yourself to all the terms,
+                  confidentiality regulations, and IP transfer conditions
+                  defined above.
                 </p>
               </div>
             </div>
