@@ -558,11 +558,23 @@ export default function LiveRoomPage() {
     const ids = new Set(selectedChannel.participantIds.map(String));
     return talentParticipants.filter((participant: any) => {
       const person = participant.user ?? participant.userId;
-      return ids.has(
-        String(person?._id ?? participant.talentId ?? participant.userId),
-      );
+      const personId = String(person?._id ?? participant.talentId ?? participant.userId);
+      
+      if (ids.has(personId)) return true;
+      
+      if (selectedChannel.type === 'custom' && selectedChannel.roleId) {
+        if (String(participant.roleId) === String(selectedChannel.roleId)) return true;
+        
+        const channelRole = workspace?.roles?.find(
+          (r: any) => String(r._id) === String(selectedChannel.roleId),
+        );
+        if (channelRole && Array.isArray(participant.matchedRoles)) {
+          return participant.matchedRoles.includes(channelRole.roleTitle);
+        }
+      }
+      return false;
     });
-  }, [selectedChannel, talentParticipants]);
+  }, [selectedChannel, talentParticipants, workspace?.roles]);
 
   const offerCandidate = useMemo(() => {
     return (
@@ -2968,10 +2980,16 @@ export default function LiveRoomPage() {
                                         </span>
                                       )}
                                     </div>
-                                    {role?.roleTitle && (
-                                      <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
-                                        {role.roleTitle}
+                                    {participant.matchedRoles && participant.matchedRoles.length > 0 ? (
+                                      <div className="text-[10px] text-muted-foreground truncate leading-none mt-1" title={participant.matchedRoles.join(', ')}>
+                                        Roles: {participant.matchedRoles.join(', ')}
                                       </div>
+                                    ) : (
+                                      role?.roleTitle && (
+                                        <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
+                                          {role.roleTitle}
+                                        </div>
+                                      )
                                     )}
                                   </div>
                                 </div>
@@ -3223,10 +3241,16 @@ export default function LiveRoomPage() {
                                             </span>
                                           )}
                                         </div>
-                                        {role?.roleTitle && (
-                                          <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
-                                            {role.roleTitle}
+                                        {participant.matchedRoles && participant.matchedRoles.length > 0 ? (
+                                          <div className="text-[10px] text-muted-foreground truncate leading-none mt-1" title={participant.matchedRoles.join(', ')}>
+                                            Roles: {participant.matchedRoles.join(', ')}
                                           </div>
+                                        ) : (
+                                          role?.roleTitle && (
+                                            <div className="text-[10px] text-muted-foreground truncate leading-none mt-1">
+                                              {role.roleTitle}
+                                            </div>
+                                          )
                                         )}
                                       </div>
                                     </div>

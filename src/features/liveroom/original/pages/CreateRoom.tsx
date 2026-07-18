@@ -6143,6 +6143,7 @@ export default function CreateRoom() {
   const [launchJob, setLaunchJob] = useState<LaunchJob | null>(null);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [showTalentChoiceModal, setShowTalentChoiceModal] = useState(false);
 
   const [downloadingBlueprintPdf, setDownloadingBlueprintPdf] = useState(false);
   const [isFinalBlueprint, setIsFinalBlueprint] = useState(false);
@@ -6155,7 +6156,7 @@ export default function CreateRoom() {
   const [selectedTalentKeys, setSelectedTalentKeys] = useState<
     Record<string, boolean>
   >({});
-  const [talentMatchingTab, setTalentMatchingTab] = useState<'ai' | 'manual'>('ai');
+  const [talentMatchingTab, setTalentMatchingTab] = useState<'ai' | 'manual'>('manual');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -6539,6 +6540,24 @@ Please return ONLY the refined value.
     if (!sessionData?._id || !blueprint || finalizingBlueprint) return;
     setFinalizingBlueprint(true);
     try {
+      const res = await fetch(`/api/launch/${sessionData._id}/blueprint`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ blueprint }),
+      });
+      if (!res.ok) {
+        throw new Error(
+          await readApiError(res, 'Failed to save blueprint modifications'),
+        );
+      }
+      const data = await res.json();
+      if (data.session) {
+        setSessionData(data.session);
+      }
+
       setIsFinalBlueprint(true);
       setShowFinalConfirmation(false);
       toast.success(
@@ -7110,88 +7129,31 @@ Please return ONLY the modified text itself, without any introductory or convers
   };
 
   const downloadBlueprintPdf = async () => {
-    if (!blueprintReportRef.current || downloadingBlueprintPdf) return;
+    if (!sessionData?._id || downloadingBlueprintPdf) return;
     setDownloadingBlueprintPdf(true);
     setError('');
     try {
-      if ((document as any).fonts?.ready) {
-        await (document as any).fonts.ready;
-      }
-
-      const element = blueprintReportRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        allowTaint: true,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: document.documentElement.offsetWidth,
-        windowHeight: element.scrollHeight,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector(
-            '[data-blueprint-report-capture]',
-          ) as HTMLElement | null;
-          if (clonedElement) {
-            clonedElement.style.boxShadow = 'none';
-            clonedElement.style.margin = '0';
-            clonedElement.style.transform = 'none';
-          }
+      const res = await fetch(
+        `/api/launch/${sessionData._id}/business-blueprint.pdf`,
+        {
+          headers: { Authorization: `Bearer ${getToken()}` },
         },
-      });
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true,
-        precision: 16,
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = pdfWidth / imgWidth;
-      const pageHeightPx = Math.floor(pdfHeight / ratio);
-
-      let renderedHeight = 0;
-      while (renderedHeight < imgHeight) {
-        const sliceHeight = Math.min(pageHeightPx, imgHeight - renderedHeight);
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = imgWidth;
-        pageCanvas.height = sliceHeight;
-
-        const context = pageCanvas.getContext('2d');
-        if (!context) {
-          throw new Error('Failed to prepare blueprint PDF canvas');
-        }
-
-        context.drawImage(
-          canvas,
-          0,
-          renderedHeight,
-          imgWidth,
-          sliceHeight,
-          0,
-          0,
-          imgWidth,
-          sliceHeight,
-        );
-
-        const imgData = pageCanvas.toDataURL('image/png', 1.0);
-        if (renderedHeight > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, sliceHeight * ratio);
-        renderedHeight += sliceHeight;
-      }
-
-      pdf.save(
-        `business-blueprint-${sessionData?._id || new Date().toISOString().slice(0, 10)}.pdf`,
       );
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(
+          text ? JSON.parse(text).error : 'Failed to download blueprint PDF',
+        );
+      }
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `business-blueprint-${sessionData._id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
     } catch (err: any) {
       const msg = err?.message ?? 'Failed to download blueprint PDF';
       setError(msg);
@@ -7481,16 +7443,15 @@ Please return ONLY the modified text itself, without any introductory or convers
       : [];
 
   const selectedTalentRecommendations = talentRecommendationReport
-    ? [
-        ...talentRecommendationReport.recommendations.filter(
-          (recommendation) =>
-            selectedTalentKeys[recommendationKey(recommendation, 'ai')],
-        ),
-        ...(talentRecommendationReport.manualFreelancers || []).filter(
-          (recommendation) =>
-            selectedTalentKeys[recommendationKey(recommendation, 'manual')],
-        ),
-      ]
+    ? (talentMatchingTab === 'ai'
+        ? talentRecommendationReport.recommendations.filter(
+            (recommendation) =>
+              selectedTalentKeys[recommendationKey(recommendation, 'ai')],
+          )
+        : (talentRecommendationReport.manualFreelancers || []).filter(
+            (recommendation) =>
+              selectedTalentKeys[recommendationKey(recommendation, 'manual')],
+          ))
     : [];
 
   const enterRoomDashboard = async () => {
@@ -7540,6 +7501,82 @@ Please return ONLY the modified text itself, without any introductory or convers
       const msg = err?.message ?? 'Failed to enter room dashboard';
       setError(msg);
       toast.error(msg);
+    } finally {
+      setCreatingRoom(false);
+    }
+  };
+
+  const handleDirectAiTalentSelection = async () => {
+    if (!sessionData?._id || creatingRoom) return;
+    setShowTalentChoiceModal(false);
+    setCreatingRoom(true);
+    setError('');
+    
+    // Switch to recommendations phase and set placeholder report to trigger premium loader
+    setTalentRecommendationReport({
+      roleCount: 0,
+      recommendations: [],
+    });
+    setPhase('recommendations');
+    
+    try {
+      // 1. Fetch talent recommendations
+      const recommendationsRes = await fetch(
+        `/api/launch/${sessionData._id}/talent-recommendations`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${getToken()}` },
+        },
+      );
+      if (!recommendationsRes.ok) {
+        throw new Error(
+          await readApiError(recommendationsRes, 'Failed to generate talent recommendations'),
+        );
+      }
+      const data = await recommendationsRes.json();
+      
+      const recommendationsList = Array.isArray(data.recommendations)
+        ? data.recommendations
+        : [];
+      
+      // 2. Prepare scoping and create the room with all recommendations
+      const allQuestions = [...mandatoryQuestions, ...optionalQuestions];
+      const answersPayload = allQuestions
+        .map((question) => ({
+          questionId: question._id,
+          answer: answers[question._id]?.trim() ?? '',
+        }))
+        .filter((item) => item.answer);
+
+      const res = await fetch(`/api/launch/${sessionData._id}/scope`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          answers: answersPayload,
+          selectedTalentRecommendations: recommendationsList,
+          isAiSelected: true,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(
+          await readApiError(
+            res,
+            'Failed to create the room dashboard',
+          ),
+        );
+      }
+      const room = await res.json();
+      navigate(`/room/${room._id}`);
+    } catch (err: any) {
+      const msg = err?.message ?? 'Failed to complete AI selection and room creation';
+      setError(msg);
+      toast.error(msg);
+      // Revert states on error
+      setTalentRecommendationReport(null);
+      setPhase('blueprint');
     } finally {
       setCreatingRoom(false);
     }
@@ -8516,7 +8553,17 @@ Please return ONLY the modified text itself, without any introductory or convers
                         {creatingRoom ? 'Preparing room...' : 'Skip matches'}
                       </Button>
                       <Button
-                        onClick={generateTalentRecommendations}
+                        onClick={() => {
+                          const missing = mandatoryQuestions.filter(
+                            (question) => !answers[question._id]?.trim(),
+                          );
+                          if (missing.length > 0) {
+                            toast.error('Please answer all mandatory questions');
+                            setPhase('technical');
+                            return;
+                          }
+                          setShowTalentChoiceModal(true);
+                        }}
                         disabled={loadingRecommendations || creatingRoom}
                       >
                         {loadingRecommendations
@@ -8536,12 +8583,14 @@ Please return ONLY the modified text itself, without any introductory or convers
                   </div>
                 </div>
 
-                <BlueprintReport
-                  blueprint={blueprint}
-                  onSectionChange={setActiveReportSection}
-                  region={phase1Review.region}
-                  isEditable={false}
-                />
+                <div data-blueprint-report-capture ref={blueprintReportRef}>
+                  <BlueprintReport
+                    blueprint={blueprint}
+                    onSectionChange={setActiveReportSection}
+                    region={phase1Review.region}
+                    isEditable={false}
+                  />
+                </div>
               </div>
             ))}
 
@@ -8638,32 +8687,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                   </div>
                 </div>
 
-                <div className="flex border-b border-border/40 gap-4 mt-2">
-                  <button
-                    onClick={() => {
-                      setTalentMatchingTab('ai');
-                      if (talentRecommendationReport) {
-                        setSelectedTalentKeys(
-                          buildDefaultSelectedTalentKeys(
-                            talentRecommendationReport,
-                          ),
-                        );
-                      }
-                    }}
-                    className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all relative ${talentMatchingTab === 'ai' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-                  >
-                    AI Suggested Freelancers
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTalentMatchingTab('manual');
-                      setSelectedTalentKeys({});
-                    }}
-                    className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all relative ${talentMatchingTab === 'manual' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-                  >
-                    Manual Selection List
-                  </button>
-                </div>
+
 
                 {talentMatchingTab === 'ai' ? (
                   talentRecommendationReport.recommendations.length === 0 ? (
@@ -9446,6 +9470,118 @@ Please return ONLY the modified text itself, without any introductory or convers
                   className="font-bold text-xs h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {finalizingBlueprint ? 'Finalizing...' : 'Yes, this is final'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTalentChoiceModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl rounded-3xl border border-primary/20 bg-gradient-to-b from-card via-card to-background p-8 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
+            {/* Glowing orb overlays */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex flex-col gap-6 relative z-10">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0 shadow-lg">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-foreground tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text">
+                      Choose Talent Matching Method
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Select how you want to invite matched freelancers to your workspace channels.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                  onClick={() => setShowTalentChoiceModal(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 mt-2">
+                {/* AI Selected Card */}
+                <button
+                  onClick={handleDirectAiTalentSelection}
+                  className="group relative flex flex-col justify-between text-left rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-card/50 p-6 shadow-md transition-all duration-300 hover:border-primary/60 hover:scale-[1.02] focus:outline-none hover:shadow-primary/5 hover:shadow-lg"
+                >
+                  {/* Subtle pulsing background glow inside the card */}
+                  <div className="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex justify-between items-center">
+                      <div className="h-10 w-10 rounded-xl bg-primary/25 border border-primary/20 flex items-center justify-center">
+                        <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                      </div>
+                      <span className="inline-flex items-center rounded-full bg-primary/20 border border-primary/30 px-2 py-0.5 text-[9px] font-bold text-primary uppercase tracking-wide">
+                        Recommended
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-200">
+                        AI Selected Freelancers
+                      </h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Auto-selects the top 3 verified freelancers for each recommended role and puts them directly in the discussion workspace channels.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-center gap-1.5 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform relative z-10">
+                    <span>Use AI Selection</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </div>
+                </button>
+
+                {/* Manual Selection Card */}
+                <button
+                  onClick={() => {
+                    setShowTalentChoiceModal(false);
+                    generateTalentRecommendations();
+                  }}
+                  className="group relative flex flex-col justify-between text-left rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md transition-all duration-300 hover:border-primary/20 hover:bg-card/70 hover:scale-[1.02] focus:outline-none"
+                >
+                  <div className="space-y-4">
+                    <div className="h-10 w-10 rounded-xl bg-muted border border-border flex items-center justify-center">
+                      <Edit3 className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors duration-200" />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-bold text-foreground group-hover:text-primary/80 transition-colors duration-200">
+                        Manual Selection List
+                      </h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Browse verified candidate profiles, inspect technical skills, past work, reputation scores, and manually choose who to invite.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-center gap-1.5 text-xs font-bold text-muted-foreground group-hover:text-foreground transition-all">
+                    <span>Use Manual Selection</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </div>
+                </button>
+              </div>
+
+              <div className="flex justify-end mt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTalentChoiceModal(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
                 </Button>
               </div>
             </div>

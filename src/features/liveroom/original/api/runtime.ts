@@ -485,6 +485,7 @@ export async function liveRoomApiFetch(
           selectedTalent: selectedTalentFromRecommendations(
             body.selectedTalentRecommendations,
           ),
+          isAiSelected: body.isAiSelected,
         }),
       });
       return jsonResponse(workspace.room || workspace);
