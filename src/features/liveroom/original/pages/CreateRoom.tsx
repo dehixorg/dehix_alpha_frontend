@@ -6216,6 +6216,8 @@ export default function CreateRoom() {
   const [pendingCreationType, setPendingCreationType] = useState<
     'manual' | 'ai' | null
   >(null);
+  const [creationError, setCreationError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const blueprintReportRef = useRef<HTMLDivElement | null>(null);
@@ -7501,7 +7503,7 @@ Please return ONLY the modified text itself, without any introductory or convers
     : [];
 
   const enterRoomDashboard = async () => {
-    if (!sessionData?._id || creatingRoom) return;
+    if (!sessionData?._id || creatingRoom || isRedirecting) return;
     const missing = mandatoryQuestions.filter(
       (question) => !answers[question._id]?.trim(),
     );
@@ -7512,7 +7514,11 @@ Please return ONLY the modified text itself, without any introductory or convers
     }
 
     setCreatingRoom(true);
+    setCreationError(null);
+    setIsRedirecting(false);
     setError('');
+    let shouldResetState = true;
+
     try {
       const allQuestions = [...mandatoryQuestions, ...optionalQuestions];
       const answersPayload = allQuestions
@@ -7551,21 +7557,33 @@ Please return ONLY the modified text itself, without any introductory or convers
         );
         updateConnectsBalance(Math.max(0, currentConnects - 150));
       }
+
+      shouldResetState = false;
+      setIsRedirecting(true);
       navigate(`/room/${room._id}`);
     } catch (err: any) {
-      const msg = err?.message ?? 'Failed to enter room dashboard';
+      const msg =
+        err?.message ??
+        'Room creation failed. No connects were deducted if the room was not created.';
       setError(msg);
       toast.error(msg);
+      setCreationError(msg);
     } finally {
-      setCreatingRoom(false);
+      if (shouldResetState) {
+        setCreatingRoom(false);
+        setIsRedirecting(false);
+      }
     }
   };
 
   const handleDirectAiTalentSelection = async () => {
-    if (!sessionData?._id || creatingRoom) return;
+    if (!sessionData?._id || creatingRoom || isRedirecting) return;
     setShowTalentChoiceModal(false);
     setCreatingRoom(true);
+    setCreationError(null);
+    setIsRedirecting(false);
     setError('');
+    let shouldResetState = true;
 
     try {
       // 1. Fetch talent recommendations
@@ -7626,14 +7644,22 @@ Please return ONLY the modified text itself, without any introductory or convers
         );
         updateConnectsBalance(Math.max(0, currentConnects - 150));
       }
+
+      shouldResetState = false;
+      setIsRedirecting(true);
       navigate(`/room/${room._id}`);
     } catch (err: any) {
       const msg =
-        err?.message ?? 'Failed to complete AI selection and room creation';
+        err?.message ??
+        'Room creation failed. No connects were deducted if the room was not created.';
       setError(msg);
       toast.error(msg);
+      setCreationError(msg);
     } finally {
-      setCreatingRoom(false);
+      if (shouldResetState) {
+        setCreatingRoom(false);
+        setIsRedirecting(false);
+      }
     }
   };
   const research = analysis?.research_analysis;
@@ -7679,16 +7705,9 @@ Please return ONLY the modified text itself, without any introductory or convers
             {sessionData?.projectTitle && (
               <>
                 <span className="text-border shrink-0">/</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-sm text-muted-foreground truncate max-w-[240px] cursor-help">
-                      {sessionData.projectTitle}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[320px] break-words">
-                    <p className="text-xs">{sessionData.projectTitle}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <span className="text-sm font-medium text-muted-foreground truncate max-w-[200px]">
+                  {sessionData.projectTitle}
+                </span>
               </>
             )}
           </div>
@@ -9711,7 +9730,12 @@ Please return ONLY the modified text itself, without any introductory or convers
       {showConnectsConfirm && (
         <ConnectsDialog
           externalOpen={showConnectsConfirm}
-          setExternalOpen={setShowConnectsConfirm}
+          setExternalOpen={(open) => {
+            if (!creatingRoom) {
+              setShowConnectsConfirm(open);
+              if (!open) setCreationError(null);
+            }
+          }}
           loading={creatingRoom}
           setLoading={setCreatingRoom}
           requiredConnects={150}
@@ -9720,7 +9744,24 @@ Please return ONLY the modified text itself, without any introductory or convers
           resourceName="LiveRoom"
           hideTrigger={true}
           skipRedirect={true}
+          processingTitle="Creating Your LiveRoom"
+          processingSubtitle={
+            pendingCreationType === 'ai'
+              ? 'Deducting 150 connects, selecting verified talent, and preparing your workspace. You will be redirected automatically.'
+              : 'Deducting 150 connects, inviting selected talent, and preparing your workspace. You will be redirected automatically.'
+          }
+          isRedirecting={isRedirecting}
+          errorMessage={creationError}
+          onRetry={async () => {
+            setCreationError(null);
+            if (pendingCreationType === 'ai') {
+              await handleDirectAiTalentSelection();
+            } else if (pendingCreationType === 'manual') {
+              await enterRoomDashboard();
+            }
+          }}
           onSubmit={async () => {
+            setCreationError(null);
             if (pendingCreationType === 'ai') {
               await handleDirectAiTalentSelection();
             } else if (pendingCreationType === 'manual') {

@@ -34,6 +34,11 @@ interface ConnectsDialogProps {
   setExternalOpen?: (open: boolean) => void;
   resourceName?: string;
   hideTrigger?: boolean;
+  processingTitle?: string;
+  processingSubtitle?: string;
+  errorMessage?: string | null;
+  onRetry?: () => void;
+  isRedirecting?: boolean;
 }
 
 export function ConnectsIcon({
@@ -62,6 +67,11 @@ export default function ConnectsDialog({
   setExternalOpen,
   resourceName = 'project',
   hideTrigger = false,
+  processingTitle,
+  processingSubtitle,
+  errorMessage,
+  onRetry,
+  isRedirecting = false,
 }: ConnectsDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -131,7 +141,7 @@ export default function ConnectsDialog({
   };
 
   const handleConfirm = async () => {
-    if (isLowConnects) return;
+    if (isLowConnects || loading || isRedirecting) return;
     setLoading(true);
     try {
       let response: any;
@@ -154,18 +164,18 @@ export default function ConnectsDialog({
 
       if (!skipRedirect) {
         router.push('/dashboard/business');
+        setOpenConfirm(false);
       }
-      setOpenConfirm(false);
     } catch (error) {
       console.error('Error deducting connects:', error);
-      alert('Failed to deduct connects. Try again!');
     } finally {
-      setLoading(false);
+      // Intentionally keep open if parent controls state or redirect
     }
   };
 
   const isLowConnects = userConnects < requiredConnects;
   const remainingAfterDeduction = Math.max(0, userConnects - requiredConnects);
+  const isBusy = loading || isRedirecting;
 
   return (
     <>
@@ -173,22 +183,34 @@ export default function ConnectsDialog({
         <Button
           type="button"
           size="sm"
-          disabled={loading}
+          disabled={isBusy}
           onClick={dialogOpen}
           className="gap-2"
         >
           <ConnectsIcon className="h-4 w-4 text-amber-500" />
-          {loading ? 'Loading...' : buttonText}
+          {isBusy ? 'Loading...' : buttonText}
         </Button>
       )}
-      <Dialog open={openConfirm} onOpenChange={setOpenConfirm} modal={true}>
+      <Dialog
+        open={openConfirm}
+        onOpenChange={(open) => {
+          if (!isBusy) setOpenConfirm(open);
+        }}
+        modal={true}
+      >
         <DialogPortal>
           <DialogOverlay
-            style={{ zIndex: 9998, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-            className="backdrop-blur-xs transition-opacity duration-200"
+            style={{ zIndex: 9998, backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
+            className="backdrop-blur-md transition-opacity duration-300"
           />
           <DialogContent
             className="sm:max-w-md bg-card border border-border/60 shadow-2xl p-6 rounded-2xl overflow-hidden"
+            onPointerDownOutside={(e) => {
+              if (isBusy) e.preventDefault();
+            }}
+            onEscapeKeyDown={(e) => {
+              if (isBusy) e.preventDefault();
+            }}
             style={{
               position: 'fixed',
               top: '50%',
@@ -248,7 +270,106 @@ export default function ConnectsDialog({
                   </Button>
                 </DialogFooter>
               </div>
+            ) : isRedirecting ? (
+              /* Redirecting State inside popup */
+              <div className="space-y-6 py-2">
+                <div className="flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="relative flex items-center justify-center w-16 h-16">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-500 shadow-xs relative z-10">
+                      <ConnectsIcon className="h-6 w-6 animate-pulse" />
+                    </div>
+                    <div className="absolute inset-[-6px] rounded-2xl border border-emerald-500/30 animate-ping opacity-60" />
+                  </div>
+                  <div className="space-y-1.5 min-w-0">
+                    <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
+                      LiveRoom Ready!
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                      Redirecting you to your workspace...
+                    </DialogDescription>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    disabled
+                    className="w-full h-11 rounded-xl bg-emerald-600 text-white font-semibold shadow-sm gap-2 opacity-90 cursor-not-allowed"
+                  >
+                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    Redirecting...
+                  </Button>
+                </div>
+              </div>
+            ) : loading ? (
+              /* Processing State inside popup */
+              <div className="space-y-6 py-2">
+                <div className="flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="relative flex items-center justify-center w-16 h-16">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500 shadow-xs relative z-10">
+                      <ConnectsIcon className="h-6 w-6 animate-pulse" />
+                    </div>
+                    <div className="absolute inset-[-6px] rounded-2xl border border-amber-500/30 animate-ping opacity-60" />
+                  </div>
+                  <div className="space-y-1.5 min-w-0">
+                    <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
+                      {processingTitle || `Creating Your ${resourceName}`}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                      {processingSubtitle ||
+                        `Please wait while we deduct ${requiredConnects} connects and prepare your workspace. You will be redirected automatically.`}
+                    </DialogDescription>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    disabled
+                    className="w-full h-11 rounded-xl bg-amber-500 text-white font-semibold shadow-sm gap-2 opacity-90 cursor-not-allowed"
+                  >
+                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    Processing...
+                  </Button>
+                </div>
+              </div>
+            ) : errorMessage ? (
+              /* Error State inside popup */
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive shrink-0 shadow-xs">
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
+                      {resourceName} Creation Failed
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                      {errorMessage ||
+                        'Room creation failed. No connects were deducted if the room was not created.'}
+                    </DialogDescription>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex items-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpenConfirm(false)}
+                    className="flex-1 h-10 rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (onRetry) onRetry();
+                      else handleConfirm();
+                    }}
+                    className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm gap-2"
+                  >
+                    Try Again
+                  </Button>
+                </DialogFooter>
+              </div>
             ) : (
+              /* Initial Confirm State */
               <div className="space-y-5">
                 <div className="flex items-start gap-4">
                   <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
@@ -308,16 +429,7 @@ export default function ConnectsDialog({
                     disabled={loading}
                     className="flex-1 h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-sm gap-2 transition-all"
                   >
-                    {loading ? (
-                      <>
-                        <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <ConnectsIcon className="h-4 w-4" /> Confirm & Create
-                      </>
-                    )}
+                    <ConnectsIcon className="h-4 w-4" /> Confirm & Create
                   </Button>
                 </DialogFooter>
               </div>
