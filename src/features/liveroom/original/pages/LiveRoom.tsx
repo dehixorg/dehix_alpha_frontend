@@ -3858,10 +3858,25 @@ function PlatformSyncCockpit({
       0,
     );
   const openRoles = roles.filter((role) => role.status !== 'filled');
+  const [syncRoleFilter, setSyncRoleFilter] = useState<string>('all');
+  const [candidateSyncOpen, setCandidateSyncOpen] = useState(true);
+
   const candidateRows = participants
     .map((participant) => buildCandidateSyncRow(participant, workspace))
-    .filter(Boolean)
-    .slice(0, 4);
+    .filter(Boolean);
+
+  const availableCandidateRoles = Array.from(
+    new Set(
+      candidateRows
+        .map((row: any) => row?.role)
+        .filter((r: any): r is string => Boolean(r) && typeof r === 'string'),
+    ),
+  );
+
+  const filteredCandidateRows = candidateRows.filter((row: any) => {
+    if (syncRoleFilter === 'all') return true;
+    return row?.role === syncRoleFilter;
+  });
 
   const pipeline = [
     {
@@ -4023,46 +4038,103 @@ function PlatformSyncCockpit({
       </div>
 
       {isOwner && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
-            <span>Candidate Sync</span>
-            <span>{participants.length}</span>
-          </div>
-          {candidateRows.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground">
-              Invites, bids, interviews, and selected talent will mirror here.
-            </p>
-          ) : (
-            candidateRows.map((row: any) => (
-              <button
-                key={row.id}
-                onClick={() => row.channelId && onSelectChannel(row.channelId)}
-                disabled={!row.channelId}
-                className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-bold text-foreground">
-                      {row.name}
-                    </div>
-                    <div className="truncate text-[10px] text-muted-foreground">
-                      {row.role}
-                    </div>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${row.className}`}
+        <div className="space-y-2 pt-2 border-t border-border/10">
+          {/* Collapsible Header Dropdown similar to Invited / Pending */}
+          <button
+            type="button"
+            onClick={() => setCandidateSyncOpen(!candidateSyncOpen)}
+            className="w-full flex items-center justify-between text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5 py-1.5 hover:text-foreground transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              <span>
+                Candidate Sync (
+                {filteredCandidateRows.length}
+                {syncRoleFilter !== 'all' ? ` / ${candidateRows.length}` : ''}
+                )
+              </span>
+            </div>
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
+                candidateSyncOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {candidateSyncOpen && (
+            <div className="space-y-2.5 animate-fadeIn mt-1">
+              {/* Role Dropdown Filter Bar */}
+              {availableCandidateRoles.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <label
+                    htmlFor="sync-role-filter"
+                    className="text-[10px] text-muted-foreground font-semibold shrink-0"
                   >
-                    {row.stage}
-                  </span>
+                    Role:
+                  </label>
+                  <select
+                    id="sync-role-filter"
+                    value={syncRoleFilter}
+                    onChange={(e) => setSyncRoleFilter(e.target.value)}
+                    className="w-full text-[11px] font-medium bg-background border border-border/50 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer"
+                  >
+                    <option value="all">All Roles ({candidateRows.length})</option>
+                    {availableCandidateRoles.map((roleTitle) => {
+                      const count = candidateRows.filter(
+                        (r: any) => r?.role === roleTitle,
+                      ).length;
+                      return (
+                        <option key={roleTitle} value={roleTitle}>
+                          {roleTitle} ({count})
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
-                <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
-                  <span className="truncate">{row.detail}</span>
-                  {row.channelId ? (
-                    <span className="font-bold text-primary">open</span>
-                  ) : null}
-                </div>
-              </button>
-            ))
+              )}
+
+              {/* No internal vertical scrollbar - expand naturally */}
+              <div className="space-y-2">
+                {filteredCandidateRows.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground text-center">
+                    {syncRoleFilter === 'all'
+                      ? 'Invites, bids, interviews, and selected talent will mirror here.'
+                      : `No candidates found for ${syncRoleFilter}.`}
+                  </p>
+                ) : (
+                  filteredCandidateRows.map((row: any) => (
+                    <button
+                      key={row.id}
+                      onClick={() => row.channelId && onSelectChannel(row.channelId)}
+                      disabled={!row.channelId}
+                      className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate text-xs font-bold text-foreground">
+                            {row.name}
+                          </div>
+                          <div className="truncate text-[10px] text-muted-foreground">
+                            {row.role}
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${row.className}`}
+                        >
+                          {row.stage}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                        <span className="truncate">{row.detail}</span>
+                        {row.channelId ? (
+                          <span className="font-bold text-primary">open</span>
+                        ) : null}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}

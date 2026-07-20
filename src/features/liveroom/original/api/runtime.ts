@@ -488,7 +488,11 @@ export async function liveRoomApiFetch(
           isAiSelected: body.isAiSelected,
         }),
       });
-      return jsonResponse(workspace.room || workspace);
+      const roomObj = workspace.room || workspace;
+      if (typeof workspace?.remainingConnects === 'number') {
+        roomObj.remainingConnects = workspace.remainingConnects;
+      }
+      return jsonResponse(roomObj);
     }
 
     if (path === '/rooms/my') {

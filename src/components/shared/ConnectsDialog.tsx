@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Coins, AlertTriangle } from 'lucide-react';
+import { Zap, AlertTriangle } from 'lucide-react';
 
 import { updateConnectsBalance } from '@/lib/updateConnects';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
@@ -17,13 +17,14 @@ import {
   DialogOverlay,
   DialogPortal,
 } from '@/components/ui/dialog';
+
 interface ConnectsDialogProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   onSubmit: any;
-  isValidCheck: () => Promise<boolean>;
+  isValidCheck?: () => Promise<boolean>;
   userId: string;
-  buttonText: string;
+  buttonText?: string;
   userType: string;
   requiredConnects: number;
   data?: any;
@@ -31,6 +32,16 @@ interface ConnectsDialogProps {
   onCloseParentDialog?: () => void;
   externalOpen?: boolean;
   setExternalOpen?: (open: boolean) => void;
+  resourceName?: string;
+  hideTrigger?: boolean;
+}
+
+export function ConnectsIcon({
+  className = 'h-5 w-5',
+  strokeWidth = 2.2,
+  ...props
+}: { className?: string; strokeWidth?: number } & React.ComponentProps<typeof Zap>) {
+  return <Zap className={className} strokeWidth={strokeWidth} {...props} />;
 }
 
 export default function ConnectsDialog({
@@ -39,7 +50,7 @@ export default function ConnectsDialog({
   onSubmit,
   isValidCheck,
   userId,
-  buttonText,
+  buttonText = 'Submit',
   userType,
   requiredConnects,
   data,
@@ -47,9 +58,10 @@ export default function ConnectsDialog({
   onCloseParentDialog,
   externalOpen,
   setExternalOpen,
+  resourceName = 'project',
+  hideTrigger = false,
 }: ConnectsDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [lowConnects, setLowConnects] = useState(false);
 
   // Use external state if provided, otherwise use internal state
   const openConfirm = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -66,7 +78,6 @@ export default function ConnectsDialog({
   };
 
   const userConnects = getUserConnects();
-
   const router = useRouter();
 
   const fetchMoreConnects = async () => {
@@ -103,27 +114,22 @@ export default function ConnectsDialog({
 
   const dialogOpen = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const isValid = await isValidCheck();
-    if (!isValid) return;
-
-    // Set the dialog state first
-    if (userConnects < requiredConnects) {
-      setLowConnects(true);
-    } else {
-      setLowConnects(false);
+    if (isValidCheck) {
+      const isValid = await isValidCheck();
+      if (!isValid) return;
     }
+
     setOpenConfirm(true);
 
-    // Close parent dialog immediately after opening confirm dialog
     if (onCloseParentDialog) {
-      // Use requestAnimationFrame for smoother transition
       requestAnimationFrame(() => {
         onCloseParentDialog();
       });
     }
   };
+
   const handleConfirm = async () => {
-    if (lowConnects) return;
+    if (isLowConnects) return;
     setLoading(true);
     try {
       let response: any;
@@ -133,7 +139,6 @@ export default function ConnectsDialog({
         response = await onSubmit();
       }
 
-      // Update connects balance if returned in response
       const remainingConnects =
         response?.data?.remainingConnects || response?.remainingConnects;
       if (typeof remainingConnects === 'number') {
@@ -142,7 +147,6 @@ export default function ConnectsDialog({
         typeof userConnects === 'number' &&
         typeof requiredConnects === 'number'
       ) {
-        // Fallback: calculate locally if backend doesn't return remainingConnects
         updateConnectsBalance(userConnects - requiredConnects);
       }
 
@@ -158,108 +162,163 @@ export default function ConnectsDialog({
     }
   };
 
+  const isLowConnects = userConnects < requiredConnects;
+  const remainingAfterDeduction = Math.max(0, userConnects - requiredConnects);
+
   return (
     <>
-      <Button
-        type="button"
-        size="sm"
-        disabled={loading}
-        onClick={dialogOpen}
-        className="gap-2"
-      >
-        <Coins className="h-4 w-4" />
-        {loading ? 'Loading...' : buttonText}
-      </Button>
+      {!hideTrigger && (
+        <Button
+          type="button"
+          size="sm"
+          disabled={loading}
+          onClick={dialogOpen}
+          className="gap-2"
+        >
+          <ConnectsIcon className="h-4 w-4 text-amber-500" />
+          {loading ? 'Loading...' : buttonText}
+        </Button>
+      )}
       <Dialog open={openConfirm} onOpenChange={setOpenConfirm} modal={true}>
         <DialogPortal>
           <DialogOverlay
-            style={{ zIndex: 9998, backgroundColor: 'transparent' }}
+            style={{ zIndex: 9998, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+            className="backdrop-blur-xs transition-opacity duration-200"
           />
           <DialogContent
-            className="sm:max-w-md bg-background"
+            className="sm:max-w-md bg-card border border-border/60 shadow-2xl p-6 rounded-2xl overflow-hidden"
             style={{
               position: 'fixed',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
               zIndex: 9999,
-              border: '1px solid hsl(var(--border))',
-              borderRadius: 'calc(var(--radius) + 0.5rem)',
-              boxShadow:
-                '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             }}
           >
-            {lowConnects ? (
-              <>
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 rounded-full bg-amber-500/10 text-amber-600 p-2">
-                    <AlertTriangle className="h-5 w-5" />
+            {isLowConnects ? (
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive shrink-0 shadow-xs">
+                    <AlertTriangle className="h-6 w-6" />
                   </div>
-                  <div className="space-y-1">
-                    <DialogTitle>Insufficient connects</DialogTitle>
-                    <DialogDescription>
-                      You need more connects to create this project.
+                  <div className="space-y-1 min-w-0">
+                    <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
+                      Insufficient Connects Balance
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                      You need at least{' '}
+                      <span className="font-semibold text-foreground">
+                        {requiredConnects} connects
+                      </span>{' '}
+                      to create this {resourceName}.
                     </DialogDescription>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md border p-2">
-                    <div className="text-muted-foreground">Your connects</div>
-                    <div className="font-semibold">{userConnects}</div>
-                  </div>
-                  <div className="rounded-md border p-2">
-                    <div className="text-muted-foreground">Required</div>
-                    <div className="font-semibold">{requiredConnects}</div>
-                  </div>
-                </div>
-                <DialogFooter className="mt-4 flex justify-end">
-                  <Button onClick={fetchMoreConnects} className="gap-2">
-                    Request connects
-                  </Button>
-                </DialogFooter>
-              </>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 rounded-full bg-primary/10 text-primary p-2">
-                      <Coins className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <DialogTitle>Confirm connects deduction</DialogTitle>
-                      <DialogDescription>
-                        Creating this project will deduct the following from
-                        your balance.
-                      </DialogDescription>
-                    </div>
-                  </div>
 
-                  <div className="rounded-md border p-3 flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Deduction
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Your Platform Balance</span>
+                    <span className="font-mono font-bold text-destructive">
+                      {userConnects} connects
                     </span>
-                    <span className="font-semibold flex items-center gap-1">
-                      <Coins className="h-4 w-4" /> {requiredConnects}
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/20 pt-2.5">
+                    <span>Required Amount</span>
+                    <span className="font-mono font-bold text-foreground">
+                      {requiredConnects} connects
                     </span>
                   </div>
                 </div>
 
-                <DialogFooter className="mt-2">
+                <DialogFooter className="flex items-center gap-2 pt-1">
                   <Button
                     variant="outline"
                     onClick={() => setOpenConfirm(false)}
+                    className="flex-1 h-10 rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={fetchMoreConnects}
+                    className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground font-semibold gap-2 shadow-sm"
+                  >
+                    <ConnectsIcon className="h-4 w-4" /> Request Connects
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-500 shrink-0 shadow-xs">
+                    <ConnectsIcon className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
+                      Confirm Connects Deduction
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                      Creating this{' '}
+                      <span className="font-semibold text-foreground">
+                        {resourceName}
+                      </span>{' '}
+                      will deduct connects from your platform balance.
+                    </DialogDescription>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Available Balance</span>
+                    <span className="font-mono font-medium text-foreground">
+                      {userConnects} connects
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm font-semibold border-t border-b border-border/30 py-2.5">
+                    <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                      <ConnectsIcon className="h-4 w-4" /> Deduction Amount
+                    </span>
+                    <span className="font-mono text-base text-amber-600 dark:text-amber-400 font-bold">
+                      -{requiredConnects}{' '}
+                      <span className="text-xs font-normal font-sans">
+                        connects
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Remaining After Approval</span>
+                    <span className="font-mono font-medium text-foreground">
+                      {remainingAfterDeduction} connects
+                    </span>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex items-center gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpenConfirm(false)}
+                    disabled={loading}
+                    className="flex-1 h-10 rounded-xl"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleConfirm}
                     disabled={loading}
-                    className="gap-2"
+                    className="flex-1 h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-sm gap-2 transition-all"
                   >
-                    {loading ? 'Processing...' : 'Confirm'}
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ConnectsIcon className="h-4 w-4" /> Confirm & Create
+                      </>
+                    )}
                   </Button>
                 </DialogFooter>
-              </>
+              </div>
             )}
           </DialogContent>
         </DialogPortal>

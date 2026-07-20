@@ -14,6 +14,8 @@ import {
   FileCheck,
   Archive,
   Coins,
+  Zap,
+  FolderPlus,
   Clipboard,
   Ticket,
   Calendar,
@@ -36,6 +38,40 @@ const STATUS_COLORS: Record<string, string> = {
     'text-emerald-500 bg-emerald-500/10 border-emerald-500/25 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20',
   closed: 'text-muted-foreground bg-muted/20 border-border/55',
 };
+
+function UserAvatar({ user, className = 'h-7 w-7 text-xs' }: { user: any; className?: string }) {
+  const avatarSrc =
+    user?.avatarUrl ||
+    user?.photoURL ||
+    user?.profilePic ||
+    user?.avatar ||
+    user?.photo;
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .filter(Boolean)
+        .map((part: string) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'B';
+
+  if (avatarSrc) {
+    return (
+      <img
+        src={avatarSrc}
+        alt={user?.name || 'User'}
+        className={`${className} rounded-lg object-cover border border-border/60 shrink-0`}
+      />
+    );
+  }
+
+  return (
+    <div className={`${className} rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center shrink-0 uppercase tracking-tighter`}>
+      {initials}
+    </div>
+  );
+}
 
 export default function BusinessDashboard() {
   const [, navigate] = useLocation();
@@ -206,15 +242,9 @@ export default function BusinessDashboard() {
       <div className="sticky top-0 z-10 border-b border-border/40 bg-background/80 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-neutral-950 dark:bg-white border border-neutral-800 dark:border-neutral-200 flex items-center justify-center overflow-hidden">
-              <img
-                src="/dehix.png"
-                alt="Dehix"
-                className="w-3.5 h-3.5 invert-0 dark:invert object-contain"
-              />
-            </div>
-            <span className="font-medium text-sm">{user?.name}</span>
-            <span className="text-xs text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+            <UserAvatar user={user} className="h-7 w-7 text-xs" />
+            <span className="font-bold text-sm text-foreground">{user?.name}</span>
+            <span className="text-xs text-muted-foreground border border-border/50 rounded-md px-1.5 py-0.5 font-medium">
               Business
             </span>
           </div>
@@ -287,22 +317,13 @@ export default function BusinessDashboard() {
 
         {/* Stats row */}
         {!isLoading && roomList.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             {[
               {
-                label: 'Total Rooms',
+                label: 'Projects Created',
                 value: roomList.length,
                 mono: false,
-                icon: <Layers className="h-4 w-4 text-primary" />,
-              },
-              {
-                label: 'Participants',
-                value: roomList.reduce(
-                  (s: number, r: any) => s + (r.participantCount ?? 0),
-                  0,
-                ),
-                mono: false,
-                icon: <Users className="h-4 w-4 text-blue-400" />,
+                icon: <FolderPlus className="h-4 w-4 text-primary" />,
               },
               {
                 label: 'Contracted',
@@ -318,11 +339,12 @@ export default function BusinessDashboard() {
                 icon: <Archive className="h-4 w-4 text-muted-foreground" />,
               },
               {
-                label: 'Total Escrow',
-                value: `$${roomList.reduce((s: number, r: any) => s + (r.milestoneStats?.totalUsd ?? 0), 0).toLocaleString()}`,
-                sub: `$${roomList.reduce((s: number, r: any) => s + (r.milestoneStats?.releasedUsd ?? 0), 0).toLocaleString()} released`,
+                label: 'Total Used Connects',
+                value: (roomList.length * 150).toLocaleString(),
+                sub: '150 connects per room',
                 mono: true,
-                icon: <Coins className="h-4 w-4 text-emerald-500" />,
+                isAmber: true,
+                icon: <Zap className="h-4 w-4 text-amber-500" strokeWidth={2.2} />,
               },
             ].map((s) => (
               <div
@@ -338,7 +360,13 @@ export default function BusinessDashboard() {
                   </div>
                 </div>
                 <div
-                  className={`text-2xl font-black tracking-tight ${s.mono ? 'font-mono text-green-500' : 'text-foreground'}`}
+                  className={`text-2xl font-black tracking-tight ${
+                    (s as any).isAmber
+                      ? 'font-mono text-amber-500'
+                      : s.mono
+                        ? 'font-mono text-green-500'
+                        : 'text-foreground'
+                  }`}
                 >
                   {s.value}
                 </div>

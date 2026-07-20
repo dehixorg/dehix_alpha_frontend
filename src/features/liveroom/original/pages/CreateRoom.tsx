@@ -24,6 +24,7 @@ import {
   Layout,
   TrendingUp,
   Coins,
+  Zap,
   Lightbulb,
   Activity,
   DollarSign,
@@ -39,15 +40,18 @@ import {
   Code2,
   Server,
   GripVertical,
+  Filter,
+  ArrowUpDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 
 import { useLocation } from '../adapters/wouter';
 import { liveRoomApiFetch as fetch } from '../api/runtime';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
+import MilestoneReviewSection from '../components/MilestoneReviewSection';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Tooltip,
   TooltipTrigger,
@@ -60,6 +64,7 @@ type WizardPhase =
   | 'analysis'
   | 'technical'
   | 'blueprint'
+  | 'milestones'
   | 'recommendations';
 type PhaseJobStatus = 'queued' | 'generating' | 'ready' | 'failed';
 type LaunchJob = {
@@ -197,6 +202,8 @@ type TalentRecommendationReport = {
   budgetUsd?: number | null;
   roleCount: number;
   recommendedTeams?: RoleRecommendationGroup[];
+  groupedRecommendationTeams?: RoleRecommendationGroup[];
+  groupedManualTeams?: RoleRecommendationGroup[];
   recommendations: TalentRecommendation[];
   manualFreelancers?: TalentRecommendation[];
 };
@@ -2762,7 +2769,7 @@ function BlueprintReviewSection({
   const textareaCls = `${inputCls} resize-none leading-relaxed`;
   const sectionTitleCls = 'text-sm font-bold text-foreground tracking-tight';
 
-  const getAutoRows = (text: string, min = 2, max = 12) => {
+  const getAutoRows = (text: string, min = 2, max = 50) => {
     if (!text) return min;
     const lines = text.split('\n').length;
     const chars = Math.ceil(text.length / 70);
@@ -2773,41 +2780,50 @@ function BlueprintReviewSection({
     {
       id: 'executive_summary',
       title: 'Executive Summary',
+      description: 'The shortest business read of the blueprint.',
       icon: <FileText className="h-4 w-4" />,
     },
     {
       id: 'target_users',
       title: 'Target Users',
+      description: 'Primary and secondary users with their pains and goals.',
       icon: <Users className="h-4 w-4" />,
     },
     {
       id: 'mvp_definition',
       title: 'MVP Definition',
+      description:
+        'What should be built now, later, and deliberately left out.',
       icon: <Layout className="h-4 w-4" />,
     },
     {
       id: 'technical_architecture',
       title: 'Technical Architecture',
+      description: 'Stack, components, API modules, and data model.',
       icon: <Cpu className="h-4 w-4" />,
     },
     {
       id: 'development_roadmap',
       title: 'Development Roadmap',
+      description: 'A practical phased build plan.',
       icon: <Clock className="h-4 w-4" />,
     },
     {
       id: 'team_requirements',
       title: 'Team Requirements',
+      description: 'Roles, skills, and effort required to execute the plan.',
       icon: <Users className="h-4 w-4" />,
     },
     {
       id: 'business_model',
       title: 'Business Model',
+      description: 'Pricing strategy and revenue streams.',
       icon: <Coins className="h-4 w-4" />,
     },
     {
       id: 'go_to_market',
       title: 'Go-To-Market',
+      description: 'Acquisition channels and launch plan.',
       icon: <Globe className="h-4 w-4" />,
     },
   ];
@@ -2826,6 +2842,7 @@ function BlueprintReviewSection({
       TABS.push({
         id: key,
         title: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        description: 'Details for this section.',
         icon: <FileText className="h-4 w-4" />,
       });
     }
@@ -3317,7 +3334,7 @@ function BlueprintReviewSection({
                         updated[idx] = e.target.value;
                         onUpdateField('mvp_definition', field, updated);
                       }}
-                      rows={getAutoRows(String(str), 1, 4)}
+                      rows={getAutoRows(String(str))}
                       className={`${textareaCls} flex-1`}
                       placeholder="Feature description..."
                     />
@@ -3438,7 +3455,7 @@ function BlueprintReviewSection({
                             onChange={(e) =>
                               updateFeature(field, idx, descKey, e.target.value)
                             }
-                            rows={getAutoRows(purposeVal, 2, 6)}
+                            rows={getAutoRows(purposeVal)}
                             className={textareaCls}
                             placeholder="What does this feature do..."
                           />
@@ -3505,7 +3522,7 @@ function BlueprintReviewSection({
                 <textarea
                   value={item}
                   onChange={(e) => updateExcludedString(idx, e.target.value)}
-                  rows={getAutoRows(item, 1, 4)}
+                  rows={getAutoRows(item)}
                   className={`${textareaCls} flex-1`}
                   placeholder="Feature excluded from MVP..."
                 />
@@ -3648,7 +3665,7 @@ function BlueprintReviewSection({
                   <textarea
                     value={val}
                     onChange={(e) => updateStackKey(key, e.target.value)}
-                    rows={getAutoRows(val, 1, 4)}
+                    rows={getAutoRows(val)}
                     className={textareaCls}
                     placeholder={`${key.replace(/_/g, ' ')} technology...`}
                   />
@@ -3735,7 +3752,7 @@ function BlueprintReviewSection({
                                 e.target.value,
                               )
                             }
-                            rows={getAutoRows(compPurpose, 2, 5)}
+                            rows={getAutoRows(compPurpose)}
                             className={textareaCls}
                             placeholder="Describe component functionality..."
                           />
@@ -3828,7 +3845,7 @@ function BlueprintReviewSection({
                             onChange={(e) =>
                               updateApiObject(idx, purposeKey, e.target.value)
                             }
-                            rows={getAutoRows(modPurpose, 2, 5)}
+                            rows={getAutoRows(modPurpose)}
                             className={textareaCls}
                             placeholder="Describe API capabilities..."
                           />
@@ -3847,7 +3864,7 @@ function BlueprintReviewSection({
                   <textarea
                     value={apiStr}
                     onChange={(e) => updateApiString(idx, e.target.value)}
-                    rows={getAutoRows(apiStr, 1, 4)}
+                    rows={getAutoRows(apiStr)}
                     className={`${textareaCls} flex-1`}
                     placeholder="e.g. Auth Module: handles logins..."
                   />
@@ -3970,7 +3987,7 @@ function BlueprintReviewSection({
                               onChange={(e) =>
                                 updateDbObject(idx, descKey, e.target.value)
                               }
-                              rows={getAutoRows(modelDesc, 1, 4)}
+                              rows={getAutoRows(modelDesc)}
                               className={textareaCls}
                               placeholder="Model description..."
                             />
@@ -3990,7 +4007,7 @@ function BlueprintReviewSection({
                   <textarea
                     value={dbStr}
                     onChange={(e) => updateDbString(idx, e.target.value)}
-                    rows={getAutoRows(dbStr, 1, 4)}
+                    rows={getAutoRows(dbStr)}
                     className={`${textareaCls} flex-1`}
                     placeholder="e.g. Users: stores accounts..."
                   />
@@ -4289,7 +4306,7 @@ function BlueprintReviewSection({
                                   updatedTasks[taskIdx] = e.target.value;
                                   updatePhase(idx, 'tasks', updatedTasks);
                                 }}
-                                rows={getAutoRows(t, 1, 4)}
+                                rows={getAutoRows(t)}
                                 className={`${inputCls} resize-none leading-relaxed flex-1 py-2`}
                                 placeholder="Task description..."
                               />
@@ -4645,6 +4662,7 @@ function BlueprintReviewSection({
                     item.description ||
                     '',
                 );
+                const roleRefineFieldKey = `${getTeamFieldKey()}__${idx}__purpose`;
 
                 return (
                   <div key={idx} className={`${cardCls} relative`}>
@@ -4672,7 +4690,7 @@ function BlueprintReviewSection({
                             {rolePurpose.trim() &&
                               renderRefineBtn(
                                 'team_requirements',
-                                `${getTeamFieldKey()}_${idx}`,
+                                roleRefineFieldKey,
                                 `${roleName} Responsibilities`,
                               )}
                           </div>
@@ -4681,13 +4699,13 @@ function BlueprintReviewSection({
                             onChange={(e) =>
                               updateRole(idx, 'purpose', e.target.value)
                             }
-                            rows={getAutoRows(rolePurpose, 2, 6)}
+                            rows={getAutoRows(rolePurpose)}
                             className={textareaCls}
                             placeholder="What this role is responsible for..."
                           />
                           {renderRefinePanel(
                             'team_requirements',
-                            `${getTeamFieldKey()}_${idx}`,
+                            roleRefineFieldKey,
                           )}
                         </div>
                       </div>
@@ -4947,7 +4965,7 @@ function BlueprintReviewSection({
                   <textarea
                     value={driverStr}
                     onChange={(e) => updateDriver(idx, e.target.value)}
-                    rows={getAutoRows(driverStr, 1, 4)}
+                    rows={getAutoRows(driverStr)}
                     className={`${textareaCls} flex-1`}
                     placeholder="e.g. High API costs for AI inference..."
                   />
@@ -5044,6 +5062,18 @@ function BlueprintReviewSection({
             .replace(/_/g, ' ')
             .replace(/\b\w/g, (c) => c.toUpperCase());
 
+          const isPricingStrategyField =
+            sectionId === 'business_model' &&
+            (key.toLowerCase().includes('pricing') ||
+              key === 'pricing_strategy');
+          const isLaunchChannelsField =
+            sectionId === 'go_to_market' &&
+            (key === 'launch_channels' ||
+              key.toLowerCase().includes('launch_channel'));
+          const shouldShowRefine =
+            (sectionId !== 'business_model' && !isLaunchChannelsField) ||
+            isPricingStrategyField;
+
           if (Array.isArray(item) || item === undefined || item === null) {
             const list = asStringList(item);
             return (
@@ -5066,15 +5096,15 @@ function BlueprintReviewSection({
                               updated[idx] = e.target.value;
                               onUpdateField(sectionId, key, updated);
                             }}
-                            rows={getAutoRows(str, 1, 4)}
+                            rows={getAutoRows(str)}
                             className={`${textareaCls} w-full`}
                             placeholder="List item..."
                           />
-                          {sectionId !== 'business_model' &&
+                          {shouldShowRefine &&
                             renderRefinePanel(sectionId, `${key}__${idx}`)}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
-                          {sectionId !== 'business_model' &&
+                          {shouldShowRefine &&
                             str.trim() &&
                             renderRefineBtn(
                               sectionId,
@@ -5109,19 +5139,18 @@ function BlueprintReviewSection({
             <div key={key} className={cardCls}>
               <div className="flex items-center justify-between mb-2">
                 <label className={labelCls}>{humanLabel}</label>
-                {sectionId !== 'business_model' &&
+                {shouldShowRefine &&
                   strVal.length > 40 &&
                   renderRefineBtn(sectionId, key, humanLabel)}
               </div>
               <textarea
                 value={strVal}
                 onChange={(e) => onUpdateField(sectionId, key, e.target.value)}
-                rows={getAutoRows(strVal, 2, 6)}
+                rows={getAutoRows(strVal)}
                 className={textareaCls}
                 placeholder={`Enter details for ${humanLabel.toLowerCase()}...`}
               />
-              {sectionId !== 'business_model' &&
-                renderRefinePanel(sectionId, key)}
+              {shouldShowRefine && renderRefinePanel(sectionId, key)}
             </div>
           );
         })}
@@ -5224,7 +5253,7 @@ function BlueprintReviewSection({
                         updated[idx] = e.target.value;
                         onUpdateField(sectionId, key, updated);
                       }}
-                      rows={getAutoRows(strVal, 1, 6)}
+                      rows={getAutoRows(strVal)}
                       className={`${textareaCls} flex-1`}
                     />
                     <DeleteBtn
@@ -5265,7 +5294,7 @@ function BlueprintReviewSection({
                           u[idx] = e.target.value;
                           onUpdateField(sectionId, key, u);
                         }}
-                        rows={getAutoRows(String(item), 1, 4)}
+                        rows={getAutoRows(String(item))}
                         className={`${textareaCls} flex-1`}
                       />
                       <DeleteBtn
@@ -5317,7 +5346,9 @@ function BlueprintReviewSection({
                                     >
                                       {subLabel}
                                     </label>
-                                    {strSub.length > 20 &&
+                                    {(strSub.length > 20 ||
+                                      sectionId === 'risk_analysis' ||
+                                      key.toLowerCase().includes('risk')) &&
                                       renderRefineBtn(
                                         sectionId,
                                         `${key}__${idx}__${subKey}`,
@@ -5334,7 +5365,7 @@ function BlueprintReviewSection({
                                       };
                                       onUpdateField(sectionId, key, u);
                                     }}
-                                    rows={getAutoRows(strSub, 1, 6)}
+                                    rows={getAutoRows(strSub)}
                                     className={textareaCls}
                                   />
                                   {renderRefinePanel(
@@ -5370,8 +5401,6 @@ function BlueprintReviewSection({
                                     }}
                                     rows={getAutoRows(
                                       (subVal as any[]).join('\n'),
-                                      2,
-                                      6,
                                     )}
                                     className={textareaCls}
                                     placeholder="One item per line..."
@@ -5500,20 +5529,45 @@ function BlueprintReviewSection({
   };
 
   const renderActiveTabContent = () => {
-    if (activeTab === 'executive_summary')
-      return renderExecutiveSummaryReview();
-    if (activeTab === 'target_users') return renderTargetUsersReview();
-    if (activeTab === 'mvp_definition') return renderMvpDefinitionReview();
-    if (activeTab === 'technical_architecture')
-      return renderTechnicalArchitectureReview();
-    if (activeTab === 'development_roadmap')
-      return renderDevelopmentRoadmapReview();
-    if (activeTab === 'team_requirements')
-      return renderTeamRequirementsReview();
-    if (activeTab === 'cost_estimation') return renderCostEstimationReview();
-    if (activeTab === 'business_model') return renderBusinessModelReview();
-    if (activeTab === 'go_to_market') return renderGoToMarketReview();
-    return renderGenericReview();
+    const tabInfo = TABS.find((t) => t.id === activeTab);
+    const content = (() => {
+      if (activeTab === 'executive_summary')
+        return renderExecutiveSummaryReview();
+      if (activeTab === 'target_users') return renderTargetUsersReview();
+      if (activeTab === 'mvp_definition') return renderMvpDefinitionReview();
+      if (activeTab === 'technical_architecture')
+        return renderTechnicalArchitectureReview();
+      if (activeTab === 'development_roadmap')
+        return renderDevelopmentRoadmapReview();
+      if (activeTab === 'team_requirements')
+        return renderTeamRequirementsReview();
+      if (activeTab === 'cost_estimation') return renderCostEstimationReview();
+      if (activeTab === 'business_model') return renderBusinessModelReview();
+      if (activeTab === 'go_to_market') return renderGoToMarketReview();
+      return renderGenericReview();
+    })();
+
+    return (
+      <div className="space-y-6">
+        <div className="mb-2 p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40 shadow-sm relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2.5 relative z-10">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              {tabInfo?.icon || <FileText className="h-4 w-4" />}
+            </div>
+            {tabInfo?.title}
+          </h2>
+          {/* @ts-ignore */}
+          {tabInfo?.description && (
+            <p className="text-sm text-muted-foreground mt-2.5 leading-relaxed ml-11 relative z-10">
+              {/* @ts-ignore */}
+              {tabInfo.description}
+            </p>
+          )}
+        </div>
+        {content}
+      </div>
+    );
   };
 
   return (
@@ -5546,11 +5600,6 @@ function BlueprintReviewSection({
                     {tab.icon}
                   </div>
                   <span className="truncate flex-1">{tab.title}</span>
-                  {hasContent && (
-                    <div
-                      className={`h-2 w-2 rounded-full shrink-0 ${active ? 'bg-primary' : 'bg-emerald-500/60'}`}
-                    />
-                  )}
                 </button>
               );
             })}
@@ -5558,26 +5607,6 @@ function BlueprintReviewSection({
         </aside>
 
         <section className="min-w-0 space-y-6">
-          <div className="pb-5 border-b border-border/30">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
-                <Edit3 className="h-3 w-3" />
-                Phase 3 - Review
-              </span>
-            </div>
-            <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
-              Review & Edit Blueprint
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed max-w-xl">
-              Edit any field below in plain language. Use the{' '}
-              <span className="inline-flex items-center gap-0.5 text-primary font-medium">
-                <Sparkles className="h-3 w-3" />
-                Refine
-              </span>{' '}
-              buttons to improve content with AI.
-            </p>
-          </div>
-
           <div className="space-y-5">{renderActiveTabContent()}</div>
         </section>
       </div>
@@ -5631,7 +5660,7 @@ function BlueprintReport({
   return (
     <ReportReader
       sections={sections}
-      initialSectionId="mvp_definition"
+      initialSectionId={sections[0]?.id || 'executive_summary'}
       onSectionChange={onSectionChange}
       isEditable={isEditable}
       onSaveSection={handleSaveSection}
@@ -6156,7 +6185,13 @@ export default function CreateRoom() {
   const [selectedTalentKeys, setSelectedTalentKeys] = useState<
     Record<string, boolean>
   >({});
-  const [talentMatchingTab, setTalentMatchingTab] = useState<'ai' | 'manual'>('manual');
+  const [talentMatchingTab, setTalentMatchingTab] = useState<'ai' | 'manual'>(
+    'manual',
+  );
+  const [talentRoleFilter, setTalentRoleFilter] = useState<string>('all');
+  const [talentAvailabilityFilter, setTalentAvailabilityFilter] =
+    useState<string>('all');
+  const [talentSortFilter, setTalentSortFilter] = useState<string>('score');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -6522,7 +6557,7 @@ Please return ONLY the refined value.
         }
       }
 
-      if (fieldKey !== sectionId && pathParts.length === 0) {
+      if (fieldKey !== sectionId) {
         nextBlueprint[sectionId] = sectionObj;
       }
 
@@ -6561,7 +6596,7 @@ Please return ONLY the refined value.
       setIsFinalBlueprint(true);
       setShowFinalConfirmation(false);
       toast.success(
-        'Blueprint finalized successfully! PDF is synchronized and download is now active.',
+        'Blueprint finalized successfully! Please review the final output.',
       );
     } catch (err: any) {
       toast.error(
@@ -7316,12 +7351,18 @@ Please return ONLY the modified text itself, without any introductory or convers
     }
   };
 
-  const recommendationKey = (recommendation: TalentRecommendation, mode?: 'ai' | 'manual') => {
+  const recommendationKey = (
+    recommendation: TalentRecommendation,
+    mode?: 'ai' | 'manual',
+  ) => {
     const prefix = mode || (talentMatchingTab === 'ai' ? 'ai' : 'manual');
     return `${prefix}:${recommendation.talentId}:${recommendation.matchedRole.roleTitle}`;
   };
 
-  const toggleTalentSelection = (recommendation: TalentRecommendation, mode?: 'ai' | 'manual') => {
+  const toggleTalentSelection = (
+    recommendation: TalentRecommendation,
+    mode?: 'ai' | 'manual',
+  ) => {
     const key = recommendationKey(recommendation, mode);
     setSelectedTalentKeys((prev) => ({
       ...prev,
@@ -7443,16 +7484,19 @@ Please return ONLY the modified text itself, without any introductory or convers
       : [];
 
   const selectedTalentRecommendations = talentRecommendationReport
-    ? (talentMatchingTab === 'ai'
-        ? talentRecommendationReport.recommendations.filter(
-            (recommendation) =>
-              selectedTalentKeys[recommendationKey(recommendation, 'ai')],
-          )
-        : (talentRecommendationReport.manualFreelancers || []).filter(
-            (recommendation) =>
-              selectedTalentKeys[recommendationKey(recommendation, 'manual')],
-          ))
+    ? talentMatchingTab === 'ai'
+      ? talentRecommendationReport.recommendations.filter(
+          (recommendation) =>
+            selectedTalentKeys[recommendationKey(recommendation, 'ai')],
+        )
+      : (talentRecommendationReport.manualFreelancers || []).filter(
+          (recommendation) =>
+            selectedTalentKeys[recommendationKey(recommendation, 'manual')],
+        )
     : [];
+
+  const [showConnectsConfirm, setShowConnectsConfirm] = useState(false);
+  const [pendingCreationType, setPendingCreationType] = useState<'manual' | 'ai' | null>(null);
 
   const enterRoomDashboard = async () => {
     if (!sessionData?._id || creatingRoom) return;
@@ -7496,6 +7540,12 @@ Please return ONLY the modified text itself, without any introductory or convers
         );
       }
       const room = await res.json();
+      if (typeof room?.remainingConnects === 'number') {
+        updateConnectsBalance(room.remainingConnects);
+      } else {
+        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+        updateConnectsBalance(Math.max(0, currentConnects - 150));
+      }
       navigate(`/room/${room._id}`);
     } catch (err: any) {
       const msg = err?.message ?? 'Failed to enter room dashboard';
@@ -7511,14 +7561,7 @@ Please return ONLY the modified text itself, without any introductory or convers
     setShowTalentChoiceModal(false);
     setCreatingRoom(true);
     setError('');
-    
-    // Switch to recommendations phase and set placeholder report to trigger premium loader
-    setTalentRecommendationReport({
-      roleCount: 0,
-      recommendations: [],
-    });
-    setPhase('recommendations');
-    
+
     try {
       // 1. Fetch talent recommendations
       const recommendationsRes = await fetch(
@@ -7530,15 +7573,18 @@ Please return ONLY the modified text itself, without any introductory or convers
       );
       if (!recommendationsRes.ok) {
         throw new Error(
-          await readApiError(recommendationsRes, 'Failed to generate talent recommendations'),
+          await readApiError(
+            recommendationsRes,
+            'Failed to generate talent recommendations',
+          ),
         );
       }
       const data = await recommendationsRes.json();
-      
+
       const recommendationsList = Array.isArray(data.recommendations)
         ? data.recommendations
         : [];
-      
+
       // 2. Prepare scoping and create the room with all recommendations
       const allQuestions = [...mandatoryQuestions, ...optionalQuestions];
       const answersPayload = allQuestions
@@ -7562,21 +7608,22 @@ Please return ONLY the modified text itself, without any introductory or convers
       });
       if (!res.ok) {
         throw new Error(
-          await readApiError(
-            res,
-            'Failed to create the room dashboard',
-          ),
+          await readApiError(res, 'Failed to create the room dashboard'),
         );
       }
       const room = await res.json();
+      if (typeof room?.remainingConnects === 'number') {
+        updateConnectsBalance(room.remainingConnects);
+      } else {
+        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+        updateConnectsBalance(Math.max(0, currentConnects - 150));
+      }
       navigate(`/room/${room._id}`);
     } catch (err: any) {
-      const msg = err?.message ?? 'Failed to complete AI selection and room creation';
+      const msg =
+        err?.message ?? 'Failed to complete AI selection and room creation';
       setError(msg);
       toast.error(msg);
-      // Revert states on error
-      setTalentRecommendationReport(null);
-      setPhase('blueprint');
     } finally {
       setCreatingRoom(false);
     }
@@ -7672,7 +7719,9 @@ Please return ONLY the modified text itself, without any introductory or convers
               ['recommendations', '4', 'Talent matches'],
             ].map(([key, number, label]) => {
               const active =
-                phase === key || (phase === 'blueprint' && key === 'technical');
+                phase === key ||
+                (phase === 'blueprint' && key === 'technical') ||
+                (phase === 'milestones' && key === 'technical');
               return (
                 <div
                   key={key}
@@ -7695,7 +7744,14 @@ Please return ONLY the modified text itself, without any introductory or convers
             </div>
           )}
 
-          {phase === 'idea' &&
+          {creatingRoom ? (
+            <PremiumLoader
+              title="Assembling Your Live Room"
+              subtitle="Creating your dashboard, setting up team channels, deducting 150 connects, and launching workspace..."
+            />
+          ) : (
+            <>
+              {phase === 'idea' &&
             (validating ? (
               <PremiumLoader
                 title="Validating Business Idea"
@@ -8074,11 +8130,12 @@ Please return ONLY the modified text itself, without any introductory or convers
                     {suggestingAll ? (
                       <>
                         <span className="w-3.5 h-3.5 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
-                        Generating all...
+                        Suggesting...
                       </>
-                    ) : allSuggestedOrAnswered ? (
+                    ) : mandatoryQuestions.length > 0 &&
+                      mandatoryQuestions.every((q) => usedAiSuggest[q._id]) ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-green-500" />
+                        <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
                         Suggested for All
                       </>
                     ) : (
@@ -8465,9 +8522,22 @@ Please return ONLY the modified text itself, without any introductory or convers
               />
             ) : !isFinalBlueprint ? (
               <div className="space-y-7 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
-                  <div className="text-xs text-primary font-medium uppercase tracking-wider">
-                    Phase 3 Review
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                      Phase 3 review
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight mb-3">
+                      Review & Edit Blueprint
+                    </h1>
+                    <p className="text-muted-foreground max-w-4xl text-sm leading-relaxed">
+                      Edit any field below in plain language. Use the{' '}
+                      <span className="inline-flex items-center gap-0.5 text-primary font-medium">
+                        <Sparkles className="h-3 w-3" />
+                        Refine
+                      </span>{' '}
+                      buttons to improve content with AI.
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2 shrink-0">
                     <Button
@@ -8496,7 +8566,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                     >
                       {finalizingBlueprint
                         ? 'Finalizing...'
-                        : 'Confirm as Final'}
+                        : 'Approve and Finalize'}
                     </Button>
                   </div>
                 </div>
@@ -8518,68 +8588,62 @@ Please return ONLY the modified text itself, without any introductory or convers
               </div>
             ) : (
               <div className="space-y-7 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
                       Phase 3 output
                     </div>
-                    <div className="flex flex-wrap gap-2 shrink-0">
-                      <Button
-                        variant="outline"
-                        onClick={downloadBlueprintPdf}
-                        disabled={
-                          downloadingBlueprintPdf ||
-                          creatingRoom ||
-                          loadingRecommendations
-                        }
-                        className="bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20 font-bold"
-                      >
-                        {downloadingBlueprintPdf
-                          ? 'Preparing...'
-                          : 'Download PDF'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsFinalBlueprint(false)}
-                        disabled={creatingRoom || loadingRecommendations}
-                      >
-                        Make changes
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={enterRoomDashboard}
-                        disabled={creatingRoom || loadingRecommendations}
-                      >
-                        {creatingRoom ? 'Preparing room...' : 'Skip matches'}
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          const missing = mandatoryQuestions.filter(
-                            (question) => !answers[question._id]?.trim(),
-                          );
-                          if (missing.length > 0) {
-                            toast.error('Please answer all mandatory questions');
-                            setPhase('technical');
-                            return;
-                          }
-                          setShowTalentChoiceModal(true);
-                        }}
-                        disabled={loadingRecommendations || creatingRoom}
-                      >
-                        {loadingRecommendations
-                          ? 'Finding talent...'
-                          : 'Find talent matches'}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 mt-1">
-                    <h1 className="text-3xl font-bold tracking-tight">
+                    <h1 className="text-3xl font-bold tracking-tight mb-3">
                       Business and development blueprint
                     </h1>
-                    <p className="text-muted-foreground max-w-4xl leading-relaxed text-sm">
+                    <p className="text-muted-foreground max-w-4xl text-sm leading-relaxed">
                       This report uses the Phase 2 analysis plus the mandatory
                       and optional Phase 3 answers.
                     </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsFinalBlueprint(false)}
+                      disabled={creatingRoom || loadingRecommendations}
+                      className="gap-1.5"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                      Edit Blueprint
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={downloadBlueprintPdf}
+                      disabled={
+                        downloadingBlueprintPdf ||
+                        creatingRoom ||
+                        loadingRecommendations
+                      }
+                      className="bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20 font-bold"
+                    >
+                      {downloadingBlueprintPdf
+                        ? 'Preparing...'
+                        : 'Download PDF'}
+                    </Button>
+
+                    <Button
+                      onClick={() => {
+                        const missing = mandatoryQuestions.filter(
+                          (question) => !answers[question._id]?.trim(),
+                        );
+                        if (missing.length > 0) {
+                          toast.error('Please answer all mandatory questions');
+                          setPhase('technical');
+                          return;
+                        }
+                        setPhase('milestones');
+                      }}
+                      disabled={loadingRecommendations || creatingRoom}
+                      className="gap-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Review Milestones
+                    </Button>
                   </div>
                 </div>
 
@@ -8593,6 +8657,15 @@ Please return ONLY the modified text itself, without any introductory or convers
                 </div>
               </div>
             ))}
+
+          {phase === 'milestones' && (
+            <MilestoneReviewSection
+              blueprint={blueprint || {}}
+              onApproveAndFindTalent={() => setShowTalentChoiceModal(true)}
+              onBack={() => setPhase('blueprint')}
+              isFindingTalent={loadingRecommendations}
+            />
+          )}
 
           {phase === 'recommendations' &&
             talentRecommendationReport &&
@@ -8617,21 +8690,20 @@ Please return ONLY the modified text itself, without any introductory or convers
                       Phase 4 output
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight mb-3">
-                      Recommended talent for this budget
+                      Recommended talent matches
                     </h1>
                     <p className="text-muted-foreground max-w-2xl">
                       Candidates are ranked using verified reputation, previous
-                      work, GitHub score, skill fit, availability, and budget
-                      fit.
+                      work, GitHub score, skill fit, and availability.
                     </p>
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <Button
                       variant="outline"
-                      onClick={() => setPhase('blueprint')}
+                      onClick={() => setPhase('milestones')}
                       disabled={creatingRoom || loadingRecommendations}
                     >
-                      Back to blueprint
+                      Back to milestones
                     </Button>
                     <Button
                       variant="outline"
@@ -8643,7 +8715,10 @@ Please return ONLY the modified text itself, without any introductory or convers
                         : 'Refresh matches'}
                     </Button>
                     <Button
-                      onClick={enterRoomDashboard}
+                      onClick={() => {
+                        setPendingCreationType('manual');
+                        setShowConnectsConfirm(true);
+                      }}
                       disabled={creatingRoom || loadingRecommendations}
                     >
                       {creatingRoom
@@ -8657,11 +8732,14 @@ Please return ONLY the modified text itself, without any introductory or convers
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="rounded-xl border border-border/50 bg-card p-4">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                      Detected MVP budget
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 text-amber-500" strokeWidth={2.2} /> Required connects
                     </div>
-                    <div className="text-2xl font-bold font-mono text-primary">
-                      {formatCurrency(talentRecommendationReport.budgetUsd)}
+                    <div className="text-2xl font-bold font-mono text-amber-500 flex items-center gap-1.5">
+                      <Zap className="h-5 w-5 text-amber-500" strokeWidth={2.2} /> 150 <span className="text-xs font-normal text-muted-foreground font-sans">connects</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Deducted upon room creation
                     </div>
                   </div>
                   <div className="rounded-xl border border-border/50 bg-card p-4">
@@ -8687,535 +8765,472 @@ Please return ONLY the modified text itself, without any introductory or convers
                   </div>
                 </div>
 
+                {(() => {
+                  const activeGroups: RoleRecommendationGroup[] =
+                    talentMatchingTab === 'ai'
+                      ? talentRecommendationReport.groupedRecommendationTeams ||
+                        talentRecommendationReport.recommendedTeams ||
+                        []
+                      : talentRecommendationReport.groupedManualTeams ||
+                        talentRecommendationReport.recommendedTeams ||
+                        [];
 
+                  const availableRoleTitles = Array.from(
+                    new Set(
+                      activeGroups
+                        .map((g: RoleRecommendationGroup) => g.role?.roleTitle)
+                        .filter((t: string | undefined): t is string => Boolean(t)),
+                    ),
+                  );
 
-                {talentMatchingTab === 'ai' ? (
-                  talentRecommendationReport.recommendations.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
-                      <h2 className="font-semibold mb-2">
-                        No verified talent matched yet
-                      </h2>
-                      <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                        The room can still be created. Once more verified talent
-                        credentials exist, this phase will rank them
-                        automatically.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {groupedRecommendationTeams.map((group) => (
-                        <section
-                          key={group.role.roleTitle}
-                          className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
-                        >
-                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
-                              <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
-                                Role match group
-                              </div>
-                              <h2 className="text-xl font-semibold">
-                                {group.role.roleTitle}
-                              </h2>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {group.role.skillDomain}
-                              </p>
-                              {group.role.keywords?.length ? (
-                                <div className="flex flex-wrap gap-1.5 mt-3">
-                                  {group.role.keywords
-                                    .slice(0, 9)
-                                    .map((keyword) => (
-                                      <span
-                                        key={keyword}
-                                        className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
-                                      >
-                                        {keyword}
-                                      </span>
-                                    ))}
-                                </div>
-                              ) : null}
-                            </div>
-                            <div className="text-xs text-muted-foreground md:text-right">
-                              <div>
-                                <span className="font-mono text-foreground">
-                                  {group.availableMatches.length}
-                                </span>{' '}
-                                available
-                              </div>
-                              <div>
-                                <span className="font-mono text-foreground">
-                                  {group.unavailableMatches.length}
-                                </span>{' '}
-                                not available rn
-                              </div>
-                            </div>
-                          </div>
+                  const filteredGroups = activeGroups.filter(
+                    (g: RoleRecommendationGroup) => {
+                      if (talentRoleFilter === 'all') return true;
+                      return g.role?.roleTitle === talentRoleFilter;
+                    },
+                  );
 
-                          {[
-                            ['Available first', group.availableMatches],
-                            ['Not available right now', group.unavailableMatches],
-                          ].map(([label, matches]) =>
-                            Array.isArray(matches) && matches.length > 0 ? (
-                              <div key={String(label)} className="space-y-3">
-                                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {String(label)}
-                                </div>
-                                <div className="grid gap-3">
-                                  {matches.map((recommendation) => {
-                                    const key = recommendationKey(recommendation, 'ai');
-                                    const selected = !!selectedTalentKeys[key];
-                                    return (
-                                      <div
-                                        key={key}
-                                        className={`rounded-xl border p-4 transition-colors ${selected ? 'border-primary/50 bg-primary/10' : 'border-border/40 bg-background/35'}`}
-                                      >
-                                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                          <div className="flex items-start gap-3 min-w-0">
-                                            <button
-                                              onClick={() => toggleTalentSelection(recommendation, 'ai')}
-                                              className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'}`}
-                                              title="Select talent"
-                                            >
-                                              {selected ? '✓' : ''}
-                                            </button>
-                                            <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-                                              <span className="text-primary font-bold">
-                                                {recommendation.user.name?.[0]?.toUpperCase() ??
-                                                  'T'}
-                                              </span>
-                                            </div>
-                                            <div className="min-w-0">
-                                              <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="text-base font-semibold truncate">
-                                                  {recommendation.user.name}
-                                                </h3>
-                                                <span
-                                                  className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
-                                                >
-                                                  {recommendation.user
-                                                    .availabilityLabel ??
-                                                    (recommendation.user.isOnline
-                                                      ? 'Available now'
-                                                      : 'Not available rn')}
-                                                </span>
-                                                {recommendation.user.location && (
-                                                  <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
-                                                    {recommendation.user.location}
-                                                  </span>
-                                                )}
-                                              </div>
-                                              <p className="text-sm text-primary mt-1">
-                                                {
-                                                  recommendation.credential
-                                                    .skillDomain
-                                                }
-                                              </p>
-                                              <p className="text-xs text-muted-foreground mt-1">
-                                                L{recommendation.credential.level}{' '}
-                                                -{' '}
-                                                {
-                                                  recommendation.credential
-                                                    .reputationScore
-                                                }{' '}
-                                                rep -{' '}
-                                                {
-                                                  recommendation.credential
-                                                    .projectsCompleted
-                                                }{' '}
-                                                projects - GitHub{' '}
-                                                {
-                                                  recommendation.credential
-                                                    .githubScore
-                                                }
-                                              </p>
-                                              {recommendation.matchedKeywords
-                                                ?.length ? (
-                                                <div className="flex flex-wrap gap-1.5 mt-3">
-                                                  {recommendation.matchedKeywords
-                                                    .slice(0, 8)
-                                                    .map((keyword) => (
-                                                      <span
-                                                        key={keyword}
-                                                        className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
-                                                      >
-                                                        {keyword}
-                                                      </span>
-                                                    ))}
-                                                </div>
-                                              ) : null}
-                                              {recommendation.missingKeywords
-                                                ?.length ? (
-                                                <p className="text-[10px] text-muted-foreground/70 mt-2">
-                                                  Missing/weak:{' '}
-                                                  {recommendation.missingKeywords
-                                                    .slice(0, 5)
-                                                    .join(', ')}
-                                                </p>
-                                              ) : null}
-                                            </div>
-                                          </div>
-                                          <div className="shrink-0 text-left lg:text-right space-y-2">
-                                            <div>
-                                              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                                                Score
-                                              </div>
-                                              <div className="text-3xl font-bold font-mono text-primary">
-                                                {recommendation.finalScore}
-                                              </div>
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">
-                                              <div>
-                                                $
-                                                {
-                                                  recommendation.estimatedHourlyRateUsd
-                                                }
-                                                /hr
-                                              </div>
-                                              <div>
-                                                {formatCurrency(
-                                                  recommendation.weeklyRateUsd ??
-                                                    recommendation.estimatedHourlyRateUsd *
-                                                      40,
-                                                )}
-                                                /week
-                                              </div>
-                                              <div>
-                                                {formatCurrency(
-                                                  recommendation.monthlyRateUsd ??
-                                                    (recommendation.weeklyRateUsd ??
-                                                      recommendation.estimatedHourlyRateUsd *
-                                                        40) * 4,
-                                                )}
-                                                /month
-                                              </div>
-                                            </div>
-                                            <div className="flex gap-2 lg:justify-end">
-                                              <Button
-                                                size="sm"
-                                                variant={
-                                                  selected ? 'default' : 'outline'
-                                                }
-                                                onClick={() => toggleTalentSelection(recommendation, 'ai')}
-                                              >
-                                                {selected ? 'Selected' : 'Select'}
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                  navigate(
-                                                    `/talent/profile/${recommendation.talentId}`,
-                                                  )
-                                                }
-                                              >
-                                                Profile
-                                              </Button>
-                                            </div>
-                                          </div>
-                                        </div>
+                  const sortMatches = (matches: any[]) => {
+                    const list = [...matches];
+                    if (talentSortFilter === 'score') {
+                      list.sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
+                    } else if (talentSortFilter === 'reputation') {
+                      list.sort(
+                        (a, b) =>
+                          (b.credential?.reputationScore || 0) -
+                          (a.credential?.reputationScore || 0),
+                      );
+                    } else if (talentSortFilter === 'rate_asc') {
+                      list.sort(
+                        (a, b) =>
+                          (a.estimatedHourlyRateUsd || 0) -
+                          (b.estimatedHourlyRateUsd || 0),
+                      );
+                    } else if (talentSortFilter === 'rate_desc') {
+                      list.sort(
+                        (a, b) =>
+                          (b.estimatedHourlyRateUsd || 0) -
+                          (a.estimatedHourlyRateUsd || 0),
+                      );
+                    }
+                    return list;
+                  };
 
-                                        <div className="grid gap-2 md:grid-cols-3 mt-4">
-                                          <ScorePill
-                                            label="Keyword match"
-                                            value={
-                                              recommendation.scoreBreakdown
-                                                .skillMatchScore
-                                            }
-                                          />
-                                          <ScorePill
-                                            label="Availability"
-                                            value={
-                                              recommendation.scoreBreakdown
-                                                .availabilityScore
-                                            }
-                                          />
-                                          <ScorePill
-                                            label="Budget fit"
-                                            value={
-                                              recommendation.scoreBreakdown
-                                                .budgetFitScore
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ) : null,
-                          )}
-                        </section>
-                      ))}
-                    </div>
-                  )
-                ) : (
-                  (!talentRecommendationReport.manualFreelancers || talentRecommendationReport.manualFreelancers.length === 0) ? (
-                    <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
-                      <h2 className="font-semibold mb-2">
-                        No freelancers available
-                      </h2>
-                      <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                        There are no active freelancers in the talent pool at this time.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Select freelancers manually to invite them to your LiveRoom.
+                  const showAvailable =
+                    talentAvailabilityFilter === 'all' ||
+                    talentAvailabilityFilter === 'available';
+                  const showUnavailable =
+                    talentAvailabilityFilter === 'all' ||
+                    talentAvailabilityFilter === 'unavailable';
+
+                  const mode = talentMatchingTab === 'ai' ? 'ai' : 'manual';
+                  const noTalents =
+                    activeGroups.length === 0 ||
+                    activeGroups.every(
+                      (g: RoleRecommendationGroup) =>
+                        (!g.availableMatches || g.availableMatches.length === 0) &&
+                        (!g.unavailableMatches || g.unavailableMatches.length === 0),
+                    );
+
+                  if (noTalents) {
+                    return (
+                      <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
+                        <h2 className="font-semibold mb-2">
+                          No talent matches available
+                        </h2>
+                        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+                          {talentMatchingTab === 'ai'
+                            ? 'The room can still be created. Once more verified talent credentials exist, this phase will rank them automatically.'
+                            : 'There are no active freelancers in the talent pool at this time.'}
+                        </p>
                       </div>
-                      {groupedManualTeams.map((group) => (
-                        <section
-                          key={group.role.roleTitle}
-                          className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
-                        >
-                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
-                              <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
-                                Role match group
-                              </div>
-                              <h2 className="text-xl font-semibold">
-                                {group.role.roleTitle}
-                              </h2>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {group.role.skillDomain}
-                              </p>
-                              {group.role.keywords?.length ? (
-                                <div className="flex flex-wrap gap-1.5 mt-3">
-                                  {group.role.keywords
-                                    .slice(0, 9)
-                                    .map((keyword) => (
-                                      <span
-                                        key={keyword}
-                                        className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
-                                      >
-                                        {keyword}
-                                      </span>
-                                    ))}
-                                </div>
-                              ) : null}
-                            </div>
-                            <div className="text-xs text-muted-foreground md:text-right">
-                              <div>
-                                <span className="font-mono text-foreground">
-                                  {group.availableMatches.length}
-                                </span>{' '}
-                                available
-                              </div>
-                              <div>
-                                <span className="font-mono text-foreground">
-                                  {group.unavailableMatches.length}
-                                </span>{' '}
-                                not available rn
-                              </div>
-                            </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Filter Bar */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card/80 border border-border/50 rounded-xl p-3.5 shadow-xs">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <Filter className="h-3.5 w-3.5 text-primary" /> Filter by:
                           </div>
 
-                          {[
-                            ['Available first', group.availableMatches],
-                            ['Not available right now', group.unavailableMatches],
-                          ].map(([label, matches]) =>
-                            Array.isArray(matches) && matches.length > 0 ? (
-                              <div key={String(label)} className="space-y-3">
-                                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {String(label)}
-                                </div>
-                                <div className="grid gap-3">
-                                  {matches.map((recommendation) => {
-                                    const key = recommendationKey(recommendation, 'manual');
-                                    const selected = !!selectedTalentKeys[key];
-                                    return (
-                                      <div
-                                        key={key}
-                                        className={`rounded-xl border p-4 transition-colors ${selected ? 'border-primary/50 bg-primary/10' : 'border-border/40 bg-background/35'}`}
-                                      >
-                                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                          <div className="flex items-start gap-3 min-w-0">
-                                            <button
-                                              onClick={() => toggleTalentSelection(recommendation, 'manual')}
-                                              className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'}`}
-                                              title="Select talent"
-                                            >
-                                              {selected ? '✓' : ''}
-                                            </button>
-                                            <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-                                              <span className="text-primary font-bold">
-                                                {recommendation.user.name?.[0]?.toUpperCase() ??
-                                                  'T'}
-                                              </span>
-                                            </div>
-                                            <div className="min-w-0">
-                                              <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="text-base font-semibold truncate">
-                                                  {recommendation.user.name}
-                                                </h3>
-                                                <span
-                                                  className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
-                                                >
-                                                  {recommendation.user
-                                                    .availabilityLabel ??
-                                                    (recommendation.user.isOnline
-                                                      ? 'Available now'
-                                                      : 'Not available rn')}
-                                                </span>
-                                                {recommendation.user.location && (
-                                                  <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
-                                                    {recommendation.user.location}
-                                                  </span>
-                                                )}
-                                              </div>
-                                              <p className="text-sm text-primary mt-1">
-                                                {recommendation.credential.skillDomain}
-                                              </p>
-                                              <p className="text-xs text-muted-foreground mt-1">
-                                                L{recommendation.credential.level}{' '}
-                                                -{' '}
-                                                {
-                                                  recommendation.credential
-                                                    .reputationScore
-                                                }{' '}
-                                                rep -{' '}
-                                                {
-                                                  recommendation.credential
-                                                    .projectsCompleted
-                                                }{' '}
-                                                projects - GitHub{' '}
-                                                {
-                                                  recommendation.credential
-                                                    .githubScore
-                                                }
-                                              </p>
-                                              {recommendation.matchedKeywords
-                                                ?.length ? (
-                                                <div className="flex flex-wrap gap-1.5 mt-3">
-                                                  {recommendation.matchedKeywords
-                                                    .slice(0, 8)
-                                                    .map((keyword) => (
-                                                      <span
-                                                        key={keyword}
-                                                        className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
-                                                      >
-                                                        {keyword}
-                                                      </span>
-                                                    ))}
-                                                </div>
-                                              ) : null}
-                                              {recommendation.missingKeywords
-                                                ?.length ? (
-                                                <p className="text-[10px] text-muted-foreground/70 mt-2">
-                                                  Missing/weak:{' '}
-                                                  {recommendation.missingKeywords
-                                                    .slice(0, 5)
-                                                    .join(', ')}
-                                                </p>
-                                              ) : null}
-                                            </div>
-                                          </div>
-                                          <div className="shrink-0 text-left lg:text-right space-y-2">
-                                            <div>
-                                              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                                                Score
-                                              </div>
-                                              <div className="text-3xl font-bold font-mono text-primary">
-                                                {recommendation.finalScore}
-                                              </div>
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">
-                                              <div>
-                                                $
-                                                {
-                                                  recommendation.estimatedHourlyRateUsd
-                                                }
-                                                /hr
-                                              </div>
-                                              <div>
-                                                {formatCurrency(
-                                                  recommendation.weeklyRateUsd ??
-                                                    recommendation.estimatedHourlyRateUsd *
-                                                      40,
-                                                )}
-                                                /week
-                                              </div>
-                                              <div>
-                                                {formatCurrency(
-                                                  recommendation.monthlyRateUsd ??
-                                                    (recommendation.weeklyRateUsd ??
-                                                      recommendation.estimatedHourlyRateUsd *
-                                                        40) * 4,
-                                                )}
-                                                /month
-                                              </div>
-                                            </div>
-                                            <div className="flex gap-2 lg:justify-end">
-                                              <Button
-                                                size="sm"
-                                                variant={
-                                                  selected ? 'default' : 'outline'
-                                                }
-                                                onClick={() => toggleTalentSelection(recommendation, 'manual')}
-                                              >
-                                                {selected ? 'Selected' : 'Select'}
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                  navigate(
-                                                    `/talent/profile/${recommendation.talentId}`,
-                                                  )
-                                                }
-                                              >
-                                                Profile
-                                              </Button>
-                                            </div>
-                                          </div>
-                                        </div>
+                          {/* Role Dropdown */}
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                              Role:
+                            </label>
+                            <select
+                              value={talentRoleFilter}
+                              onChange={(e) => setTalentRoleFilter(e.target.value)}
+                              className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+                            >
+                              <option value="all">
+                                All Roles ({talentRecommendationReport.recommendations?.length || 0})
+                              </option>
+                              {availableRoleTitles.map((roleTitle) => (
+                                <option key={roleTitle} value={roleTitle}>
+                                  {roleTitle}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
 
-                                        <div className="grid gap-2 md:grid-cols-3 mt-4">
-                                          <ScorePill
-                                            label="Keyword match"
-                                            value={
-                                              recommendation.scoreBreakdown
-                                                .skillMatchScore
-                                            }
-                                          />
-                                          <ScorePill
-                                            label="Availability"
-                                            value={
-                                              recommendation.scoreBreakdown
-                                                .availabilityScore
-                                            }
-                                          />
-                                          <ScorePill
-                                            label="Budget fit"
-                                            value={
-                                              recommendation.scoreBreakdown
-                                                .budgetFitScore
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
+                          {/* Availability Dropdown */}
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                              Availability:
+                            </label>
+                            <select
+                              value={talentAvailabilityFilter}
+                              onChange={(e) =>
+                                setTalentAvailabilityFilter(e.target.value)
+                              }
+                              className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+                            >
+                              <option value="all">All Availability</option>
+                              <option value="available">Available Now</option>
+                              <option value="unavailable">Not Available RN</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" /> Sort:
+                          </div>
+                          <select
+                            value={talentSortFilter}
+                            onChange={(e) => setTalentSortFilter(e.target.value)}
+                            className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+                          >
+                            <option value="score">Highest Match Score</option>
+                            <option value="reputation">Highest Reputation</option>
+                            <option value="rate_asc">Hourly Rate: Low to High</option>
+                            <option value="rate_desc">Hourly Rate: High to Low</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {filteredGroups.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-border/50 p-8 text-center text-sm text-muted-foreground">
+                          No matches found for the selected role filter.
+                        </div>
+                      ) : (
+                        filteredGroups.map((group: RoleRecommendationGroup) => {
+                          const availMatches = showAvailable
+                            ? sortMatches(group.availableMatches || [])
+                            : [];
+                          const unavailMatches = showUnavailable
+                            ? sortMatches(group.unavailableMatches || [])
+                            : [];
+
+                          if (
+                            availMatches.length === 0 &&
+                            unavailMatches.length === 0
+                          )
+                            return null;
+
+                          return (
+                            <section
+                              key={group.role.roleTitle}
+                              className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
+                            >
+                              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                <div>
+                                  <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                                    Role match group
+                                  </div>
+                                  <h2 className="text-xl font-semibold">
+                                    {group.role.roleTitle}
+                                  </h2>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {group.role.skillDomain}
+                                  </p>
+                                  {group.role.keywords?.length ? (
+                                    <div className="flex flex-wrap gap-1.5 mt-3">
+                                      {group.role.keywords
+                                        .slice(0, 9)
+                                        .map((keyword: string) => (
+                                          <span
+                                            key={keyword}
+                                            className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
+                                          >
+                                            {keyword}
+                                          </span>
+                                        ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                                <div className="text-xs text-muted-foreground md:text-right">
+                                  <div>
+                                    <span className="font-mono text-foreground">
+                                      {group.availableMatches.length}
+                                    </span>{' '}
+                                    available
+                                  </div>
+                                  <div>
+                                    <span className="font-mono text-foreground">
+                                      {group.unavailableMatches.length}
+                                    </span>{' '}
+                                    not available rn
+                                  </div>
                                 </div>
                               </div>
-                            ) : null,
-                          )}
-                        </section>
-                      ))}
+
+                              {[
+                                ['Available first', availMatches],
+                                ['Not available right now', unavailMatches],
+                              ].map(([label, matches]) =>
+                                Array.isArray(matches) && matches.length > 0 ? (
+                                  <div
+                                    key={String(label)}
+                                    className="space-y-3"
+                                  >
+                                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                      {String(label)}
+                                    </div>
+                                    <div className="grid gap-3">
+                                      {matches.map((recommendation) => {
+                                        const key = recommendationKey(
+                                          recommendation,
+                                          mode,
+                                        );
+                                        const selected =
+                                          !!selectedTalentKeys[key];
+                                        return (
+                                          <div
+                                            key={key}
+                                            onClick={() =>
+                                              toggleTalentSelection(
+                                                recommendation,
+                                                mode,
+                                              )
+                                            }
+                                            className={`rounded-xl border p-4 transition-all cursor-pointer hover:border-primary/60 hover:shadow-md ${
+                                              selected
+                                                ? 'border-primary/60 bg-primary/10 ring-1 ring-primary/30'
+                                                : 'border-border/40 bg-background/35 hover:bg-background/60'
+                                            }`}
+                                          >
+                                            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                              <div className="flex items-start gap-3 min-w-0">
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleTalentSelection(
+                                                      recommendation,
+                                                      mode,
+                                                    );
+                                                  }}
+                                                  className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                                    selected
+                                                      ? 'bg-primary border-primary text-primary-foreground'
+                                                      : 'border-border/60 hover:border-primary'
+                                                  }`}
+                                                  title="Select talent"
+                                                >
+                                                  {selected ? '✓' : ''}
+                                                </button>
+                                                <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                                                  <span className="text-primary font-bold">
+                                                    {recommendation.user.name?.[0]?.toUpperCase() ??
+                                                      'T'}
+                                                  </span>
+                                                </div>
+                                                <div className="min-w-0">
+                                                  <div className="flex items-center gap-2 flex-wrap">
+                                                    <h3 className="text-base font-semibold truncate">
+                                                      {recommendation.user.name}
+                                                    </h3>
+                                                    <span
+                                                      className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
+                                                    >
+                                                      {recommendation.user
+                                                        .availabilityLabel ??
+                                                        (recommendation.user
+                                                          .isOnline
+                                                          ? 'Available now'
+                                                          : 'Not available rn')}
+                                                    </span>
+                                                    {recommendation.user
+                                                      .location && (
+                                                      <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
+                                                        {
+                                                          recommendation.user
+                                                            .location
+                                                        }
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                  <p className="text-sm text-primary mt-1">
+                                                    {
+                                                      recommendation.credential
+                                                        .skillDomain
+                                                    }
+                                                  </p>
+                                                  <p className="text-xs text-muted-foreground mt-1">
+                                                    L
+                                                    {
+                                                      recommendation.credential
+                                                        .level
+                                                    }{' '}
+                                                    -{' '}
+                                                    {
+                                                      recommendation.credential
+                                                        .reputationScore
+                                                    }{' '}
+                                                    rep -{' '}
+                                                    {
+                                                      recommendation.credential
+                                                        .projectsCompleted
+                                                    }{' '}
+                                                    projects - GitHub{' '}
+                                                    {
+                                                      recommendation.credential
+                                                        .githubScore
+                                                    }
+                                                  </p>
+                                                  {recommendation.matchedKeywords
+                                                    ?.length ? (
+                                                    <div className="flex flex-wrap gap-1.5 mt-3">
+                                                      {recommendation.matchedKeywords
+                                                        .slice(0, 8)
+                                                        .map((keyword: string) => (
+                                                          <span
+                                                            key={keyword}
+                                                            className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
+                                                          >
+                                                            {keyword}
+                                                          </span>
+                                                        ))}
+                                                    </div>
+                                                  ) : null}
+                                                  {recommendation.missingKeywords
+                                                    ?.length ? (
+                                                    <p className="text-[10px] text-muted-foreground/70 mt-2">
+                                                      Missing/weak:{' '}
+                                                      {recommendation.missingKeywords
+                                                        .slice(0, 5)
+                                                        .join(', ')}
+                                                    </p>
+                                                  ) : null}
+                                                </div>
+                                              </div>
+                                              <div className="shrink-0 text-left lg:text-right space-y-2">
+                                                <div>
+                                                  <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                                                    Score
+                                                  </div>
+                                                  <div className="text-3xl font-bold font-mono text-primary">
+                                                    {recommendation.finalScore}
+                                                  </div>
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                  <div>
+                                                    $
+                                                    {
+                                                      recommendation.estimatedHourlyRateUsd
+                                                    }
+                                                    /hr
+                                                  </div>
+                                                  <div>
+                                                    {formatCurrency(
+                                                      recommendation.weeklyRateUsd ??
+                                                        recommendation.estimatedHourlyRateUsd *
+                                                          40,
+                                                    )}
+                                                    /week
+                                                  </div>
+                                                  <div>
+                                                    {formatCurrency(
+                                                      recommendation.monthlyRateUsd ??
+                                                        (recommendation.weeklyRateUsd ??
+                                                          recommendation.estimatedHourlyRateUsd *
+                                                            40) * 4,
+                                                    )}
+                                                    /month
+                                                  </div>
+                                                </div>
+                                                <div className="flex gap-2 lg:justify-end">
+                                                  <Button
+                                                    size="sm"
+                                                    variant={
+                                                      selected
+                                                        ? 'default'
+                                                        : 'outline'
+                                                    }
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      toggleTalentSelection(
+                                                        recommendation,
+                                                        mode,
+                                                      );
+                                                    }}
+                                                  >
+                                                    {selected
+                                                      ? 'Selected'
+                                                      : 'Select'}
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      navigate(
+                                                        `/talent/profile/${recommendation.talentId}`,
+                                                      );
+                                                    }}
+                                                  >
+                                                    Profile
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            </div>
+
+                                            <div className="grid gap-2 md:grid-cols-3 mt-4">
+                                              <ScorePill
+                                                label="Keyword match"
+                                                value={
+                                                  recommendation.scoreBreakdown
+                                                    .skillMatchScore
+                                                }
+                                              />
+                                              <ScorePill
+                                                label="Availability"
+                                                value={
+                                                  recommendation.scoreBreakdown
+                                                    .availabilityScore
+                                                }
+                                              />
+                                              <ScorePill
+                                                label="Budget fit"
+                                                value={
+                                                  recommendation.scoreBreakdown
+                                                    .budgetFitScore
+                                                }
+                                              />
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ) : null,
+                              )}
+                            </section>
+                          );
+                        })
+                      )}
                     </div>
-                  )
-                )}
-                {blueprint && (
-                  <div data-blueprint-report-capture ref={blueprintReportRef}>
-                    <BlueprintReport
-                      blueprint={blueprint!}
-                      onSectionChange={setActiveReportSection}
-                      region={phase1Review.region}
-                      isEditable={false}
-                    />
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             ))}
+            </>
+          )}
         </main>
 
         {phase !== 'idea' && isChatOpen && (
@@ -9495,7 +9510,8 @@ Please return ONLY the modified text itself, without any introductory or convers
                       Choose Talent Matching Method
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Select how you want to invite matched freelancers to your workspace channels.
+                      Select how you want to invite matched freelancers to your
+                      workspace channels.
                     </p>
                   </div>
                 </div>
@@ -9512,7 +9528,11 @@ Please return ONLY the modified text itself, without any introductory or convers
               <div className="grid gap-4 md:grid-cols-2 mt-2">
                 {/* AI Selected Card */}
                 <button
-                  onClick={handleDirectAiTalentSelection}
+                  onClick={() => {
+                    setShowTalentChoiceModal(false);
+                    setPendingCreationType('ai');
+                    setShowConnectsConfirm(true);
+                  }}
                   className="group relative flex flex-col justify-between text-left rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-card/50 p-6 shadow-md transition-all duration-300 hover:border-primary/60 hover:scale-[1.02] focus:outline-none hover:shadow-primary/5 hover:shadow-lg"
                 >
                   {/* Subtle pulsing background glow inside the card */}
@@ -9533,7 +9553,9 @@ Please return ONLY the modified text itself, without any introductory or convers
                         AI Selected Freelancers
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Auto-selects the top 3 verified freelancers for each recommended role and puts them directly in the discussion workspace channels.
+                        Auto-selects the top 3 verified freelancers for each
+                        recommended role and puts them directly in the
+                        discussion workspace channels.
                       </p>
                     </div>
                   </div>
@@ -9562,7 +9584,9 @@ Please return ONLY the modified text itself, without any introductory or convers
                         Manual Selection List
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Browse verified candidate profiles, inspect technical skills, past work, reputation scores, and manually choose who to invite.
+                        Browse verified candidate profiles, inspect technical
+                        skills, past work, reputation scores, and manually
+                        choose who to invite.
                       </p>
                     </div>
                   </div>
@@ -9587,6 +9611,27 @@ Please return ONLY the modified text itself, without any introductory or convers
             </div>
           </div>
         </div>
+      )}
+      {showConnectsConfirm && (
+        <ConnectsDialog
+          externalOpen={showConnectsConfirm}
+          setExternalOpen={setShowConnectsConfirm}
+          loading={creatingRoom}
+          setLoading={setCreatingRoom}
+          requiredConnects={150}
+          userId={sessionData?.businessId || (user as any)?._id || ''}
+          userType="business"
+          resourceName="LiveRoom"
+          hideTrigger={true}
+          skipRedirect={true}
+          onSubmit={async () => {
+            if (pendingCreationType === 'ai') {
+              await handleDirectAiTalentSelection();
+            } else if (pendingCreationType === 'manual') {
+              await enterRoomDashboard();
+            }
+          }}
+        />
       )}
     </div>
   );

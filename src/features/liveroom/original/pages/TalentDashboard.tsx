@@ -17,18 +17,76 @@ import { SBTCredentialCard } from '../components/SBTCredentialCard';
 import { ReputationRing } from '../components/ReputationRing';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
+import {
+  Search,
+  Inbox,
+  DoorOpen,
+  Award,
+  Coins,
+  Activity,
+  User,
+  Check,
+  Copy,
+  ArrowUpRight,
+  Briefcase,
+  MessageSquare,
+  Sparkles,
+  ShieldCheck,
+  Key,
+  Filter,
+  CheckCircle2,
+  Video,
+  Edit2,
+  X,
+  Clock,
+} from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
-  scoping: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20',
+  scoping:
+    'text-blue-500 bg-blue-500/10 border-blue-500/25 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/20',
   matching:
-    'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
-  open: 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20',
+    'text-amber-500 bg-amber-500/10 border-amber-500/25 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20',
+  open: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/25 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20',
   assembling:
-    'text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20',
+    'text-indigo-500 bg-indigo-500/10 border-indigo-500/25 dark:text-indigo-400 dark:bg-indigo-500/10 dark:border-indigo-500/20',
   contracted:
-    'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20',
-  closed: 'text-muted-foreground bg-muted border-border',
+    'text-emerald-500 bg-emerald-500/10 border-emerald-500/25 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20',
+  closed: 'text-muted-foreground bg-muted/20 border-border/55',
 };
+
+function UserAvatar({ user, className = 'h-7 w-7 text-xs' }: { user: any; className?: string }) {
+  const avatarSrc =
+    user?.avatarUrl ||
+    user?.photoURL ||
+    user?.profilePic ||
+    user?.avatar ||
+    user?.photo;
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .filter(Boolean)
+        .map((part: string) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'T';
+
+  if (avatarSrc) {
+    return (
+      <img
+        src={avatarSrc}
+        alt={user?.name || 'User'}
+        className={`${className} rounded-lg object-cover border border-border/60 shrink-0`}
+      />
+    );
+  }
+
+  return (
+    <div className={`${className} rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center shrink-0 uppercase tracking-tighter`}>
+      {initials}
+    </div>
+  );
+}
 
 export default function TalentDashboard() {
   const [, navigate] = useLocation();
@@ -68,6 +126,9 @@ export default function TalentDashboard() {
   const [respondingOfferId, setRespondingOfferId] = useState<string | null>(
     null,
   );
+  const [roomSearch, setRoomSearch] = useState('');
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [inboxFilter, setInboxFilter] = useState<'all' | 'offer' | 'enquiry' | 'invite'>('all');
 
   const loadProjectEnquiries = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -228,10 +289,12 @@ export default function TalentDashboard() {
   const inviteList = Array.isArray(invites) ? invites : [];
   const pendingEnquiries = projectEnquiries.filter(
     (enquiry) => enquiry.responseStatus === 'pending',
-  ).length;
+  );
   const pendingOffers = hireOffers.filter((offer) =>
     ['sent', 'changes_requested'].includes(offer.status),
-  ).length;
+  );
+  const totalPendingAsks = inviteList.length + pendingEnquiries.length + pendingOffers.length;
+
   const overallRep =
     credList.length > 0
       ? Math.round(
@@ -345,668 +408,790 @@ export default function TalentDashboard() {
     }
   };
 
+  // Build Unified Needs Action Priority Feed Items
+  const priorityFeedItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      type: 'offer' | 'enquiry' | 'invite';
+      title: string;
+      role?: string;
+      amountUsd?: number;
+      matchScore?: number;
+      status: string;
+      summary?: string;
+      skills?: string[];
+      rawItem: any;
+    }> = [];
+
+    // Offers
+    hireOffers.forEach((offer: any) => {
+      if (['sent', 'changes_requested'].includes(offer.status)) {
+        items.push({
+          id: `offer-${offer._id}`,
+          type: 'offer',
+          title: offer.room?.title ?? 'Hire Offer',
+          role: offer.role?.roleTitle ?? 'Project role',
+          amountUsd: offer.amountUsd,
+          status: offer.status,
+          summary: offer.scopeSummary,
+          rawItem: offer,
+        });
+      }
+    });
+
+    // Enquiries
+    projectEnquiries.forEach((enquiry: any) => {
+      if (enquiry.responseStatus === 'pending') {
+        items.push({
+          id: `enquiry-${enquiry._id}`,
+          type: 'enquiry',
+          title: enquiry.room?.title ?? 'Project Enquiry',
+          role: enquiry.role?.roleTitle ?? enquiry.role?.skillDomain ?? 'Role',
+          matchScore: enquiry.matchScore,
+          status: enquiry.responseStatus,
+          summary: enquiry.message,
+          skills: enquiry.matchedSkills,
+          rawItem: enquiry,
+        });
+      }
+    });
+
+    // Invitations
+    inviteList.forEach((invite: any) => {
+      items.push({
+        id: `invite-${invite._id}`,
+        type: 'invite',
+        title: invite.room?.title ?? 'Room Invitation',
+        role: invite.role?.roleTitle ?? invite.role?.skillDomain,
+        status: invite.status || 'pending',
+        summary: invite.room?.rawDescription || invite.project?.description,
+        rawItem: invite,
+      });
+    });
+
+    return items;
+  }, [hireOffers, projectEnquiries, inviteList]);
+
+  const filteredPriorityItems = useMemo(() => {
+    if (inboxFilter === 'all') return priorityFeedItems;
+    return priorityFeedItems.filter((item) => item.type === inboxFilter);
+  }, [priorityFeedItems, inboxFilter]);
+
+  const filteredMyRooms = myRooms.filter((entry: any) => {
+    if (!roomSearch.trim()) return true;
+    const term = roomSearch.toLowerCase();
+    const title = String(entry.room?.title || '').toLowerCase();
+    const code = String(entry.room?.roomCode || '').toLowerCase();
+    const role = String(entry.role?.roleTitle || '').toLowerCase();
+    return title.includes(term) || code.includes(term) || role.includes(term);
+  });
+
+  const totalEscrowEarned = myRooms.reduce(
+    (s: number, r: any) => s + (r.milestoneStats?.releasedUsd ?? 0),
+    0,
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="sticky top-0 z-10 border-b border-border/40 bg-background/80 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-neutral-950 dark:bg-white border border-neutral-800 dark:border-neutral-200 flex items-center justify-center overflow-hidden">
-              <img
-                src="/dehix.png"
-                alt="Dehix"
-                className="w-3.5 h-3.5 invert-0 dark:invert object-contain"
-              />
-            </div>
-            <span className="font-medium text-sm">{user?.name}</span>
-            <span className="text-xs text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
-              Talent
-            </span>
-            {inviteList.length + pendingEnquiries + pendingOffers > 0 && (
-              <span className="text-[10px] font-bold bg-rose-600 text-white rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
-                {inviteList.length + pendingEnquiries + pendingOffers}
+      {/* Top Summary Bar - Compact Action-First Header */}
+      <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <UserAvatar user={user} className="h-7 w-7 text-xs" />
+            <div className="flex items-center gap-2 truncate">
+              <span className="font-bold text-sm text-foreground truncate">
+                {user?.name}
               </span>
-            )}
+              <span className="text-[10px] font-semibold text-muted-foreground border border-border/60 rounded-md px-1.5 py-0.5">
+                Talent
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Quick Metrics & Actions */}
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-4 text-xs font-mono pr-2 border-r border-border/40">
+              <div className="flex items-center gap-1.5">
+                <Award className="h-3.5 w-3.5 text-indigo-500" />
+                <span className="text-muted-foreground">Rep:</span>
+                <span className="font-bold text-foreground">{overallRep}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <DoorOpen className="h-3.5 w-3.5 text-primary" />
+                <span className="text-muted-foreground">Rooms:</span>
+                <span className="font-bold text-foreground">{myRooms.length}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Inbox className="h-3.5 w-3.5 text-rose-500" />
+                <span className="text-muted-foreground">Needs Action:</span>
+                <span className="font-bold text-rose-500">{totalPendingAsks}</span>
+              </div>
+            </div>
+
             <Button
               size="sm"
               variant={isOnline ? 'default' : 'outline'}
               onClick={toggleOnline}
               className={
                 isOnline
-                  ? 'bg-green-700 hover:bg-green-600 border-green-600'
-                  : ''
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 gap-1.5 h-8 text-xs'
+                  : 'gap-1.5 h-8 text-xs'
               }
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isOnline ? 'bg-green-300' : 'bg-gray-500'}`}
+                className={`w-2 h-2 rounded-full ${
+                  isOnline ? 'bg-white animate-pulse' : 'bg-muted-foreground'
+                }`}
               />
               {isOnline ? 'Available' : 'Offline'}
             </Button>
+
             <Button
               size="sm"
               variant="outline"
               onClick={() => navigate('/room/join')}
+              className="gap-1.5 h-8 text-xs"
             >
-              Join Room
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/talent/profile/${user?._id}`)}
-            >
-              My Profile
+              <Key className="h-3.5 w-3.5" /> Join Code
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        <div className="flex items-start justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Talent Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Your credentials, invitations, and availability
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <ReputationRing score={overallRep} size={64} />
-            <div>
-              <div className="text-xs text-muted-foreground">
-                Overall Reputation
-              </div>
-              <div className="font-bold font-mono text-foreground text-xl">
-                {overallRep}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {credList.length} credential{credList.length !== 1 ? 's' : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Profile Edit Panel */}
-        {editingProfile && (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 mb-8 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">Edit Profile</span>
-              <button
-                onClick={() => setEditingProfile(false)}
-                className="text-muted-foreground hover:text-foreground text-xs"
-              >
-                ✕ Cancel
-              </button>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">
-                  Display Name
-                </label>
-                <input
-                  value={profileName}
-                  onChange={(e) => setProfileName(e.target.value)}
-                  placeholder={user?.name ?? 'Your name'}
-                  className="w-full bg-card border border-border/50 rounded-md px-3 py-2 text-sm outline-none focus:border-primary/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">
-                  Wallet Address
-                </label>
-                <input
-                  value={profileWallet}
-                  onChange={(e) => setProfileWallet(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full bg-card border border-border/50 rounded-md px-3 py-2 text-sm font-mono outline-none focus:border-primary/50"
-                />
-              </div>
-            </div>
-            <Button size="sm" onClick={saveProfile} disabled={savingProfile}>
-              {savingProfile ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        )}
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
-          <div
-            className={`rounded-xl border p-4 text-center ${inviteList.length + pendingEnquiries + pendingOffers > 0 ? 'border-rose-500/20 bg-rose-500/10' : 'border-border/40 bg-card'}`}
-          >
-            <div
-              className={`text-2xl font-bold font-mono ${inviteList.length + pendingEnquiries + pendingOffers > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}
-            >
-              {inviteList.length + pendingEnquiries + pendingOffers}
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Pending asks
-            </div>
-          </div>
-          <div className="rounded-xl border border-border/40 bg-card p-4 text-center">
-            <div className="text-2xl font-bold font-mono">{myRooms.length}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Active rooms
-            </div>
-          </div>
-          <div className="rounded-xl border border-border/40 bg-card p-4 text-center">
-            <div className="text-2xl font-bold font-mono">
-              {credList.length}
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Credentials
-            </div>
-          </div>
-          <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-center">
-            <div className="text-2xl font-bold font-mono text-green-600 dark:text-green-400">
-              $
-              {myRooms
-                .reduce(
-                  (s: number, r: any) =>
-                    s + (r.milestoneStats?.releasedUsd ?? 0),
-                  0,
-                )
-                .toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Escrow earned
-            </div>
-          </div>
-          <div
-            className={`rounded-xl border p-4 text-center cursor-pointer transition-colors ${isOnline ? 'border-green-500/20 bg-green-500/10 hover:bg-green-500/10' : 'border-border/40 bg-card hover:border-border/70'}`}
-            onClick={toggleOnline}
-          >
-            <div
-              className={`text-2xl font-bold font-mono ${isOnline ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}
-            >
-              {isOnline ? 'On' : 'Off'}
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Availability
-            </div>
-          </div>
-        </div>
-
-        {/* Join by code CTA */}
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-8 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">Have a room code?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Enter the code shared by a business to join their Live Room
-              directly
-            </p>
-          </div>
-          <Button size="sm" onClick={() => navigate('/room/join')}>
-            Join by Code
-          </Button>
-        </div>
-
-        {/* Hire Offers */}
-        {hireOffers.length > 0 && (
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Hire Offers</h2>
-              <span className="text-xs text-muted-foreground">
-                {pendingOffers} awaiting response
-              </span>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {hireOffers.map((offer: any) => (
-                <div
-                  key={offer._id}
-                  className="rounded-xl border border-border/50 bg-card p-4"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-sm leading-tight truncate">
-                        {offer.room?.title ?? 'Hire offer'}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-primary font-medium">
-                          {offer.role?.roleTitle ?? 'Project role'}
+      {/* Main Workspace Layout (Left: Priority Inbox & Active Work, Right: Profile & Readiness) */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Left Main Column (Needs Action Feed + Active LiveRooms + Credentials) */}
+          <div className="lg:col-span-2 space-y-8 min-w-0">
+            {/* SECTION 1: Priority Inbox ("Needs Action") */}
+            <section className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500">
+                    <Inbox className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-base tracking-tight text-foreground flex items-center gap-2">
+                      Needs Action
+                      {totalPendingAsks > 0 && (
+                        <span className="text-xs font-mono font-bold bg-rose-500 text-white rounded-full px-2 py-0.5">
+                          {totalPendingAsks}
                         </span>
-                        {offer.amountUsd ? (
-                          <span className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full px-1.5 py-0.5">
-                            ${offer.amountUsd.toLocaleString()}
-                          </span>
-                        ) : null}
+                      )}
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Unified feed of pending invitations, project enquiries, and hire offers
+                    </p>
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/40 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setInboxFilter('all')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      inboxFilter === 'all'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    All ({priorityFeedItems.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInboxFilter('offer')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      inboxFilter === 'offer'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Offers ({pendingOffers.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInboxFilter('enquiry')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      inboxFilter === 'enquiry'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Enquiries ({pendingEnquiries.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInboxFilter('invite')}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                      inboxFilter === 'invite'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Invites ({inviteList.length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Priority Feed Item Cards */}
+              {filteredPriorityItems.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center space-y-2">
+                  <Inbox className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    You are available for matching
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 max-w-md mx-auto">
+                    Keep your profile and credentials updated to receive direct LiveRoom invitations and hire offers.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredPriorityItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-border/60 bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span
+                              className={`text-[9px] font-extrabold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
+                                item.type === 'offer'
+                                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                  : item.type === 'enquiry'
+                                    ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              }`}
+                            >
+                              {item.type === 'offer'
+                                ? 'Hire Offer'
+                                : item.type === 'enquiry'
+                                  ? 'Project Enquiry'
+                                  : 'Room Invite'}
+                            </span>
+                            <span className="text-xs font-semibold text-primary">
+                              {item.role}
+                            </span>
+                            {item.amountUsd ? (
+                              <span className="text-[10px] font-mono font-bold border border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full px-2 py-0.5">
+                                ${item.amountUsd.toLocaleString()}
+                              </span>
+                            ) : null}
+                            {item.matchScore !== undefined && item.matchScore !== null ? (
+                              <span className="text-[10px] font-mono font-bold border border-primary/25 bg-primary/10 text-primary rounded-full px-2 py-0.5">
+                                {item.matchScore}% match
+                              </span>
+                            ) : null}
+                          </div>
+                          <h3 className="font-bold text-sm text-foreground truncate">
+                            {item.title}
+                          </h3>
+                        </div>
+
+                        <span
+                          className={`text-[10px] font-bold rounded-full px-2.5 py-0.5 border capitalize shrink-0 ${
+                            item.status === 'accepted' || item.status === 'contracted'
+                              ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          }`}
+                        >
+                          {String(item.status).replace(/_/g, ' ')}
+                        </span>
+                      </div>
+
+                      {item.summary && (
+                        <p className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3 italic line-clamp-2">
+                          {item.summary}
+                        </p>
+                      )}
+
+                      {item.skills && item.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.skills.slice(0, 5).map((sk) => (
+                            <span
+                              key={sk}
+                              className="text-[10px] font-medium border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md px-2 py-0.5"
+                            >
+                              {sk}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/30">
+                        {item.type === 'offer' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => respondHireOffer(item.rawItem._id, 'accepted')}
+                              disabled={respondingOfferId === item.rawItem._id}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 h-8 text-xs font-semibold"
+                            >
+                              Accept Offer <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                respondHireOffer(item.rawItem._id, 'changes_requested')
+                              }
+                              disabled={respondingOfferId === item.rawItem._id}
+                              className="h-8 text-xs"
+                            >
+                              Request Changes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => respondHireOffer(item.rawItem._id, 'declined')}
+                              disabled={respondingOfferId === item.rawItem._id}
+                              className="text-rose-600 hover:bg-rose-500/10 h-8 text-xs"
+                            >
+                              Decline
+                            </Button>
+                          </>
+                        )}
+
+                        {item.type === 'enquiry' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => respondProjectEnquiry(item.rawItem._id, 'interested')}
+                              disabled={respondingEnquiryId === item.rawItem._id}
+                              className="gap-1.5 h-8 text-xs font-semibold"
+                            >
+                              Interested <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                respondProjectEnquiry(item.rawItem._id, 'ask_question')
+                              }
+                              disabled={respondingEnquiryId === item.rawItem._id}
+                              className="h-8 text-xs"
+                            >
+                              Ask Question
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                respondProjectEnquiry(item.rawItem._id, 'not_interested')
+                              }
+                              disabled={respondingEnquiryId === item.rawItem._id}
+                              className="text-rose-600 hover:bg-rose-500/10 h-8 text-xs"
+                            >
+                              Not Interested
+                            </Button>
+                          </>
+                        )}
+
+                        {item.type === 'invite' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                respondInvite.mutate({
+                                  data: {
+                                    participantId: item.rawItem._id,
+                                    action: 'accept',
+                                  },
+                                });
+                                if (item.rawItem.roomId)
+                                  navigate(`/room/${item.rawItem.roomId}`);
+                              }}
+                              className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 h-8 text-xs font-semibold"
+                            >
+                              Join Room <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                respondInvite.mutate({
+                                  data: {
+                                    participantId: item.rawItem._id,
+                                    action: 'decline',
+                                  },
+                                })
+                              }
+                              className="h-8 text-xs"
+                            >
+                              Decline
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* SECTION 2: Active Work ("Active LiveRooms") */}
+            <section className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                    <DoorOpen className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-base tracking-tight text-foreground flex items-center gap-2">
+                      Active LiveRooms
+                      <span className="text-xs font-mono font-bold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                        {myRooms.length}
+                      </span>
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Live Room workspaces where you are an active team member
+                    </p>
+                  </div>
+                </div>
+
+                {/* Filter / Search input */}
+                {myRooms.length > 0 && (
+                  <div className="relative w-full sm:w-60">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={roomSearch}
+                      onChange={(e) => setRoomSearch(e.target.value)}
+                      placeholder="Search active rooms..."
+                      className="w-full bg-card border border-border/60 rounded-xl pl-8 pr-3 py-1 text-xs outline-none focus:border-primary/50"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Room Cards List */}
+              {filteredMyRooms.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center space-y-3">
+                  <DoorOpen className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {roomSearch ? 'No active rooms match your filter' : 'No active rooms yet'}
+                  </p>
+                  <div className="flex justify-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate('/room/join')}
+                      className="gap-1.5 text-xs"
+                    >
+                      <Key className="h-3.5 w-3.5" /> Join with Code
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredMyRooms.map((entry: any) => (
+                    <div
+                      key={entry.participantId}
+                      className="rounded-xl border border-border/60 bg-card p-4 space-y-3 hover:border-primary/40 transition-all shadow-xs"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-xs font-bold text-primary">
+                              {entry.role?.roleTitle ?? 'Team Member'}
+                            </span>
+                            <span className="font-mono text-[10px] text-muted-foreground bg-muted/40 border border-border/40 rounded px-1.5 py-0.5">
+                              {entry.room?.roomCode}
+                            </span>
+                            {entry.room?.meetLink && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                                <Video className="h-3 w-3" /> Meet Ready
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-bold text-base text-foreground leading-snug truncate">
+                            {entry.room?.title}
+                          </h3>
+                        </div>
+
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border capitalize shrink-0 ${
+                            STATUS_COLORS[entry.room?.status] ?? ''
+                          }`}
+                        >
+                          {entry.room?.status}
+                        </span>
+                      </div>
+
+                      {/* Milestone Progress */}
+                      {entry.milestoneStats?.total > 0 && (
+                        <div className="space-y-1.5 pt-2 border-t border-border/20">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-medium">
+                              Milestone Escrow
+                            </span>
+                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                              ${(entry.milestoneStats.releasedUsd ?? 0).toLocaleString()} / ${
+                                (entry.milestoneStats.totalUsd ?? 0).toLocaleString()
+                              } Released
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-muted/60 overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${
+                                  entry.milestoneStats.totalUsd > 0
+                                    ? Math.round(
+                                        (entry.milestoneStats.releasedUsd /
+                                          entry.milestoneStats.totalUsd) *
+                                          100,
+                                      )
+                                    : 0
+                                }%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bottom Action Footer */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard
+                              .writeText(entry.room?.roomCode)
+                              .then(() => {
+                                setCopiedRoomCode(entry.room?.roomCode);
+                                setTimeout(() => setCopiedRoomCode(null), 2000);
+                              });
+                          }}
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors font-mono inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedRoomCode === entry.room?.roomCode ? (
+                            <span className="text-emerald-600 font-bold">✓ Code Copied</span>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3" /> Copy Code
+                            </>
+                          )}
+                        </button>
+
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/room/${entry.room?._id}`)}
+                          className="gap-1.5 font-bold h-8 text-xs"
+                        >
+                          Enter Room <ArrowUpRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* SECTION 3: SBT Credentials (Positioned Lower Down) */}
+            <section className="space-y-4 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-500">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-base tracking-tight text-foreground flex items-center gap-2">
+                      SBT Credentials
+                      <span className="text-xs font-mono font-bold bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                        {credList.length}
+                      </span>
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Verified soulbound badges issued upon technical assessment
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {credList.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center space-y-2">
+                  <Award className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    No credentials issued yet
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 max-w-md mx-auto">
+                    Verified credentials are automatically minted after technical interviews and GitHub code analysis.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {credList.map((cred: any) => (
+                    <SBTCredentialCard key={cred._id} credential={cred} />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+
+          {/* Right Sidebar Column (Profile & Readiness, Quick Actions) */}
+          <div className="space-y-6 lg:sticky lg:top-20">
+            {/* Profile Readiness & Availability Card */}
+            <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between border-b border-border/30 pb-3">
+                <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" /> Profile & Readiness
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setEditingProfile(!editingProfile)}
+                  className="text-xs text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <Edit2 className="h-3 w-3" /> {editingProfile ? 'Close' : 'Edit'}
+                </button>
+              </div>
+
+              {/* Inline Profile Editor */}
+              {editingProfile && (
+                <div className="space-y-3 bg-muted/30 border border-border/40 p-3 rounded-xl">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">
+                      Display Name
+                    </label>
+                    <input
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      placeholder={user?.name ?? 'Your name'}
+                      className="w-full bg-background border border-border/50 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-primary/60"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">
+                      Wallet Address
+                    </label>
+                    <input
+                      value={profileWallet}
+                      onChange={(e) => setProfileWallet(e.target.value)}
+                      placeholder="0x..."
+                      className="w-full bg-background border border-border/50 rounded-lg px-2.5 py-1.5 text-xs font-mono outline-none focus:border-primary/60"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={saveProfile}
+                    disabled={savingProfile}
+                    className="w-full text-xs h-7 font-bold"
+                  >
+                    {savingProfile ? 'Saving...' : 'Save Profile'}
+                  </Button>
+                </div>
+              )}
+
+              {/* Reputation & Readiness Checklist */}
+              <div className="flex items-center gap-4 bg-muted/20 border border-border/30 rounded-xl p-3">
+                <ReputationRing score={overallRep} size={50} />
+                <div>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Overall Reputation
+                  </div>
+                  <div className="font-bold font-mono text-foreground text-xl">
+                    {overallRep}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {credList.length} verified badge{credList.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              </div>
+
+              {/* Readiness Checklist */}
+              <div className="space-y-2 pt-1">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Readiness Checklist
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2
+                        className={`h-3.5 w-3.5 ${
+                          isOnline ? 'text-emerald-500' : 'text-muted-foreground/40'
+                        }`}
+                      />
+                      Available for Matching
+                    </span>
                     <span
-                      className={`text-[10px] rounded-full px-2 py-0.5 border capitalize shrink-0 ${
-                        offer.status === 'accepted' ||
-                        offer.status === 'contracted'
-                          ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400'
-                          : offer.status === 'declined' ||
-                              offer.status === 'withdrawn'
-                            ? 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                            : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      className={`text-[10px] font-bold ${
+                        isOnline ? 'text-emerald-600' : 'text-muted-foreground'
                       }`}
                     >
-                      {String(offer.status).replace(/_/g, ' ')}
+                      {isOnline ? 'Active' : 'Offline'}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed border-l border-border/50 pl-3 mb-3">
-                    {offer.scopeSummary}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground mb-3">
-                    <div className="rounded-md bg-muted/50 px-2 py-1">
-                      Rate: {offer.rateType}
-                      {offer.rateAmountUsd ? ` · $${offer.rateAmountUsd}` : ''}
-                    </div>
-                    <div className="rounded-md bg-muted/50 px-2 py-1">
-                      Milestones: {offer.milestonePlan?.length ?? 0}
-                    </div>
-                    {offer.startDate && (
-                      <div className="rounded-md bg-muted/50 px-2 py-1">
-                        Start: {new Date(offer.startDate).toLocaleDateString()}
-                      </div>
-                    )}
-                    {offer.expectedEndDate && (
-                      <div className="rounded-md bg-muted/50 px-2 py-1">
-                        End:{' '}
-                        {new Date(offer.expectedEndDate).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                  {offer.responseMessage && (
-                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                      {offer.responseMessage}
-                    </p>
-                  )}
-                  {['sent', 'changes_requested'].includes(offer.status) ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => respondHireOffer(offer._id, 'accepted')}
-                        disabled={respondingOfferId === offer._id}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          respondHireOffer(offer._id, 'changes_requested')
-                        }
-                        disabled={respondingOfferId === offer._id}
-                      >
-                        Request Changes
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => respondHireOffer(offer._id, 'declined')}
-                        disabled={respondingOfferId === offer._id}
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  ) : offer.roomId ? (
-                    <button
-                      onClick={() => navigate(`/room/${offer.roomId}`)}
-                      className="text-[11px] text-primary hover:underline"
-                    >
-                      Enter room
-                    </button>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
-        {/* Project Enquiries */}
-        {projectEnquiries.length > 0 && (
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Project Enquiries</h2>
-              <span className="text-xs text-muted-foreground">
-                {pendingEnquiries} pending
-              </span>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2
+                        className={`h-3.5 w-3.5 ${
+                          credList.length > 0
+                            ? 'text-emerald-500'
+                            : 'text-muted-foreground/40'
+                        }`}
+                      />
+                      Verified Credentials
+                    </span>
+                    <span className="text-[10px] font-bold font-mono">
+                      {credList.length} Badges
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2
+                        className={`h-3.5 w-3.5 ${
+                          user?.name ? 'text-emerald-500' : 'text-muted-foreground/40'
+                        }`}
+                      />
+                      Talent Profile
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/talent/profile/${user?._id}`)}
+                      className="text-[10px] font-bold text-primary hover:underline"
+                    >
+                      View →
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {projectEnquiries.map((enquiry: any) => (
-                <div
-                  key={enquiry._id}
-                  className="rounded-xl border border-border/50 bg-card p-4"
+
+            {/* Quick Action: Join Room by Code */}
+            <div className="rounded-2xl border border-border/60 bg-card p-5 space-y-3 shadow-xs">
+              <div className="flex items-center gap-2 font-bold text-sm text-foreground">
+                <Key className="h-4 w-4 text-primary" /> Join LiveRoom with Code
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Received a code from a business client? Enter it below to directly join their LiveRoom workspace.
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={joinCodeInput}
+                  onChange={(e) => setJoinCodeInput(e.target.value)}
+                  placeholder="Enter code (e.g. DHX-8821)"
+                  className="w-full bg-background border border-border/60 rounded-xl px-3 py-2 text-xs font-mono outline-none focus:border-primary/60"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (joinCodeInput.trim()) {
+                      navigate(`/room/join?code=${encodeURIComponent(joinCodeInput.trim())}`);
+                    } else {
+                      navigate('/room/join');
+                    }
+                  }}
+                  className="w-full gap-1.5 font-bold text-xs h-8"
                 >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-sm leading-tight truncate">
-                        {enquiry.room?.title ?? 'Project enquiry'}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-primary font-medium">
-                          {enquiry.role?.roleTitle ??
-                            enquiry.role?.skillDomain ??
-                            'Role'}
-                        </span>
-                        {enquiry.matchScore !== null &&
-                          enquiry.matchScore !== undefined && (
-                            <span className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-1.5 py-0.5">
-                              {enquiry.matchScore}% match
-                            </span>
-                          )}
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] rounded-full px-2 py-0.5 border capitalize shrink-0 ${enquiry.responseStatus === 'pending' ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400'}`}
-                    >
-                      {String(enquiry.responseStatus).replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                  {enquiry.message && (
-                    <p className="text-xs text-muted-foreground leading-relaxed border-l border-border/50 pl-3 mb-3">
-                      {enquiry.message}
-                    </p>
-                  )}
-                  {enquiry.matchedSkills?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {enquiry.matchedSkills
-                        .slice(0, 4)
-                        .map((skill: string) => (
-                          <span
-                            key={skill}
-                            className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        respondProjectEnquiry(enquiry._id, 'interested')
-                      }
-                      disabled={respondingEnquiryId === enquiry._id}
-                    >
-                      Interested
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        respondProjectEnquiry(enquiry._id, 'ask_question')
-                      }
-                      disabled={respondingEnquiryId === enquiry._id}
-                    >
-                      Ask Question
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        respondProjectEnquiry(enquiry._id, 'proposal_submitted')
-                      }
-                      disabled={respondingEnquiryId === enquiry._id}
-                    >
-                      Proposal Sent
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        respondProjectEnquiry(enquiry._id, 'not_interested')
-                      }
-                      disabled={respondingEnquiryId === enquiry._id}
-                    >
-                      Not Interested
-                    </Button>
-                  </div>
-                  {enquiry.roomId && (
-                    <button
-                      onClick={() => navigate(`/room/${enquiry.roomId}`)}
-                      className="text-[11px] text-primary hover:underline mt-3"
-                    >
-                      View project
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* My Active Rooms */}
-        {myRooms.length > 0 && (
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">My Active Rooms</h2>
-              <span className="text-xs text-muted-foreground">
-                {myRooms.length} room{myRooms.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {myRooms.map((entry: any) => (
-                <div
-                  key={entry.participantId}
-                  className="rounded-xl border border-border/50 bg-card hover:border-primary/30 transition-colors"
-                >
-                  <button
-                    onClick={() => navigate(`/room/${entry.room._id}`)}
-                    className="w-full text-left p-4 group"
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-semibold text-sm group-hover:text-primary transition-colors truncate">
-                        {entry.room.title}
-                      </h3>
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded border capitalize shrink-0 ${STATUS_COLORS[entry.room.status] ?? ''}`}
-                      >
-                        {entry.room.status}
-                      </span>
-                    </div>
-                    {entry.role && (
-                      <p className="text-xs text-primary font-medium mb-1">
-                        {entry.role.roleTitle}
-                      </p>
-                    )}
-                    {entry.room.meetLink && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                        <p className="text-[11px] text-green-600 dark:text-green-400">
-                          Meet link available
-                        </p>
-                      </div>
-                    )}
-                    {entry.room.contractedAt && (
-                      <p className="text-[11px] text-blue-600/80 dark:text-blue-400/70 mt-0.5">
-                        Contracted{' '}
-                        {new Date(entry.room.contractedAt).toLocaleDateString()}
-                      </p>
-                    )}
-                    {entry.milestoneStats?.total > 0 && (
-                      <div className="mt-2 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">
-                            Escrow
-                          </span>
-                          <span className="text-[10px] font-mono text-green-600 dark:text-green-400">
-                            $
-                            {(
-                              entry.milestoneStats.releasedUsd ?? 0
-                            ).toLocaleString()}{' '}
-                            / $
-                            {(
-                              entry.milestoneStats.totalUsd ?? 0
-                            ).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="w-full h-1 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full bg-green-500 rounded-full transition-all"
-                            style={{
-                              width: `${entry.milestoneStats.totalUsd > 0 ? Math.round((entry.milestoneStats.releasedUsd / entry.milestoneStats.totalUsd) * 100) : 0}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                  <div className="px-4 pb-3 border-t border-border/30 pt-2 flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] text-muted-foreground font-mono">
-                      {entry.room.roomCode}
-                    </span>
-                    <span className="text-border/40 text-xs">·</span>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard
-                          .writeText(entry.room.roomCode)
-                          .then(() => {
-                            setCopiedRoomCode(entry.room.roomCode);
-                            setTimeout(() => setCopiedRoomCode(null), 2000);
-                          });
-                      }}
-                      className="text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {copiedRoomCode === entry.room.roomCode
-                        ? '✓ Copied!'
-                        : 'Copy code'}
-                    </button>
-                    {entry.milestoneStats?.total > 0 && (
-                      <>
-                        <span className="text-border/40 text-xs">·</span>
-                        <span className="text-[11px] text-muted-foreground">
-                          {entry.milestoneStats.total} milestone
-                          {entry.milestoneStats.total !== 1 ? 's' : ''}
-                        </span>
-                      </>
-                    )}
-                    <span className="text-border/40 text-xs">·</span>
-                    <button
-                      onClick={() => navigate(`/room/${entry.room._id}`)}
-                      className="text-[11px] text-primary hover:underline transition-colors"
-                    >
-                      Enter room →
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Active Invitations</h2>
-              {inviteList.length > 0 && (
-                <span className="text-xs bg-primary/20 text-primary border border-primary/30 rounded-full px-2 py-0.5">
-                  {inviteList.length}
-                </span>
-              )}
-            </div>
-            {inviteList.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border/50 p-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  No pending invitations
-                </p>
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  Set yourself as available to receive invites
-                </p>
+                  Join Workspace <ArrowUpRight className="h-3.5 w-3.5" />
+                </Button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {inviteList.map((invite: any) => (
-                  <div
-                    key={invite._id}
-                    className="rounded-xl border border-border/50 bg-card p-4"
-                  >
-                    <div className="mb-3">
-                      <h3 className="font-semibold text-sm leading-tight">
-                        {invite.room?.title ?? 'Unknown project'}
-                      </h3>
-                      {(invite.room?.rawDescription ||
-                        invite.project?.description) && (
-                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-1 border-l-2 border-primary/20 pl-2 italic">
-                          {invite.room?.rawDescription ||
-                            invite.project?.description}
-                        </p>
-                      )}
-                      {invite.role && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-primary font-medium">
-                            {invite.role.roleTitle}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {invite.role.skillDomain}
-                          </span>
-                        </div>
-                      )}
-                      {invite.role?.minReputation > 0 && (
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          Min reputation:{' '}
-                          <span className="font-mono text-foreground/70">
-                            {invite.role.minReputation}
-                          </span>
-                        </div>
-                      )}
-                      {invite.room?.roomCode && (
-                        <div className="text-xs text-muted-foreground/60 font-mono mt-1">
-                          {invite.room.roomCode}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => {
-                          respondInvite.mutate({
-                            data: {
-                              participantId: invite._id,
-                              action: 'accept',
-                            },
-                          });
-                          if (invite.roomId) navigate(`/room/${invite.roomId}`);
-                        }}
-                      >
-                        Join Room
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          respondInvite.mutate({
-                            data: {
-                              participantId: invite._id,
-                              action: 'decline',
-                            },
-                          })
-                        }
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="font-semibold mb-4">SBT Credentials</h2>
-            {credList.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border/50 p-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  No credentials issued yet
-                </p>
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  Credentials are verified and issued after GitHub analysis and
-                  technical interviews
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {credList.map((cred: any) => (
-                  <SBTCredentialCard key={cred._id} credential={cred} />
-                ))}
-              </div>
-            )}
-          </section>
+            </div>
+          </div>
         </div>
       </div>
     </div>
