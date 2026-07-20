@@ -40,7 +40,9 @@ export function ConnectsIcon({
   className = 'h-5 w-5',
   strokeWidth = 2.2,
   ...props
-}: { className?: string; strokeWidth?: number } & React.ComponentProps<typeof Zap>) {
+}: { className?: string; strokeWidth?: number } & React.ComponentProps<
+  typeof Zap
+>) {
   return <Zap className={className} strokeWidth={strokeWidth} {...props} />;
 }
 

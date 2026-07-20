@@ -39,7 +39,13 @@ const STATUS_COLORS: Record<string, string> = {
   closed: 'text-muted-foreground bg-muted/20 border-border/55',
 };
 
-function UserAvatar({ user, className = 'h-7 w-7 text-xs' }: { user: any; className?: string }) {
+function UserAvatar({
+  user,
+  className = 'h-7 w-7 text-xs',
+}: {
+  user: any;
+  className?: string;
+}) {
   const avatarSrc =
     user?.avatarUrl ||
     user?.photoURL ||
@@ -67,7 +73,9 @@ function UserAvatar({ user, className = 'h-7 w-7 text-xs' }: { user: any; classN
   }
 
   return (
-    <div className={`${className} rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center shrink-0 uppercase tracking-tighter`}>
+    <div
+      className={`${className} rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center shrink-0 uppercase tracking-tighter`}
+    >
       {initials}
     </div>
   );
@@ -243,7 +251,9 @@ export default function BusinessDashboard() {
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <UserAvatar user={user} className="h-7 w-7 text-xs" />
-            <span className="font-bold text-sm text-foreground">{user?.name}</span>
+            <span className="font-bold text-sm text-foreground">
+              {user?.name}
+            </span>
             <span className="text-xs text-muted-foreground border border-border/50 rounded-md px-1.5 py-0.5 font-medium">
               Business
             </span>
@@ -344,7 +354,9 @@ export default function BusinessDashboard() {
                 sub: '150 connects per room',
                 mono: true,
                 isAmber: true,
-                icon: <Zap className="h-4 w-4 text-amber-500" strokeWidth={2.2} />,
+                icon: (
+                  <Zap className="h-4 w-4 text-amber-500" strokeWidth={2.2} />
+                ),
               },
             ].map((s) => (
               <div

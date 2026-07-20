@@ -22,23 +22,15 @@ import {
   Inbox,
   DoorOpen,
   Award,
-  Coins,
-  Activity,
   User,
   Check,
   Copy,
   ArrowUpRight,
-  Briefcase,
-  MessageSquare,
-  Sparkles,
   ShieldCheck,
   Key,
-  Filter,
   CheckCircle2,
   Video,
   Edit2,
-  X,
-  Clock,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -54,7 +46,13 @@ const STATUS_COLORS: Record<string, string> = {
   closed: 'text-muted-foreground bg-muted/20 border-border/55',
 };
 
-function UserAvatar({ user, className = 'h-7 w-7 text-xs' }: { user: any; className?: string }) {
+function UserAvatar({
+  user,
+  className = 'h-7 w-7 text-xs',
+}: {
+  user: any;
+  className?: string;
+}) {
   const avatarSrc =
     user?.avatarUrl ||
     user?.photoURL ||
@@ -82,7 +80,9 @@ function UserAvatar({ user, className = 'h-7 w-7 text-xs' }: { user: any; classN
   }
 
   return (
-    <div className={`${className} rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center shrink-0 uppercase tracking-tighter`}>
+    <div
+      className={`${className} rounded-lg bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center shrink-0 uppercase tracking-tighter`}
+    >
       {initials}
     </div>
   );
@@ -128,7 +128,9 @@ export default function TalentDashboard() {
   );
   const [roomSearch, setRoomSearch] = useState('');
   const [joinCodeInput, setJoinCodeInput] = useState('');
-  const [inboxFilter, setInboxFilter] = useState<'all' | 'offer' | 'enquiry' | 'invite'>('all');
+  const [inboxFilter, setInboxFilter] = useState<
+    'all' | 'offer' | 'enquiry' | 'invite'
+  >('all');
 
   const loadProjectEnquiries = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -275,6 +277,75 @@ export default function TalentDashboard() {
     },
   });
 
+  // Build Unified Needs Action Priority Feed Items
+  const priorityFeedItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      type: 'offer' | 'enquiry' | 'invite';
+      title: string;
+      role?: string;
+      amountUsd?: number;
+      matchScore?: number;
+      status: string;
+      summary?: string;
+      skills?: string[];
+      rawItem: any;
+    }> = [];
+
+    // Offers
+    hireOffers.forEach((offer: any) => {
+      if (['sent', 'changes_requested'].includes(offer.status)) {
+        items.push({
+          id: `offer-${offer._id}`,
+          type: 'offer',
+          title: offer.room?.title ?? 'Hire Offer',
+          role: offer.role?.roleTitle ?? 'Project role',
+          amountUsd: offer.amountUsd,
+          status: offer.status,
+          summary: offer.scopeSummary,
+          rawItem: offer,
+        });
+      }
+    });
+
+    // Enquiries
+    projectEnquiries.forEach((enquiry: any) => {
+      if (enquiry.responseStatus === 'pending') {
+        items.push({
+          id: `enquiry-${enquiry._id}`,
+          type: 'enquiry',
+          title: enquiry.room?.title ?? 'Project Enquiry',
+          role: enquiry.role?.roleTitle ?? enquiry.role?.skillDomain ?? 'Role',
+          matchScore: enquiry.matchScore,
+          status: enquiry.responseStatus,
+          summary: enquiry.message,
+          skills: enquiry.matchedSkills,
+          rawItem: enquiry,
+        });
+      }
+    });
+
+    // Invitations
+    inviteList.forEach((invite: any) => {
+      items.push({
+        id: `invite-${invite._id}`,
+        type: 'invite',
+        title: invite.room?.title ?? 'Room Invitation',
+        role: invite.role?.roleTitle ?? invite.role?.skillDomain,
+        status: invite.status || 'pending',
+        summary: invite.room?.rawDescription || invite.project?.description,
+        rawItem: invite,
+      });
+    });
+
+    return items;
+  }, [hireOffers, projectEnquiries, inviteList]);
+
+  const filteredPriorityItems = useMemo(() => {
+    if (inboxFilter === 'all') return priorityFeedItems;
+    return priorityFeedItems.filter((item) => item.type === inboxFilter);
+  }, [priorityFeedItems, inboxFilter]);
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -293,7 +364,8 @@ export default function TalentDashboard() {
   const pendingOffers = hireOffers.filter((offer) =>
     ['sent', 'changes_requested'].includes(offer.status),
   );
-  const totalPendingAsks = inviteList.length + pendingEnquiries.length + pendingOffers.length;
+  const totalPendingAsks =
+    inviteList.length + pendingEnquiries.length + pendingOffers.length;
 
   const overallRep =
     credList.length > 0
@@ -408,75 +480,6 @@ export default function TalentDashboard() {
     }
   };
 
-  // Build Unified Needs Action Priority Feed Items
-  const priorityFeedItems = useMemo(() => {
-    const items: Array<{
-      id: string;
-      type: 'offer' | 'enquiry' | 'invite';
-      title: string;
-      role?: string;
-      amountUsd?: number;
-      matchScore?: number;
-      status: string;
-      summary?: string;
-      skills?: string[];
-      rawItem: any;
-    }> = [];
-
-    // Offers
-    hireOffers.forEach((offer: any) => {
-      if (['sent', 'changes_requested'].includes(offer.status)) {
-        items.push({
-          id: `offer-${offer._id}`,
-          type: 'offer',
-          title: offer.room?.title ?? 'Hire Offer',
-          role: offer.role?.roleTitle ?? 'Project role',
-          amountUsd: offer.amountUsd,
-          status: offer.status,
-          summary: offer.scopeSummary,
-          rawItem: offer,
-        });
-      }
-    });
-
-    // Enquiries
-    projectEnquiries.forEach((enquiry: any) => {
-      if (enquiry.responseStatus === 'pending') {
-        items.push({
-          id: `enquiry-${enquiry._id}`,
-          type: 'enquiry',
-          title: enquiry.room?.title ?? 'Project Enquiry',
-          role: enquiry.role?.roleTitle ?? enquiry.role?.skillDomain ?? 'Role',
-          matchScore: enquiry.matchScore,
-          status: enquiry.responseStatus,
-          summary: enquiry.message,
-          skills: enquiry.matchedSkills,
-          rawItem: enquiry,
-        });
-      }
-    });
-
-    // Invitations
-    inviteList.forEach((invite: any) => {
-      items.push({
-        id: `invite-${invite._id}`,
-        type: 'invite',
-        title: invite.room?.title ?? 'Room Invitation',
-        role: invite.role?.roleTitle ?? invite.role?.skillDomain,
-        status: invite.status || 'pending',
-        summary: invite.room?.rawDescription || invite.project?.description,
-        rawItem: invite,
-      });
-    });
-
-    return items;
-  }, [hireOffers, projectEnquiries, inviteList]);
-
-  const filteredPriorityItems = useMemo(() => {
-    if (inboxFilter === 'all') return priorityFeedItems;
-    return priorityFeedItems.filter((item) => item.type === inboxFilter);
-  }, [priorityFeedItems, inboxFilter]);
-
   const filteredMyRooms = myRooms.filter((entry: any) => {
     if (!roomSearch.trim()) return true;
     const term = roomSearch.toLowerCase();
@@ -485,11 +488,6 @@ export default function TalentDashboard() {
     const role = String(entry.role?.roleTitle || '').toLowerCase();
     return title.includes(term) || code.includes(term) || role.includes(term);
   });
-
-  const totalEscrowEarned = myRooms.reduce(
-    (s: number, r: any) => s + (r.milestoneStats?.releasedUsd ?? 0),
-    0,
-  );
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -519,12 +517,16 @@ export default function TalentDashboard() {
               <div className="flex items-center gap-1.5">
                 <DoorOpen className="h-3.5 w-3.5 text-primary" />
                 <span className="text-muted-foreground">Rooms:</span>
-                <span className="font-bold text-foreground">{myRooms.length}</span>
+                <span className="font-bold text-foreground">
+                  {myRooms.length}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Inbox className="h-3.5 w-3.5 text-rose-500" />
                 <span className="text-muted-foreground">Needs Action:</span>
-                <span className="font-bold text-rose-500">{totalPendingAsks}</span>
+                <span className="font-bold text-rose-500">
+                  {totalPendingAsks}
+                </span>
               </div>
             </div>
 
@@ -580,7 +582,8 @@ export default function TalentDashboard() {
                       )}
                     </h2>
                     <p className="text-xs text-muted-foreground">
-                      Unified feed of pending invitations, project enquiries, and hire offers
+                      Unified feed of pending invitations, project enquiries,
+                      and hire offers
                     </p>
                   </div>
                 </div>
@@ -642,7 +645,8 @@ export default function TalentDashboard() {
                     You are available for matching
                   </p>
                   <p className="text-xs text-muted-foreground/70 max-w-md mx-auto">
-                    Keep your profile and credentials updated to receive direct LiveRoom invitations and hire offers.
+                    Keep your profile and credentials updated to receive direct
+                    LiveRoom invitations and hire offers.
                   </p>
                 </div>
               ) : (
@@ -678,7 +682,8 @@ export default function TalentDashboard() {
                                 ${item.amountUsd.toLocaleString()}
                               </span>
                             ) : null}
-                            {item.matchScore !== undefined && item.matchScore !== null ? (
+                            {item.matchScore !== undefined &&
+                            item.matchScore !== null ? (
                               <span className="text-[10px] font-mono font-bold border border-primary/25 bg-primary/10 text-primary rounded-full px-2 py-0.5">
                                 {item.matchScore}% match
                               </span>
@@ -691,7 +696,8 @@ export default function TalentDashboard() {
 
                         <span
                           className={`text-[10px] font-bold rounded-full px-2.5 py-0.5 border capitalize shrink-0 ${
-                            item.status === 'accepted' || item.status === 'contracted'
+                            item.status === 'accepted' ||
+                            item.status === 'contracted'
                               ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                               : 'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                           }`}
@@ -725,7 +731,9 @@ export default function TalentDashboard() {
                           <>
                             <Button
                               size="sm"
-                              onClick={() => respondHireOffer(item.rawItem._id, 'accepted')}
+                              onClick={() =>
+                                respondHireOffer(item.rawItem._id, 'accepted')
+                              }
                               disabled={respondingOfferId === item.rawItem._id}
                               className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 h-8 text-xs font-semibold"
                             >
@@ -735,7 +743,10 @@ export default function TalentDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() =>
-                                respondHireOffer(item.rawItem._id, 'changes_requested')
+                                respondHireOffer(
+                                  item.rawItem._id,
+                                  'changes_requested',
+                                )
                               }
                               disabled={respondingOfferId === item.rawItem._id}
                               className="h-8 text-xs"
@@ -745,7 +756,9 @@ export default function TalentDashboard() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => respondHireOffer(item.rawItem._id, 'declined')}
+                              onClick={() =>
+                                respondHireOffer(item.rawItem._id, 'declined')
+                              }
                               disabled={respondingOfferId === item.rawItem._id}
                               className="text-rose-600 hover:bg-rose-500/10 h-8 text-xs"
                             >
@@ -758,8 +771,15 @@ export default function TalentDashboard() {
                           <>
                             <Button
                               size="sm"
-                              onClick={() => respondProjectEnquiry(item.rawItem._id, 'interested')}
-                              disabled={respondingEnquiryId === item.rawItem._id}
+                              onClick={() =>
+                                respondProjectEnquiry(
+                                  item.rawItem._id,
+                                  'interested',
+                                )
+                              }
+                              disabled={
+                                respondingEnquiryId === item.rawItem._id
+                              }
                               className="gap-1.5 h-8 text-xs font-semibold"
                             >
                               Interested <Check className="h-3.5 w-3.5" />
@@ -768,9 +788,14 @@ export default function TalentDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() =>
-                                respondProjectEnquiry(item.rawItem._id, 'ask_question')
+                                respondProjectEnquiry(
+                                  item.rawItem._id,
+                                  'ask_question',
+                                )
                               }
-                              disabled={respondingEnquiryId === item.rawItem._id}
+                              disabled={
+                                respondingEnquiryId === item.rawItem._id
+                              }
                               className="h-8 text-xs"
                             >
                               Ask Question
@@ -779,9 +804,14 @@ export default function TalentDashboard() {
                               size="sm"
                               variant="ghost"
                               onClick={() =>
-                                respondProjectEnquiry(item.rawItem._id, 'not_interested')
+                                respondProjectEnquiry(
+                                  item.rawItem._id,
+                                  'not_interested',
+                                )
                               }
-                              disabled={respondingEnquiryId === item.rawItem._id}
+                              disabled={
+                                respondingEnquiryId === item.rawItem._id
+                              }
                               className="text-rose-600 hover:bg-rose-500/10 h-8 text-xs"
                             >
                               Not Interested
@@ -871,7 +901,9 @@ export default function TalentDashboard() {
                 <div className="rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center space-y-3">
                   <DoorOpen className="h-8 w-8 text-muted-foreground/30 mx-auto" />
                   <p className="text-sm font-medium text-muted-foreground">
-                    {roomSearch ? 'No active rooms match your filter' : 'No active rooms yet'}
+                    {roomSearch
+                      ? 'No active rooms match your filter'
+                      : 'No active rooms yet'}
                   </p>
                   <div className="flex justify-center gap-2 pt-1">
                     <Button
@@ -928,9 +960,15 @@ export default function TalentDashboard() {
                               Milestone Escrow
                             </span>
                             <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                              ${(entry.milestoneStats.releasedUsd ?? 0).toLocaleString()} / ${
-                                (entry.milestoneStats.totalUsd ?? 0).toLocaleString()
-                              } Released
+                              $
+                              {(
+                                entry.milestoneStats.releasedUsd ?? 0
+                              ).toLocaleString()}{' '}
+                              / $
+                              {(
+                                entry.milestoneStats.totalUsd ?? 0
+                              ).toLocaleString()}{' '}
+                              Released
                             </span>
                           </div>
                           <div className="w-full h-2 rounded-full bg-muted/60 overflow-hidden">
@@ -967,7 +1005,9 @@ export default function TalentDashboard() {
                           className="text-xs text-muted-foreground hover:text-primary transition-colors font-mono inline-flex items-center gap-1 cursor-pointer"
                         >
                           {copiedRoomCode === entry.room?.roomCode ? (
-                            <span className="text-emerald-600 font-bold">✓ Code Copied</span>
+                            <span className="text-emerald-600 font-bold">
+                              ✓ Code Copied
+                            </span>
                           ) : (
                             <>
                               <Copy className="h-3 w-3" /> Copy Code
@@ -1017,7 +1057,8 @@ export default function TalentDashboard() {
                     No credentials issued yet
                   </p>
                   <p className="text-xs text-muted-foreground/70 max-w-md mx-auto">
-                    Verified credentials are automatically minted after technical interviews and GitHub code analysis.
+                    Verified credentials are automatically minted after
+                    technical interviews and GitHub code analysis.
                   </p>
                 </div>
               ) : (
@@ -1043,7 +1084,8 @@ export default function TalentDashboard() {
                   onClick={() => setEditingProfile(!editingProfile)}
                   className="text-xs text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                 >
-                  <Edit2 className="h-3 w-3" /> {editingProfile ? 'Close' : 'Edit'}
+                  <Edit2 className="h-3 w-3" />{' '}
+                  {editingProfile ? 'Close' : 'Edit'}
                 </button>
               </div>
 
@@ -1094,7 +1136,8 @@ export default function TalentDashboard() {
                     {overallRep}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {credList.length} verified badge{credList.length !== 1 ? 's' : ''}
+                    {credList.length} verified badge
+                    {credList.length !== 1 ? 's' : ''}
                   </div>
                 </div>
               </div>
@@ -1109,7 +1152,9 @@ export default function TalentDashboard() {
                     <span className="flex items-center gap-2">
                       <CheckCircle2
                         className={`h-3.5 w-3.5 ${
-                          isOnline ? 'text-emerald-500' : 'text-muted-foreground/40'
+                          isOnline
+                            ? 'text-emerald-500'
+                            : 'text-muted-foreground/40'
                         }`}
                       />
                       Available for Matching
@@ -1143,7 +1188,9 @@ export default function TalentDashboard() {
                     <span className="flex items-center gap-2">
                       <CheckCircle2
                         className={`h-3.5 w-3.5 ${
-                          user?.name ? 'text-emerald-500' : 'text-muted-foreground/40'
+                          user?.name
+                            ? 'text-emerald-500'
+                            : 'text-muted-foreground/40'
                         }`}
                       />
                       Talent Profile
@@ -1166,7 +1213,8 @@ export default function TalentDashboard() {
                 <Key className="h-4 w-4 text-primary" /> Join LiveRoom with Code
               </div>
               <p className="text-xs text-muted-foreground">
-                Received a code from a business client? Enter it below to directly join their LiveRoom workspace.
+                Received a code from a business client? Enter it below to
+                directly join their LiveRoom workspace.
               </p>
               <div className="space-y-2">
                 <input
@@ -1180,7 +1228,9 @@ export default function TalentDashboard() {
                   size="sm"
                   onClick={() => {
                     if (joinCodeInput.trim()) {
-                      navigate(`/room/join?code=${encodeURIComponent(joinCodeInput.trim())}`);
+                      navigate(
+                        `/room/join?code=${encodeURIComponent(joinCodeInput.trim())}`,
+                      );
                     } else {
                       navigate('/room/join');
                     }

@@ -50,14 +50,15 @@ import { liveRoomApiFetch as fetch } from '../api/runtime';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import MilestoneReviewSection from '../components/MilestoneReviewSection';
-import ConnectsDialog from '@/components/shared/ConnectsDialog';
-import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
 } from '../../../../components/ui/tooltip';
+
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
+import { updateConnectsBalance } from '@/lib/updateConnects';
 
 type WizardPhase =
   | 'idea'
@@ -6185,7 +6186,7 @@ export default function CreateRoom() {
   const [selectedTalentKeys, setSelectedTalentKeys] = useState<
     Record<string, boolean>
   >({});
-  const [talentMatchingTab, setTalentMatchingTab] = useState<'ai' | 'manual'>(
+  const [talentMatchingTab, _setTalentMatchingTab] = useState<'ai' | 'manual'>(
     'manual',
   );
   const [talentRoleFilter, setTalentRoleFilter] = useState<string>('all');
@@ -6211,6 +6212,10 @@ export default function CreateRoom() {
     Record<string, boolean>
   >({});
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showConnectsConfirm, setShowConnectsConfirm] = useState(false);
+  const [pendingCreationType, setPendingCreationType] = useState<
+    'manual' | 'ai' | null
+  >(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const blueprintReportRef = useRef<HTMLDivElement | null>(null);
@@ -6344,7 +6349,7 @@ Please return ONLY the recommended answer itself, without any introductory or co
     }
   };
 
-  const handleRefineBlueprintSection = async (
+  const _handleRefineBlueprintSection = async (
     sectionId: string,
     promptText: string,
   ) => {
@@ -6397,7 +6402,7 @@ Return ONLY a valid raw JSON object matching the exact schema as the original ob
     }
   };
 
-  const saveBlueprintToServer = async (updatedBlueprint: any) => {
+  const _saveBlueprintToServer = async (updatedBlueprint: any) => {
     setBlueprint(updatedBlueprint);
   };
 
@@ -7423,7 +7428,7 @@ Please return ONLY the modified text itself, without any introductory or convers
     return defaults;
   };
 
-  const groupedRecommendationTeams: RoleRecommendationGroup[] =
+  const _groupedRecommendationTeams: RoleRecommendationGroup[] =
     talentRecommendationReport?.recommendedTeams?.length
       ? talentRecommendationReport.recommendedTeams
       : talentRecommendationReport
@@ -7454,7 +7459,7 @@ Please return ONLY the modified text itself, without any introductory or convers
           )
         : [];
 
-  const groupedManualTeams: RoleRecommendationGroup[] =
+  const _groupedManualTeams: RoleRecommendationGroup[] =
     talentRecommendationReport?.manualFreelancers
       ? Object.values(
           talentRecommendationReport.manualFreelancers.reduce<
@@ -7494,9 +7499,6 @@ Please return ONLY the modified text itself, without any introductory or convers
             selectedTalentKeys[recommendationKey(recommendation, 'manual')],
         )
     : [];
-
-  const [showConnectsConfirm, setShowConnectsConfirm] = useState(false);
-  const [pendingCreationType, setPendingCreationType] = useState<'manual' | 'ai' | null>(null);
 
   const enterRoomDashboard = async () => {
     if (!sessionData?._id || creatingRoom) return;
@@ -7543,7 +7545,10 @@ Please return ONLY the modified text itself, without any introductory or convers
       if (typeof room?.remainingConnects === 'number') {
         updateConnectsBalance(room.remainingConnects);
       } else {
-        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+        const currentConnects = parseInt(
+          localStorage.getItem('DHX_CONNECTS') || '0',
+          10,
+        );
         updateConnectsBalance(Math.max(0, currentConnects - 150));
       }
       navigate(`/room/${room._id}`);
@@ -7615,7 +7620,10 @@ Please return ONLY the modified text itself, without any introductory or convers
       if (typeof room?.remainingConnects === 'number') {
         updateConnectsBalance(room.remainingConnects);
       } else {
-        const currentConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+        const currentConnects = parseInt(
+          localStorage.getItem('DHX_CONNECTS') || '0',
+          10,
+        );
         updateConnectsBalance(Math.max(0, currentConnects - 150));
       }
       navigate(`/room/${room._id}`);
@@ -7752,569 +7760,409 @@ Please return ONLY the modified text itself, without any introductory or convers
           ) : (
             <>
               {phase === 'idea' &&
-            (validating ? (
-              <PremiumLoader
-                title="Validating Business Idea"
-                subtitle="Evaluating market demand, defining target audience personas, examining competitors, scoring potential, and framing the initial business concept..."
-              />
-            ) : (
-              <div className="space-y-6">
-                <div>
-                  <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                    Phase 1
-                  </div>
-                  <h1 className="text-3xl font-bold tracking-tight mb-3">
-                    Shape your project vision
-                  </h1>
-                  <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                    Describe your business idea or product vision in your own
-                    words. We will evaluate the market potential, define target
-                    personas, map competitors, and frame the initial business
-                    model to kickstart your launch room.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border/50 bg-card overflow-hidden focus-within:border-primary/40 transition-colors">
-                  <textarea
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    placeholder="Example: I want to build a platform for local restaurants to predict demand and reduce ingredient waste..."
-                    className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/40 resize-none p-6 outline-none text-base leading-relaxed min-h-[190px]"
-                    rows={7}
+                (validating ? (
+                  <PremiumLoader
+                    title="Validating Business Idea"
+                    subtitle="Evaluating market demand, defining target audience personas, examining competitors, scoring potential, and framing the initial business concept..."
                   />
-                  <div className="border-t border-border/40 px-6 py-3 flex items-center justify-between gap-3">
-                    <span
-                      className={`text-xs ${description.length < 20 ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
-                    >
-                      {description.length} chars{' '}
-                      {description.length < 20 && description.length > 0
-                        ? '- add more detail'
-                        : ''}
-                    </span>
-                    <Button
-                      onClick={validateIdea}
-                      disabled={validating || description.trim().length < 20}
-                    >
-                      Analyze business
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-          {phase === 'analysis' && !analysis && (
-            <PremiumLoader
-              title="Generating Business Analysis"
-              subtitle="Market, audience, competitor, revenue, risk, SWOT, scores, and verdict sections are being produced in the background..."
-            />
-          )}
-
-          {phase === 'analysis' &&
-            analysis &&
-            (savingPhase1Review || loadingQuestions ? (
-              <PremiumLoader
-                title={
-                  savingPhase1Review
-                    ? 'Saving Business Review'
-                    : 'Preparing Blueprint Questions'
-                }
-                subtitle={
-                  savingPhase1Review
-                    ? 'Updating launch session with your confirmed assumptions, target audiences, and market configurations...'
-                    : 'Formulating targeted mandatory and optional technical scoping questions for your blueprint...'
-                }
-              />
-            ) : (
-              <div className="space-y-7">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                      Phase 2 output
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-3">
-                      Business analysis result
-                    </h1>
-                    <p className="text-muted-foreground max-w-2xl">
-                      {analysis.idea_summary}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPhase('idea')}
-                      disabled={loadingQuestions}
-                    >
-                      Edit idea
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Redesigned Metrics Grid */}
-                <div className="grid gap-6 md:grid-cols-3">
-                  {/* Verdict Card */}
-                  <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md transition-all duration-300 hover:border-primary/30">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Analysis Verdict
-                      </span>
-                      {research?.final_verdict && (
-                        <span
-                          className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
-                            research.final_verdict
-                              .toLowerCase()
-                              .includes('ready') ||
-                            research.final_verdict
-                              .toLowerCase()
-                              .includes('viable')
-                              ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25'
-                              : research.final_verdict
-                                    .toLowerCase()
-                                    .includes('scoping') ||
-                                  research.final_verdict
-                                    .toLowerCase()
-                                    .includes('work')
-                                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25'
-                                : 'bg-red-500/10 text-red-500 border border-red-500/25'
-                          }`}
-                        >
-                          {research.final_verdict}
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-bold text-foreground">
-                        {research?.final_verdict
-                          ?.toLowerCase()
-                          .includes('viable')
-                          ? 'Strong Potential'
-                          : 'Needs Refinement'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {research?.verdict_reasoning ??
-                          'The initial analysis is complete. Review the suggestions and warnings before proceeding.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Overall Score Card */}
-                  <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md flex items-center gap-6 transition-all duration-300 hover:border-primary/30">
-                    <div className="relative flex items-center justify-center shrink-0 w-24 h-24">
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle
-                          cx="48"
-                          cy="48"
-                          r="40"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          className="text-muted/10"
-                          fill="transparent"
-                        />
-                        <circle
-                          cx="48"
-                          cy="48"
-                          r="40"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          className="text-primary transition-all duration-1000 ease-out"
-                          strokeDasharray={2 * Math.PI * 40}
-                          strokeDashoffset={
-                            2 *
-                            Math.PI *
-                            40 *
-                            (1 - (research?.overall_score ?? 0) / 10)
-                          }
-                          strokeLinecap="round"
-                          fill="transparent"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-2xl font-extrabold font-mono text-foreground leading-none">
-                          {research?.overall_score ?? 'N/A'}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">
-                          / 10
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Overall Score
-                      </span>
-                      <h3 className="text-xl font-bold text-foreground">
-                        Idea Viability
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Composite score based on market size, feasibility,
-                        demand & competitive advantage.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Region Card */}
-                  <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md transition-all duration-300 hover:border-primary/30">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Target Region
-                      </span>
-                      <MapPin className="h-5 w-5 text-primary animate-pulse" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-3xl font-extrabold text-foreground tracking-tight">
-                        {analysis.region_used ?? 'Global'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Analysis calibrated for local demographics, regional
-                        regulations, and specific market dynamics.
-                      </p>
-                      {analysis.needs_clarification && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-500 font-medium">
-                          <AlertCircle className="h-4 w-4 shrink-0" />
-                          <span>AI flagged this idea for clarification.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Redesigned Business Review Form */}
-                <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-b from-card/80 to-card/40 p-6 space-y-6 shadow-lg">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/40 pb-4">
+                ) : (
+                  <div className="space-y-6">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                          Business Review
-                        </span>
-                        {sessionData?.phase1ConfirmedAt && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 border border-green-500/20 px-2.5 py-0.5 text-xs font-medium text-green-500">
-                            <CheckCircle className="h-3.5 w-3.5" />
-                            Confirmed
-                          </span>
-                        )}
+                      <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                        Phase 1
                       </div>
-                      <h2 className="mt-1 text-xl font-bold text-foreground">
-                        Confirm Phase 2 Inputs & Assumptions
-                      </h2>
-                      <p className="mt-1 max-w-2xl text-xs text-muted-foreground leading-relaxed">
-                        We&apos;ve generated the business requirements based on
-                        your idea. Use the fields below to customize, adjust, or
-                        use AI to refine specific values before generating the
-                        technical blueprint.
+                      <h1 className="text-3xl font-bold tracking-tight mb-3">
+                        Shape your project vision
+                      </h1>
+                      <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                        Describe your business idea or product vision in your
+                        own words. We will evaluate the market potential, define
+                        target personas, map competitors, and frame the initial
+                        business model to kickstart your launch room.
                       </p>
                     </div>
-                  </div>
 
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {renderPhase1ReviewField(
-                      'region',
-                      'Region',
-                      'e.g., India, USA, Global',
-                      false,
-                    )}
-                    {renderPhase1ReviewField(
-                      'targetAudience',
-                      'Target Customers',
-                      'Who the business will serve',
-                      true,
-                    )}
-                  </div>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {renderPhase1ReviewField(
-                      'businessModel',
-                      'Business Model',
-                      'Subscription, commission, B2B SaaS, etc.',
-                    )}
-                    {renderPhase1ReviewField(
-                      'competitors',
-                      'Competitor Context',
-                      'Known competitors, alternatives, or market category',
-                    )}
-                  </div>
-                  <div className="w-full">
-                    {renderPhase1ReviewField(
-                      'ideaSummary',
-                      'Idea Summary',
-                      'Short corrected description of the business idea',
-                    )}
-                  </div>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {renderPhase1ReviewField(
-                      'marketDemand',
-                      'Market Demand Notes',
-                      'What demand, pain, or opportunity should Phase 2 consider?',
-                    )}
-                    {renderPhase1ReviewField(
-                      'goToMarket',
-                      'Go-to-market Notes',
-                      'Launch channel, sales motion, geography-specific GTM',
-                    )}
-                  </div>
-                </div>
-
-                {analysis.needs_clarification &&
-                  analysis.clarifying_questions &&
-                  analysis.clarifying_questions.length > 0 && (
-                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-                      <h3 className="text-sm font-semibold text-amber-300 mb-2">
-                        Clarifying questions from AI
-                      </h3>
-                      <ul className="space-y-1.5">
-                        {analysis.clarifying_questions.map(
-                          (question, index) => (
-                            <li
-                              key={index}
-                              className="text-sm text-amber-100/80"
-                            >
-                              {index + 1}. {question}
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                <AnalysisDetails
-                  analysis={analysis}
-                  onSectionChange={setActiveReportSection}
-                  isChatOpen={isChatOpen}
-                />
-
-                <div className="flex items-center gap-3 pt-4 border-t border-border/40">
-                  <Button
-                    className="flex-1 h-12 text-base font-semibold"
-                    onClick={confirmPhase1AndLoadQuestions}
-                    disabled={loadingQuestions || savingPhase1Review}
-                  >
-                    Confirm Phase 2 and continue
-                  </Button>
-                </div>
-              </div>
-            ))}
-
-          {phase === 'technical' &&
-            (generatingBlueprint ? (
-              <PremiumLoader
-                title="Generating Tech Blueprint"
-                subtitle="Creating system architecture, database models, API flows, development stages, and pricing estimations..."
-              />
-            ) : (
-              <div className="space-y-8 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
-                  <div>
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                      Phase 3 intake
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-1">
-                      Answer blueprint questions
-                    </h1>
-                    <p className="text-muted-foreground max-w-2xl text-xs leading-relaxed">
-                      The fixed questions are mandatory. The optional questions
-                      are generated from the business idea and make the final
-                      blueprint more specific.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={`shrink-0 h-10 px-4 text-xs font-bold gap-2 self-start sm:self-center transition-all ${
-                      allSuggestedOrAnswered
-                        ? 'bg-muted border border-border text-muted-foreground opacity-75'
-                        : 'bg-primary/10 border border-primary/25 text-primary hover:bg-primary/25'
-                    }`}
-                    onClick={handleAiSuggestForAll}
-                    disabled={
-                      suggestingId !== null ||
-                      suggestingAll ||
-                      allSuggestedOrAnswered
-                    }
-                  >
-                    {suggestingAll ? (
-                      <>
-                        <span className="w-3.5 h-3.5 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
-                        Suggesting...
-                      </>
-                    ) : mandatoryQuestions.length > 0 &&
-                      mandatoryQuestions.every((q) => usedAiSuggest[q._id]) ? (
-                      <>
-                        <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
-                        Suggested for All
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-3.5 w-3.5" />
-                        AI Suggest for All
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                <div className="space-y-6">
-                  {mandatoryQuestions.map((question, index) => {
-                    const isSuggestingThis = suggestingId === question._id;
-                    const value = answers[question._id] || '';
-                    const refineVal = refineInputs[question._id] || '';
-                    const isRefineOpen =
-                      expandedRefineFields[question._id] || false;
-
-                    const hasSuggested = usedAiSuggest[question._id] || false;
-
-                    return (
-                      <div
-                        key={question._id}
-                        className="space-y-3 rounded-xl border border-border/30 bg-background/20 p-4 transition-all hover:border-border/50"
-                      >
-                        <div className="flex items-start justify-between gap-4 w-full">
-                          <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
-                            {index + 1}. {question.question}{' '}
-                            <span className="text-primary">*</span>
-                          </label>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2.5 text-xs text-primary bg-primary/5 hover:bg-primary/10 gap-1.5"
-                              onClick={() =>
-                                handleAiSuggest(question._id, question.question)
-                              }
-                              disabled={suggestingId !== null || hasSuggested}
-                            >
-                              {isSuggestingThis ? (
-                                <>
-                                  <span className="w-3 h-3 rounded-full border border-primary/40 border-t-primary animate-spin" />
-                                  Suggesting...
-                                </>
-                              ) : hasSuggested ? (
-                                <>
-                                  <CheckCircle className="h-3 w-3 text-muted-foreground/60" />
-                                  Suggested
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="h-3 w-3" />
-                                  AI Suggest
-                                </>
-                              )}
-                            </Button>
-                            {value.trim() && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className={`h-7 px-2.5 text-xs gap-1.5 transition-all ${
-                                  isRefineOpen
-                                    ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-primary/20'
-                                    : 'bg-primary/5 text-primary hover:bg-primary/10'
-                                }`}
-                                onClick={() => {
-                                  setExpandedRefineFields((prev) => ({
-                                    ...prev,
-                                    [question._id]: !prev[question._id],
-                                  }));
-                                }}
-                              >
-                                <Sparkles className="h-3 w-3" />
-                                {isRefineOpen ? 'Close Refine' : 'Refine'}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <textarea
-                          value={value}
-                          onChange={(event) => {
-                            setAnswers({
-                              ...answers,
-                              [question._id]: event.target.value,
-                            });
-                            event.target.style.height = 'auto';
-                            event.target.style.height = `${event.target.scrollHeight}px`;
-                          }}
-                          ref={(el) => {
-                            textareaRefs.current[question._id] = el;
-                            if (el) {
-                              el.style.height = 'auto';
-                              el.style.height = `${el.scrollHeight}px`;
-                            }
-                          }}
-                          placeholder="Answer in plain language..."
-                          className="w-full min-h-[92px] bg-background/55 text-foreground placeholder:text-muted-foreground/45 resize-none p-3 rounded-lg border border-border/40 outline-none text-sm focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all leading-relaxed overflow-hidden"
-                        />
-
-                        {value.trim() && isRefineOpen && (
-                          <div className="space-y-2 bg-card border border-border/40 rounded-lg p-2.5 transition-all animate-in slide-in-from-top-1 duration-200">
-                            <textarea
-                              value={refineVal}
-                              onChange={(e) => {
-                                setRefineInputs({
-                                  ...refineInputs,
-                                  [question._id]: e.target.value,
-                                });
-                                e.target.style.height = 'auto';
-                                e.target.style.height = `${e.target.scrollHeight}px`;
-                              }}
-                              ref={(el) => {
-                                textareaRefs.current[`refine_${question._id}`] =
-                                  el;
-                                if (el) {
-                                  el.style.height = 'auto';
-                                  el.style.height = `${el.scrollHeight}px`;
-                                }
-                              }}
-                              placeholder="Refine this answer (e.g. 'make it shorter', 'add Solidity details')"
-                              rows={1}
-                              className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/45 outline-none px-2 resize-none min-h-[32px] leading-relaxed overflow-hidden"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleAiRefine(
-                                    question._id,
-                                    question.question,
-                                  );
-                                }
-                              }}
-                            />
-                            <div className="flex justify-end border-t border-border/20 pt-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="h-7 px-3 text-xs text-primary bg-primary/5 hover:bg-primary/10 gap-1"
-                                onClick={() =>
-                                  handleAiRefine(
-                                    question._id,
-                                    question.question,
-                                  )
-                                }
-                                disabled={
-                                  suggestingId !== null || !refineVal.trim()
-                                }
-                              >
-                                {isSuggestingThis ? (
-                                  <>
-                                    <span className="w-3 h-3 rounded-full border border-primary/40 border-t-primary animate-spin" />
-                                    Refining...
-                                  </>
-                                ) : (
-                                  <>Refine</>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                    <div className="rounded-xl border border-border/50 bg-card overflow-hidden focus-within:border-primary/40 transition-colors">
+                      <textarea
+                        value={description}
+                        onChange={(event) => setDescription(event.target.value)}
+                        placeholder="Example: I want to build a platform for local restaurants to predict demand and reduce ingredient waste..."
+                        className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/40 resize-none p-6 outline-none text-base leading-relaxed min-h-[190px]"
+                        rows={7}
+                      />
+                      <div className="border-t border-border/40 px-6 py-3 flex items-center justify-between gap-3">
+                        <span
+                          className={`text-xs ${description.length < 20 ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
+                        >
+                          {description.length} chars{' '}
+                          {description.length < 20 && description.length > 0
+                            ? '- add more detail'
+                            : ''}
+                        </span>
+                        <Button
+                          onClick={validateIdea}
+                          disabled={
+                            validating || description.trim().length < 20
+                          }
+                        >
+                          Analyze business
+                        </Button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
+                ))}
 
-                  {optionalQuestions.length > 0 && (
-                    <div className="pt-6 border-t border-border/40 space-y-4">
+              {phase === 'analysis' && !analysis && (
+                <PremiumLoader
+                  title="Generating Business Analysis"
+                  subtitle="Market, audience, competitor, revenue, risk, SWOT, scores, and verdict sections are being produced in the background..."
+                />
+              )}
+
+              {phase === 'analysis' &&
+                analysis &&
+                (savingPhase1Review || loadingQuestions ? (
+                  <PremiumLoader
+                    title={
+                      savingPhase1Review
+                        ? 'Saving Business Review'
+                        : 'Preparing Blueprint Questions'
+                    }
+                    subtitle={
+                      savingPhase1Review
+                        ? 'Updating launch session with your confirmed assumptions, target audiences, and market configurations...'
+                        : 'Formulating targeted mandatory and optional technical scoping questions for your blueprint...'
+                    }
+                  />
+                ) : (
+                  <div className="space-y-7">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h2 className="text-base font-bold text-foreground">
-                          Optional AI questions
-                        </h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          These are based on your specific idea. Answer the ones
-                          you can.
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                          Phase 2 output
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight mb-3">
+                          Business analysis result
+                        </h1>
+                        <p className="text-muted-foreground max-w-2xl">
+                          {analysis.idea_summary}
                         </p>
                       </div>
-                      {optionalQuestions.map((question, index) => {
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          onClick={() => setPhase('idea')}
+                          disabled={loadingQuestions}
+                        >
+                          Edit idea
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Redesigned Metrics Grid */}
+                    <div className="grid gap-6 md:grid-cols-3">
+                      {/* Verdict Card */}
+                      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md transition-all duration-300 hover:border-primary/30">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Analysis Verdict
+                          </span>
+                          {research?.final_verdict && (
+                            <span
+                              className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                                research.final_verdict
+                                  .toLowerCase()
+                                  .includes('ready') ||
+                                research.final_verdict
+                                  .toLowerCase()
+                                  .includes('viable')
+                                  ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25'
+                                  : research.final_verdict
+                                        .toLowerCase()
+                                        .includes('scoping') ||
+                                      research.final_verdict
+                                        .toLowerCase()
+                                        .includes('work')
+                                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25'
+                                    : 'bg-red-500/10 text-red-500 border border-red-500/25'
+                              }`}
+                            >
+                              {research.final_verdict}
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-2xl font-bold text-foreground">
+                            {research?.final_verdict
+                              ?.toLowerCase()
+                              .includes('viable')
+                              ? 'Strong Potential'
+                              : 'Needs Refinement'}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {research?.verdict_reasoning ??
+                              'The initial analysis is complete. Review the suggestions and warnings before proceeding.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Overall Score Card */}
+                      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md flex items-center gap-6 transition-all duration-300 hover:border-primary/30">
+                        <div className="relative flex items-center justify-center shrink-0 w-24 h-24">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle
+                              cx="48"
+                              cy="48"
+                              r="40"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              className="text-muted/10"
+                              fill="transparent"
+                            />
+                            <circle
+                              cx="48"
+                              cy="48"
+                              r="40"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              className="text-primary transition-all duration-1000 ease-out"
+                              strokeDasharray={2 * Math.PI * 40}
+                              strokeDashoffset={
+                                2 *
+                                Math.PI *
+                                40 *
+                                (1 - (research?.overall_score ?? 0) / 10)
+                              }
+                              strokeLinecap="round"
+                              fill="transparent"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-extrabold font-mono text-foreground leading-none">
+                              {research?.overall_score ?? 'N/A'}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground mt-0.5">
+                              / 10
+                            </span>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Overall Score
+                          </span>
+                          <h3 className="text-xl font-bold text-foreground">
+                            Idea Viability
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Composite score based on market size, feasibility,
+                            demand & competitive advantage.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Region Card */}
+                      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-6 shadow-md transition-all duration-300 hover:border-primary/30">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Target Region
+                          </span>
+                          <MapPin className="h-5 w-5 text-primary animate-pulse" />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-3xl font-extrabold text-foreground tracking-tight">
+                            {analysis.region_used ?? 'Global'}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Analysis calibrated for local demographics, regional
+                            regulations, and specific market dynamics.
+                          </p>
+                          {analysis.needs_clarification && (
+                            <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-500 font-medium">
+                              <AlertCircle className="h-4 w-4 shrink-0" />
+                              <span>
+                                AI flagged this idea for clarification.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Redesigned Business Review Form */}
+                    <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-b from-card/80 to-card/40 p-6 space-y-6 shadow-lg">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/40 pb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                              Business Review
+                            </span>
+                            {sessionData?.phase1ConfirmedAt && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 border border-green-500/20 px-2.5 py-0.5 text-xs font-medium text-green-500">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                Confirmed
+                              </span>
+                            )}
+                          </div>
+                          <h2 className="mt-1 text-xl font-bold text-foreground">
+                            Confirm Phase 2 Inputs & Assumptions
+                          </h2>
+                          <p className="mt-1 max-w-2xl text-xs text-muted-foreground leading-relaxed">
+                            We&apos;ve generated the business requirements based
+                            on your idea. Use the fields below to customize,
+                            adjust, or use AI to refine specific values before
+                            generating the technical blueprint.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6 md:grid-cols-2">
+                        {renderPhase1ReviewField(
+                          'region',
+                          'Region',
+                          'e.g., India, USA, Global',
+                          false,
+                        )}
+                        {renderPhase1ReviewField(
+                          'targetAudience',
+                          'Target Customers',
+                          'Who the business will serve',
+                          true,
+                        )}
+                      </div>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        {renderPhase1ReviewField(
+                          'businessModel',
+                          'Business Model',
+                          'Subscription, commission, B2B SaaS, etc.',
+                        )}
+                        {renderPhase1ReviewField(
+                          'competitors',
+                          'Competitor Context',
+                          'Known competitors, alternatives, or market category',
+                        )}
+                      </div>
+                      <div className="w-full">
+                        {renderPhase1ReviewField(
+                          'ideaSummary',
+                          'Idea Summary',
+                          'Short corrected description of the business idea',
+                        )}
+                      </div>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        {renderPhase1ReviewField(
+                          'marketDemand',
+                          'Market Demand Notes',
+                          'What demand, pain, or opportunity should Phase 2 consider?',
+                        )}
+                        {renderPhase1ReviewField(
+                          'goToMarket',
+                          'Go-to-market Notes',
+                          'Launch channel, sales motion, geography-specific GTM',
+                        )}
+                      </div>
+                    </div>
+
+                    {analysis.needs_clarification &&
+                      analysis.clarifying_questions &&
+                      analysis.clarifying_questions.length > 0 && (
+                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+                          <h3 className="text-sm font-semibold text-amber-300 mb-2">
+                            Clarifying questions from AI
+                          </h3>
+                          <ul className="space-y-1.5">
+                            {analysis.clarifying_questions.map(
+                              (question, index) => (
+                                <li
+                                  key={index}
+                                  className="text-sm text-amber-100/80"
+                                >
+                                  {index + 1}. {question}
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </div>
+                      )}
+
+                    <AnalysisDetails
+                      analysis={analysis}
+                      onSectionChange={setActiveReportSection}
+                      isChatOpen={isChatOpen}
+                    />
+
+                    <div className="flex items-center gap-3 pt-4 border-t border-border/40">
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold"
+                        onClick={confirmPhase1AndLoadQuestions}
+                        disabled={loadingQuestions || savingPhase1Review}
+                      >
+                        Confirm Phase 2 and continue
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+              {phase === 'technical' &&
+                (generatingBlueprint ? (
+                  <PremiumLoader
+                    title="Generating Tech Blueprint"
+                    subtitle="Creating system architecture, database models, API flows, development stages, and pricing estimations..."
+                  />
+                ) : (
+                  <div className="space-y-8 animate-in fade-in duration-300">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
+                      <div>
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                          Phase 3 intake
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight mb-1">
+                          Answer blueprint questions
+                        </h1>
+                        <p className="text-muted-foreground max-w-2xl text-xs leading-relaxed">
+                          The fixed questions are mandatory. The optional
+                          questions are generated from the business idea and
+                          make the final blueprint more specific.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={`shrink-0 h-10 px-4 text-xs font-bold gap-2 self-start sm:self-center transition-all ${
+                          allSuggestedOrAnswered
+                            ? 'bg-muted border border-border text-muted-foreground opacity-75'
+                            : 'bg-primary/10 border border-primary/25 text-primary hover:bg-primary/25'
+                        }`}
+                        onClick={handleAiSuggestForAll}
+                        disabled={
+                          suggestingId !== null ||
+                          suggestingAll ||
+                          allSuggestedOrAnswered
+                        }
+                      >
+                        {suggestingAll ? (
+                          <>
+                            <span className="w-3.5 h-3.5 rounded-full border-2 border-primary/40 border-t-primary animate-spin" />
+                            Suggesting...
+                          </>
+                        ) : mandatoryQuestions.length > 0 &&
+                          mandatoryQuestions.every(
+                            (q) => usedAiSuggest[q._id],
+                          ) ? (
+                          <>
+                            <CheckCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
+                            Suggested for All
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5" />
+                            AI Suggest for All
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {mandatoryQuestions.map((question, index) => {
                         const isSuggestingThis = suggestingId === question._id;
                         const value = answers[question._id] || '';
                         const refineVal = refineInputs[question._id] || '';
@@ -8331,7 +8179,8 @@ Please return ONLY the modified text itself, without any introductory or convers
                           >
                             <div className="flex items-start justify-between gap-4 w-full">
                               <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
-                                {index + 1}. {question.question}
+                                {index + 1}. {question.question}{' '}
+                                <span className="text-primary">*</span>
                               </label>
                               <div className="flex items-center gap-2 shrink-0">
                                 <Button
@@ -8406,7 +8255,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                                   el.style.height = `${el.scrollHeight}px`;
                                 }
                               }}
-                              placeholder="Optional answer..."
+                              placeholder="Answer in plain language..."
                               className="w-full min-h-[92px] bg-background/55 text-foreground placeholder:text-muted-foreground/45 resize-none p-3 rounded-lg border border-border/40 outline-none text-sm focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all leading-relaxed overflow-hidden"
                             />
 
@@ -8431,7 +8280,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                                       el.style.height = `${el.scrollHeight}px`;
                                     }
                                   }}
-                                  placeholder="Refine this answer (e.g. 'make it shorter')"
+                                  placeholder="Refine this answer (e.g. 'make it shorter', 'add Solidity details')"
                                   rows={1}
                                   className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/45 outline-none px-2 resize-none min-h-[32px] leading-relaxed overflow-hidden"
                                   onKeyDown={(e) => {
@@ -8474,761 +8323,1008 @@ Please return ONLY the modified text itself, without any introductory or convers
                           </div>
                         );
                       })}
+
+                      {optionalQuestions.length > 0 && (
+                        <div className="pt-6 border-t border-border/40 space-y-4">
+                          <div>
+                            <h2 className="text-base font-bold text-foreground">
+                              Optional AI questions
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              These are based on your specific idea. Answer the
+                              ones you can.
+                            </p>
+                          </div>
+                          {optionalQuestions.map((question, index) => {
+                            const isSuggestingThis =
+                              suggestingId === question._id;
+                            const value = answers[question._id] || '';
+                            const refineVal = refineInputs[question._id] || '';
+                            const isRefineOpen =
+                              expandedRefineFields[question._id] || false;
+
+                            const hasSuggested =
+                              usedAiSuggest[question._id] || false;
+
+                            return (
+                              <div
+                                key={question._id}
+                                className="space-y-3 rounded-xl border border-border/30 bg-background/20 p-4 transition-all hover:border-border/50"
+                              >
+                                <div className="flex items-start justify-between gap-4 w-full">
+                                  <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
+                                    {index + 1}. {question.question}
+                                  </label>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2.5 text-xs text-primary bg-primary/5 hover:bg-primary/10 gap-1.5"
+                                      onClick={() =>
+                                        handleAiSuggest(
+                                          question._id,
+                                          question.question,
+                                        )
+                                      }
+                                      disabled={
+                                        suggestingId !== null || hasSuggested
+                                      }
+                                    >
+                                      {isSuggestingThis ? (
+                                        <>
+                                          <span className="w-3 h-3 rounded-full border border-primary/40 border-t-primary animate-spin" />
+                                          Suggesting...
+                                        </>
+                                      ) : hasSuggested ? (
+                                        <>
+                                          <CheckCircle className="h-3 w-3 text-muted-foreground/60" />
+                                          Suggested
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Sparkles className="h-3 w-3" />
+                                          AI Suggest
+                                        </>
+                                      )}
+                                    </Button>
+                                    {value.trim() && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`h-7 px-2.5 text-xs gap-1.5 transition-all ${
+                                          isRefineOpen
+                                            ? 'bg-primary/15 text-primary border border-primary/20 hover:bg-primary/20'
+                                            : 'bg-primary/5 text-primary hover:bg-primary/10'
+                                        }`}
+                                        onClick={() => {
+                                          setExpandedRefineFields((prev) => ({
+                                            ...prev,
+                                            [question._id]: !prev[question._id],
+                                          }));
+                                        }}
+                                      >
+                                        <Sparkles className="h-3 w-3" />
+                                        {isRefineOpen
+                                          ? 'Close Refine'
+                                          : 'Refine'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                                <textarea
+                                  value={value}
+                                  onChange={(event) => {
+                                    setAnswers({
+                                      ...answers,
+                                      [question._id]: event.target.value,
+                                    });
+                                    event.target.style.height = 'auto';
+                                    event.target.style.height = `${event.target.scrollHeight}px`;
+                                  }}
+                                  ref={(el) => {
+                                    textareaRefs.current[question._id] = el;
+                                    if (el) {
+                                      el.style.height = 'auto';
+                                      el.style.height = `${el.scrollHeight}px`;
+                                    }
+                                  }}
+                                  placeholder="Optional answer..."
+                                  className="w-full min-h-[92px] bg-background/55 text-foreground placeholder:text-muted-foreground/45 resize-none p-3 rounded-lg border border-border/40 outline-none text-sm focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all leading-relaxed overflow-hidden"
+                                />
+
+                                {value.trim() && isRefineOpen && (
+                                  <div className="space-y-2 bg-card border border-border/40 rounded-lg p-2.5 transition-all animate-in slide-in-from-top-1 duration-200">
+                                    <textarea
+                                      value={refineVal}
+                                      onChange={(e) => {
+                                        setRefineInputs({
+                                          ...refineInputs,
+                                          [question._id]: e.target.value,
+                                        });
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = `${e.target.scrollHeight}px`;
+                                      }}
+                                      ref={(el) => {
+                                        textareaRefs.current[
+                                          `refine_${question._id}`
+                                        ] = el;
+                                        if (el) {
+                                          el.style.height = 'auto';
+                                          el.style.height = `${el.scrollHeight}px`;
+                                        }
+                                      }}
+                                      placeholder="Refine this answer (e.g. 'make it shorter')"
+                                      rows={1}
+                                      className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground/45 outline-none px-2 resize-none min-h-[32px] leading-relaxed overflow-hidden"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                          e.preventDefault();
+                                          handleAiRefine(
+                                            question._id,
+                                            question.question,
+                                          );
+                                        }
+                                      }}
+                                    />
+                                    <div className="flex justify-end border-t border-border/20 pt-2">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        className="h-7 px-3 text-xs text-primary bg-primary/5 hover:bg-primary/10 gap-1"
+                                        onClick={() =>
+                                          handleAiRefine(
+                                            question._id,
+                                            question.question,
+                                          )
+                                        }
+                                        disabled={
+                                          suggestingId !== null ||
+                                          !refineVal.trim()
+                                        }
+                                      >
+                                        {isSuggestingThis ? (
+                                          <>
+                                            <span className="w-3 h-3 rounded-full border border-primary/40 border-t-primary animate-spin" />
+                                            Refining...
+                                          </>
+                                        ) : (
+                                          <>Refine</>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div className="flex items-center gap-3 pt-4 border-t border-border/40">
-                  <Button
-                    variant="outline"
-                    className="h-12"
-                    onClick={() => setPhase('analysis')}
-                    disabled={generatingBlueprint}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    className="flex-1 h-12 text-base font-semibold"
-                    onClick={generateBlueprint}
-                    disabled={generatingBlueprint}
-                  >
-                    Generate Tech Blueprint
-                  </Button>
-                </div>
-              </div>
-            ))}
-
-          {phase === 'blueprint' && !blueprint && (
-            <PremiumLoader
-              title="Generating Blueprint Report"
-              subtitle="Executive summary, MVP scope, architecture, roadmap, team, budget, GTM, risks, and recommendations are being prepared in the background..."
-            />
-          )}
-
-          {phase === 'blueprint' &&
-            blueprint &&
-            (creatingRoom || loadingRecommendations ? (
-              <PremiumLoader
-                title={
-                  creatingRoom
-                    ? 'Assembling Your Live Room'
-                    : 'Scouting Talent Matches'
-                }
-                subtitle={
-                  creatingRoom
-                    ? 'Creating dashboard, compiling documents, setting up workspaces, and preparing the workspace...'
-                    : 'Scanning verified developer profiles, evaluating skill matches, reputation scores, budget fits, and availability...'
-                }
-              />
-            ) : !isFinalBlueprint ? (
-              <div className="space-y-7 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                      Phase 3 review
+                    <div className="flex items-center gap-3 pt-4 border-t border-border/40">
+                      <Button
+                        variant="outline"
+                        className="h-12"
+                        onClick={() => setPhase('analysis')}
+                        disabled={generatingBlueprint}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        className="flex-1 h-12 text-base font-semibold"
+                        onClick={generateBlueprint}
+                        disabled={generatingBlueprint}
+                      >
+                        Generate Tech Blueprint
+                      </Button>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-3">
-                      Review & Edit Blueprint
-                    </h1>
-                    <p className="text-muted-foreground max-w-4xl text-sm leading-relaxed">
-                      Edit any field below in plain language. Use the{' '}
-                      <span className="inline-flex items-center gap-0.5 text-primary font-medium">
-                        <Sparkles className="h-3 w-3" />
-                        Refine
-                      </span>{' '}
-                      buttons to improve content with AI.
-                    </p>
                   </div>
-                  <div className="flex flex-wrap gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPhase('analysis')}
-                      disabled={creatingRoom || loadingRecommendations}
-                    >
-                      Edit Phase 2
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setPhase('technical')}
-                      disabled={creatingRoom || loadingRecommendations}
-                    >
-                      Edit answers
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleConfirmFinal}
-                      disabled={
-                        creatingRoom ||
-                        loadingRecommendations ||
-                        finalizingBlueprint
-                      }
-                      className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold"
-                    >
-                      {finalizingBlueprint
-                        ? 'Finalizing...'
-                        : 'Approve and Finalize'}
-                    </Button>
-                  </div>
-                </div>
+                ))}
 
-                <BlueprintReviewSection
-                  blueprint={blueprint}
-                  region={phase1Review.region}
-                  onUpdateField={handleUpdateBlueprintField}
-                  onRefineField={handleRefineBlueprintField}
-                  isRefining={isRefiningBlueprintSection}
-                  suggestingId={suggestingId}
-                  onConfirmFinal={handleConfirmFinal}
-                  setSuggestingId={setSuggestingId}
-                  setIsRefiningBlueprintSection={setIsRefiningBlueprintSection}
-                  sessionData={sessionData}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
+              {phase === 'blueprint' && !blueprint && (
+                <PremiumLoader
+                  title="Generating Blueprint Report"
+                  subtitle="Executive summary, MVP scope, architecture, roadmap, team, budget, GTM, risks, and recommendations are being prepared in the background..."
                 />
-              </div>
-            ) : (
-              <div className="space-y-7 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                      Phase 3 output
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-3">
-                      Business and development blueprint
-                    </h1>
-                    <p className="text-muted-foreground max-w-4xl text-sm leading-relaxed">
-                      This report uses the Phase 2 analysis plus the mandatory
-                      and optional Phase 3 answers.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsFinalBlueprint(false)}
-                      disabled={creatingRoom || loadingRecommendations}
-                      className="gap-1.5"
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                      Edit Blueprint
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={downloadBlueprintPdf}
-                      disabled={
-                        downloadingBlueprintPdf ||
-                        creatingRoom ||
-                        loadingRecommendations
-                      }
-                      className="bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20 font-bold"
-                    >
-                      {downloadingBlueprintPdf
-                        ? 'Preparing...'
-                        : 'Download PDF'}
-                    </Button>
+              )}
 
-                    <Button
-                      onClick={() => {
-                        const missing = mandatoryQuestions.filter(
-                          (question) => !answers[question._id]?.trim(),
-                        );
-                        if (missing.length > 0) {
-                          toast.error('Please answer all mandatory questions');
-                          setPhase('technical');
-                          return;
-                        }
-                        setPhase('milestones');
-                      }}
-                      disabled={loadingRecommendations || creatingRoom}
-                      className="gap-1.5"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Review Milestones
-                    </Button>
-                  </div>
-                </div>
-
-                <div data-blueprint-report-capture ref={blueprintReportRef}>
-                  <BlueprintReport
-                    blueprint={blueprint}
-                    onSectionChange={setActiveReportSection}
-                    region={phase1Review.region}
-                    isEditable={false}
-                  />
-                </div>
-              </div>
-            ))}
-
-          {phase === 'milestones' && (
-            <MilestoneReviewSection
-              blueprint={blueprint || {}}
-              onApproveAndFindTalent={() => setShowTalentChoiceModal(true)}
-              onBack={() => setPhase('blueprint')}
-              isFindingTalent={loadingRecommendations}
-            />
-          )}
-
-          {phase === 'recommendations' &&
-            talentRecommendationReport &&
-            (creatingRoom || loadingRecommendations ? (
-              <PremiumLoader
-                title={
-                  creatingRoom
-                    ? 'Assembling Your Live Room'
-                    : 'Scouting Talent Matches'
-                }
-                subtitle={
-                  creatingRoom
-                    ? 'Creating dashboard, compiling documents, setting up workspaces, and preparing the workspace...'
-                    : 'Scanning verified developer profiles, evaluating skill matches, reputation scores, budget fits, and availability...'
-                }
-              />
-            ) : (
-              <div className="space-y-7 animate-in fade-in duration-300">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
-                      Phase 4 output
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-3">
-                      Recommended talent matches
-                    </h1>
-                    <p className="text-muted-foreground max-w-2xl">
-                      Candidates are ranked using verified reputation, previous
-                      work, GitHub score, skill fit, and availability.
-                    </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPhase('milestones')}
-                      disabled={creatingRoom || loadingRecommendations}
-                    >
-                      Back to milestones
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={generateTalentRecommendations}
-                      disabled={loadingRecommendations || creatingRoom}
-                    >
-                      {loadingRecommendations
-                        ? 'Refreshing...'
-                        : 'Refresh matches'}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setPendingCreationType('manual');
-                        setShowConnectsConfirm(true);
-                      }}
-                      disabled={creatingRoom || loadingRecommendations}
-                    >
-                      {creatingRoom
-                        ? 'Preparing room...'
-                        : selectedTalentRecommendations.length > 0
-                          ? `Create room with ${selectedTalentRecommendations.length} selected`
-                          : 'Enter room dashboard'}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-xl border border-border/50 bg-card p-4">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                      <Zap className="h-3.5 w-3.5 text-amber-500" strokeWidth={2.2} /> Required connects
-                    </div>
-                    <div className="text-2xl font-bold font-mono text-amber-500 flex items-center gap-1.5">
-                      <Zap className="h-5 w-5 text-amber-500" strokeWidth={2.2} /> 150 <span className="text-xs font-normal text-muted-foreground font-sans">connects</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Deducted upon room creation
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-border/50 bg-card p-4">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                      Roles considered
-                    </div>
-                    <div className="text-2xl font-bold font-mono">
-                      {talentRecommendationReport.roleCount}
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-border/50 bg-card p-4">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                      Recommended talents
-                    </div>
-                    <div className="text-2xl font-bold font-mono">
-                      {talentRecommendationReport.recommendations.length}
-                    </div>
-                    {selectedTalentRecommendations.length > 0 && (
-                      <div className="text-xs text-primary mt-1">
-                        {selectedTalentRecommendations.length} selected
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {(() => {
-                  const activeGroups: RoleRecommendationGroup[] =
-                    talentMatchingTab === 'ai'
-                      ? talentRecommendationReport.groupedRecommendationTeams ||
-                        talentRecommendationReport.recommendedTeams ||
-                        []
-                      : talentRecommendationReport.groupedManualTeams ||
-                        talentRecommendationReport.recommendedTeams ||
-                        [];
-
-                  const availableRoleTitles = Array.from(
-                    new Set(
-                      activeGroups
-                        .map((g: RoleRecommendationGroup) => g.role?.roleTitle)
-                        .filter((t: string | undefined): t is string => Boolean(t)),
-                    ),
-                  );
-
-                  const filteredGroups = activeGroups.filter(
-                    (g: RoleRecommendationGroup) => {
-                      if (talentRoleFilter === 'all') return true;
-                      return g.role?.roleTitle === talentRoleFilter;
-                    },
-                  );
-
-                  const sortMatches = (matches: any[]) => {
-                    const list = [...matches];
-                    if (talentSortFilter === 'score') {
-                      list.sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
-                    } else if (talentSortFilter === 'reputation') {
-                      list.sort(
-                        (a, b) =>
-                          (b.credential?.reputationScore || 0) -
-                          (a.credential?.reputationScore || 0),
-                      );
-                    } else if (talentSortFilter === 'rate_asc') {
-                      list.sort(
-                        (a, b) =>
-                          (a.estimatedHourlyRateUsd || 0) -
-                          (b.estimatedHourlyRateUsd || 0),
-                      );
-                    } else if (talentSortFilter === 'rate_desc') {
-                      list.sort(
-                        (a, b) =>
-                          (b.estimatedHourlyRateUsd || 0) -
-                          (a.estimatedHourlyRateUsd || 0),
-                      );
+              {phase === 'blueprint' &&
+                blueprint &&
+                (creatingRoom || loadingRecommendations ? (
+                  <PremiumLoader
+                    title={
+                      creatingRoom
+                        ? 'Assembling Your Live Room'
+                        : 'Scouting Talent Matches'
                     }
-                    return list;
-                  };
-
-                  const showAvailable =
-                    talentAvailabilityFilter === 'all' ||
-                    talentAvailabilityFilter === 'available';
-                  const showUnavailable =
-                    talentAvailabilityFilter === 'all' ||
-                    talentAvailabilityFilter === 'unavailable';
-
-                  const mode = talentMatchingTab === 'ai' ? 'ai' : 'manual';
-                  const noTalents =
-                    activeGroups.length === 0 ||
-                    activeGroups.every(
-                      (g: RoleRecommendationGroup) =>
-                        (!g.availableMatches || g.availableMatches.length === 0) &&
-                        (!g.unavailableMatches || g.unavailableMatches.length === 0),
-                    );
-
-                  if (noTalents) {
-                    return (
-                      <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
-                        <h2 className="font-semibold mb-2">
-                          No talent matches available
-                        </h2>
-                        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                          {talentMatchingTab === 'ai'
-                            ? 'The room can still be created. Once more verified talent credentials exist, this phase will rank them automatically.'
-                            : 'There are no active freelancers in the talent pool at this time.'}
+                    subtitle={
+                      creatingRoom
+                        ? 'Creating dashboard, compiling documents, setting up workspaces, and preparing the workspace...'
+                        : 'Scanning verified developer profiles, evaluating skill matches, reputation scores, budget fits, and availability...'
+                    }
+                  />
+                ) : !isFinalBlueprint ? (
+                  <div className="space-y-7 animate-in fade-in duration-300">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                          Phase 3 review
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight mb-3">
+                          Review & Edit Blueprint
+                        </h1>
+                        <p className="text-muted-foreground max-w-4xl text-sm leading-relaxed">
+                          Edit any field below in plain language. Use the{' '}
+                          <span className="inline-flex items-center gap-0.5 text-primary font-medium">
+                            <Sparkles className="h-3 w-3" />
+                            Refine
+                          </span>{' '}
+                          buttons to improve content with AI.
                         </p>
                       </div>
-                    );
-                  }
+                      <div className="flex flex-wrap gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          onClick={() => setPhase('analysis')}
+                          disabled={creatingRoom || loadingRecommendations}
+                        >
+                          Edit Phase 2
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setPhase('technical')}
+                          disabled={creatingRoom || loadingRecommendations}
+                        >
+                          Edit answers
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleConfirmFinal}
+                          disabled={
+                            creatingRoom ||
+                            loadingRecommendations ||
+                            finalizingBlueprint
+                          }
+                          className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold"
+                        >
+                          {finalizingBlueprint
+                            ? 'Finalizing...'
+                            : 'Approve and Finalize'}
+                        </Button>
+                      </div>
+                    </div>
 
-                  return (
-                    <div className="space-y-6">
-                      {/* Filter Bar */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card/80 border border-border/50 rounded-xl p-3.5 shadow-xs">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            <Filter className="h-3.5 w-3.5 text-primary" /> Filter by:
-                          </div>
-
-                          {/* Role Dropdown */}
-                          <div className="flex items-center gap-1.5">
-                            <label className="text-xs font-semibold text-muted-foreground">
-                              Role:
-                            </label>
-                            <select
-                              value={talentRoleFilter}
-                              onChange={(e) => setTalentRoleFilter(e.target.value)}
-                              className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
-                            >
-                              <option value="all">
-                                All Roles ({talentRecommendationReport.recommendations?.length || 0})
-                              </option>
-                              {availableRoleTitles.map((roleTitle) => (
-                                <option key={roleTitle} value={roleTitle}>
-                                  {roleTitle}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Availability Dropdown */}
-                          <div className="flex items-center gap-1.5">
-                            <label className="text-xs font-semibold text-muted-foreground">
-                              Availability:
-                            </label>
-                            <select
-                              value={talentAvailabilityFilter}
-                              onChange={(e) =>
-                                setTalentAvailabilityFilter(e.target.value)
-                              }
-                              className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
-                            >
-                              <option value="all">All Availability</option>
-                              <option value="available">Available Now</option>
-                              <option value="unavailable">Not Available RN</option>
-                            </select>
-                          </div>
+                    <BlueprintReviewSection
+                      blueprint={blueprint}
+                      region={phase1Review.region}
+                      onUpdateField={handleUpdateBlueprintField}
+                      onRefineField={handleRefineBlueprintField}
+                      isRefining={isRefiningBlueprintSection}
+                      suggestingId={suggestingId}
+                      onConfirmFinal={handleConfirmFinal}
+                      setSuggestingId={setSuggestingId}
+                      setIsRefiningBlueprintSection={
+                        setIsRefiningBlueprintSection
+                      }
+                      sessionData={sessionData}
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-7 animate-in fade-in duration-300">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                          Phase 3 output
                         </div>
+                        <h1 className="text-3xl font-bold tracking-tight mb-3">
+                          Business and development blueprint
+                        </h1>
+                        <p className="text-muted-foreground max-w-4xl text-sm leading-relaxed">
+                          This report uses the Phase 2 analysis plus the
+                          mandatory and optional Phase 3 answers.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsFinalBlueprint(false)}
+                          disabled={creatingRoom || loadingRecommendations}
+                          className="gap-1.5"
+                        >
+                          <Edit3 className="h-3.5 w-3.5" />
+                          Edit Blueprint
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={downloadBlueprintPdf}
+                          disabled={
+                            downloadingBlueprintPdf ||
+                            creatingRoom ||
+                            loadingRecommendations
+                          }
+                          className="bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20 font-bold"
+                        >
+                          {downloadingBlueprintPdf
+                            ? 'Preparing...'
+                            : 'Download PDF'}
+                        </Button>
 
-                        {/* Sort Dropdown */}
-                        <div className="flex items-center gap-2 self-end sm:self-auto">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" /> Sort:
-                          </div>
-                          <select
-                            value={talentSortFilter}
-                            onChange={(e) => setTalentSortFilter(e.target.value)}
-                            className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
-                          >
-                            <option value="score">Highest Match Score</option>
-                            <option value="reputation">Highest Reputation</option>
-                            <option value="rate_asc">Hourly Rate: Low to High</option>
-                            <option value="rate_desc">Hourly Rate: High to Low</option>
-                          </select>
+                        <Button
+                          onClick={() => {
+                            const missing = mandatoryQuestions.filter(
+                              (question) => !answers[question._id]?.trim(),
+                            );
+                            if (missing.length > 0) {
+                              toast.error(
+                                'Please answer all mandatory questions',
+                              );
+                              setPhase('technical');
+                              return;
+                            }
+                            setPhase('milestones');
+                          }}
+                          disabled={loadingRecommendations || creatingRoom}
+                          className="gap-1.5"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Review Milestones
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div data-blueprint-report-capture ref={blueprintReportRef}>
+                      <BlueprintReport
+                        blueprint={blueprint}
+                        onSectionChange={setActiveReportSection}
+                        region={phase1Review.region}
+                        isEditable={false}
+                      />
+                    </div>
+                  </div>
+                ))}
+
+              {phase === 'milestones' && (
+                <MilestoneReviewSection
+                  blueprint={blueprint || {}}
+                  onApproveAndFindTalent={() => setShowTalentChoiceModal(true)}
+                  onBack={() => setPhase('blueprint')}
+                  isFindingTalent={loadingRecommendations}
+                />
+              )}
+
+              {phase === 'recommendations' &&
+                talentRecommendationReport &&
+                (creatingRoom || loadingRecommendations ? (
+                  <PremiumLoader
+                    title={
+                      creatingRoom
+                        ? 'Assembling Your Live Room'
+                        : 'Scouting Talent Matches'
+                    }
+                    subtitle={
+                      creatingRoom
+                        ? 'Creating dashboard, compiling documents, setting up workspaces, and preparing the workspace...'
+                        : 'Scanning verified developer profiles, evaluating skill matches, reputation scores, budget fits, and availability...'
+                    }
+                  />
+                ) : (
+                  <div className="space-y-7 animate-in fade-in duration-300">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
+                          Phase 4 output
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight mb-3">
+                          Recommended talent matches
+                        </h1>
+                        <p className="text-muted-foreground max-w-2xl">
+                          Candidates are ranked using verified reputation,
+                          previous work, GitHub score, skill fit, and
+                          availability.
+                        </p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          onClick={() => setPhase('milestones')}
+                          disabled={creatingRoom || loadingRecommendations}
+                        >
+                          Back to milestones
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={generateTalentRecommendations}
+                          disabled={loadingRecommendations || creatingRoom}
+                        >
+                          {loadingRecommendations
+                            ? 'Refreshing...'
+                            : 'Refresh matches'}
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setPendingCreationType('manual');
+                            setShowConnectsConfirm(true);
+                          }}
+                          disabled={creatingRoom || loadingRecommendations}
+                        >
+                          {creatingRoom
+                            ? 'Preparing room...'
+                            : selectedTalentRecommendations.length > 0
+                              ? `Create room with ${selectedTalentRecommendations.length} selected`
+                              : 'Enter room dashboard'}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div className="rounded-xl border border-border/50 bg-card p-4">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                          <Zap
+                            className="h-3.5 w-3.5 text-amber-500"
+                            strokeWidth={2.2}
+                          />{' '}
+                          Required connects
+                        </div>
+                        <div className="text-2xl font-bold font-mono text-amber-500 flex items-center gap-1.5">
+                          <Zap
+                            className="h-5 w-5 text-amber-500"
+                            strokeWidth={2.2}
+                          />{' '}
+                          150{' '}
+                          <span className="text-xs font-normal text-muted-foreground font-sans">
+                            connects
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Deducted upon room creation
                         </div>
                       </div>
-
-                      {filteredGroups.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-border/50 p-8 text-center text-sm text-muted-foreground">
-                          No matches found for the selected role filter.
+                      <div className="rounded-xl border border-border/50 bg-card p-4">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                          Roles considered
                         </div>
-                      ) : (
-                        filteredGroups.map((group: RoleRecommendationGroup) => {
-                          const availMatches = showAvailable
-                            ? sortMatches(group.availableMatches || [])
-                            : [];
-                          const unavailMatches = showUnavailable
-                            ? sortMatches(group.unavailableMatches || [])
-                            : [];
+                        <div className="text-2xl font-bold font-mono">
+                          {talentRecommendationReport.roleCount}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-border/50 bg-card p-4">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                          Recommended talents
+                        </div>
+                        <div className="text-2xl font-bold font-mono">
+                          {talentRecommendationReport.recommendations.length}
+                        </div>
+                        {selectedTalentRecommendations.length > 0 && (
+                          <div className="text-xs text-primary mt-1">
+                            {selectedTalentRecommendations.length} selected
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                          if (
-                            availMatches.length === 0 &&
-                            unavailMatches.length === 0
-                          )
-                            return null;
+                    {(() => {
+                      const activeGroups: RoleRecommendationGroup[] =
+                        talentMatchingTab === 'ai'
+                          ? talentRecommendationReport.groupedRecommendationTeams ||
+                            talentRecommendationReport.recommendedTeams ||
+                            []
+                          : talentRecommendationReport.groupedManualTeams ||
+                            talentRecommendationReport.recommendedTeams ||
+                            [];
 
-                          return (
-                            <section
-                              key={group.role.roleTitle}
-                              className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
-                            >
-                              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                <div>
-                                  <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
-                                    Role match group
-                                  </div>
-                                  <h2 className="text-xl font-semibold">
-                                    {group.role.roleTitle}
-                                  </h2>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {group.role.skillDomain}
-                                  </p>
-                                  {group.role.keywords?.length ? (
-                                    <div className="flex flex-wrap gap-1.5 mt-3">
-                                      {group.role.keywords
-                                        .slice(0, 9)
-                                        .map((keyword: string) => (
-                                          <span
-                                            key={keyword}
-                                            className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
-                                          >
-                                            {keyword}
-                                          </span>
-                                        ))}
-                                    </div>
-                                  ) : null}
-                                </div>
-                                <div className="text-xs text-muted-foreground md:text-right">
-                                  <div>
-                                    <span className="font-mono text-foreground">
-                                      {group.availableMatches.length}
-                                    </span>{' '}
-                                    available
-                                  </div>
-                                  <div>
-                                    <span className="font-mono text-foreground">
-                                      {group.unavailableMatches.length}
-                                    </span>{' '}
-                                    not available rn
-                                  </div>
-                                </div>
+                      const availableRoleTitles = Array.from(
+                        new Set(
+                          activeGroups
+                            .map(
+                              (g: RoleRecommendationGroup) => g.role?.roleTitle,
+                            )
+                            .filter((t: string | undefined): t is string =>
+                              Boolean(t),
+                            ),
+                        ),
+                      );
+
+                      const filteredGroups = activeGroups.filter(
+                        (g: RoleRecommendationGroup) => {
+                          if (talentRoleFilter === 'all') return true;
+                          return g.role?.roleTitle === talentRoleFilter;
+                        },
+                      );
+
+                      const sortMatches = (matches: any[]) => {
+                        const list = [...matches];
+                        if (talentSortFilter === 'score') {
+                          list.sort(
+                            (a, b) => (b.finalScore || 0) - (a.finalScore || 0),
+                          );
+                        } else if (talentSortFilter === 'reputation') {
+                          list.sort(
+                            (a, b) =>
+                              (b.credential?.reputationScore || 0) -
+                              (a.credential?.reputationScore || 0),
+                          );
+                        } else if (talentSortFilter === 'rate_asc') {
+                          list.sort(
+                            (a, b) =>
+                              (a.estimatedHourlyRateUsd || 0) -
+                              (b.estimatedHourlyRateUsd || 0),
+                          );
+                        } else if (talentSortFilter === 'rate_desc') {
+                          list.sort(
+                            (a, b) =>
+                              (b.estimatedHourlyRateUsd || 0) -
+                              (a.estimatedHourlyRateUsd || 0),
+                          );
+                        }
+                        return list;
+                      };
+
+                      const showAvailable =
+                        talentAvailabilityFilter === 'all' ||
+                        talentAvailabilityFilter === 'available';
+                      const showUnavailable =
+                        talentAvailabilityFilter === 'all' ||
+                        talentAvailabilityFilter === 'unavailable';
+
+                      const mode = talentMatchingTab === 'ai' ? 'ai' : 'manual';
+                      const noTalents =
+                        activeGroups.length === 0 ||
+                        activeGroups.every(
+                          (g: RoleRecommendationGroup) =>
+                            (!g.availableMatches ||
+                              g.availableMatches.length === 0) &&
+                            (!g.unavailableMatches ||
+                              g.unavailableMatches.length === 0),
+                        );
+
+                      if (noTalents) {
+                        return (
+                          <div className="rounded-xl border border-dashed border-border/50 p-10 text-center">
+                            <h2 className="font-semibold mb-2">
+                              No talent matches available
+                            </h2>
+                            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+                              {talentMatchingTab === 'ai'
+                                ? 'The room can still be created. Once more verified talent credentials exist, this phase will rank them automatically.'
+                                : 'There are no active freelancers in the talent pool at this time.'}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-6">
+                          {/* Filter Bar */}
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card/80 border border-border/50 rounded-xl p-3.5 shadow-xs">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                <Filter className="h-3.5 w-3.5 text-primary" />{' '}
+                                Filter by:
                               </div>
 
-                              {[
-                                ['Available first', availMatches],
-                                ['Not available right now', unavailMatches],
-                              ].map(([label, matches]) =>
-                                Array.isArray(matches) && matches.length > 0 ? (
-                                  <div
-                                    key={String(label)}
-                                    className="space-y-3"
+                              {/* Role Dropdown */}
+                              <div className="flex items-center gap-1.5">
+                                <label className="text-xs font-semibold text-muted-foreground">
+                                  Role:
+                                </label>
+                                <select
+                                  value={talentRoleFilter}
+                                  onChange={(e) =>
+                                    setTalentRoleFilter(e.target.value)
+                                  }
+                                  className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+                                >
+                                  <option value="all">
+                                    All Roles (
+                                    {talentRecommendationReport.recommendations
+                                      ?.length || 0}
+                                    )
+                                  </option>
+                                  {availableRoleTitles.map((roleTitle) => (
+                                    <option key={roleTitle} value={roleTitle}>
+                                      {roleTitle}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Availability Dropdown */}
+                              <div className="flex items-center gap-1.5">
+                                <label className="text-xs font-semibold text-muted-foreground">
+                                  Availability:
+                                </label>
+                                <select
+                                  value={talentAvailabilityFilter}
+                                  onChange={(e) =>
+                                    setTalentAvailabilityFilter(e.target.value)
+                                  }
+                                  className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+                                >
+                                  <option value="all">All Availability</option>
+                                  <option value="available">
+                                    Available Now
+                                  </option>
+                                  <option value="unavailable">
+                                    Not Available RN
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Sort Dropdown */}
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />{' '}
+                                Sort:
+                              </div>
+                              <select
+                                value={talentSortFilter}
+                                onChange={(e) =>
+                                  setTalentSortFilter(e.target.value)
+                                }
+                                className="h-8 rounded-lg bg-background border border-border/50 px-2.5 text-xs text-foreground font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+                              >
+                                <option value="score">
+                                  Highest Match Score
+                                </option>
+                                <option value="reputation">
+                                  Highest Reputation
+                                </option>
+                                <option value="rate_asc">
+                                  Hourly Rate: Low to High
+                                </option>
+                                <option value="rate_desc">
+                                  Hourly Rate: High to Low
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {filteredGroups.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-border/50 p-8 text-center text-sm text-muted-foreground">
+                              No matches found for the selected role filter.
+                            </div>
+                          ) : (
+                            filteredGroups.map(
+                              (group: RoleRecommendationGroup) => {
+                                const availMatches = showAvailable
+                                  ? sortMatches(group.availableMatches || [])
+                                  : [];
+                                const unavailMatches = showUnavailable
+                                  ? sortMatches(group.unavailableMatches || [])
+                                  : [];
+
+                                if (
+                                  availMatches.length === 0 &&
+                                  unavailMatches.length === 0
+                                )
+                                  return null;
+
+                                return (
+                                  <section
+                                    key={group.role.roleTitle}
+                                    className="rounded-xl border border-border/50 bg-card p-5 space-y-4"
                                   >
-                                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                      {String(label)}
+                                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                      <div>
+                                        <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+                                          Role match group
+                                        </div>
+                                        <h2 className="text-xl font-semibold">
+                                          {group.role.roleTitle}
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                          {group.role.skillDomain}
+                                        </p>
+                                        {group.role.keywords?.length ? (
+                                          <div className="flex flex-wrap gap-1.5 mt-3">
+                                            {group.role.keywords
+                                              .slice(0, 9)
+                                              .map((keyword: string) => (
+                                                <span
+                                                  key={keyword}
+                                                  className="text-[10px] border border-primary/20 bg-primary/10 text-primary rounded-full px-2 py-0.5"
+                                                >
+                                                  {keyword}
+                                                </span>
+                                              ))}
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground md:text-right">
+                                        <div>
+                                          <span className="font-mono text-foreground">
+                                            {group.availableMatches.length}
+                                          </span>{' '}
+                                          available
+                                        </div>
+                                        <div>
+                                          <span className="font-mono text-foreground">
+                                            {group.unavailableMatches.length}
+                                          </span>{' '}
+                                          not available rn
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="grid gap-3">
-                                      {matches.map((recommendation) => {
-                                        const key = recommendationKey(
-                                          recommendation,
-                                          mode,
-                                        );
-                                        const selected =
-                                          !!selectedTalentKeys[key];
-                                        return (
-                                          <div
-                                            key={key}
-                                            onClick={() =>
-                                              toggleTalentSelection(
+
+                                    {[
+                                      ['Available first', availMatches],
+                                      [
+                                        'Not available right now',
+                                        unavailMatches,
+                                      ],
+                                    ].map(([label, matches]) =>
+                                      Array.isArray(matches) &&
+                                      matches.length > 0 ? (
+                                        <div
+                                          key={String(label)}
+                                          className="space-y-3"
+                                        >
+                                          <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                            {String(label)}
+                                          </div>
+                                          <div className="grid gap-3">
+                                            {matches.map((recommendation) => {
+                                              const key = recommendationKey(
                                                 recommendation,
                                                 mode,
-                                              )
-                                            }
-                                            className={`rounded-xl border p-4 transition-all cursor-pointer hover:border-primary/60 hover:shadow-md ${
-                                              selected
-                                                ? 'border-primary/60 bg-primary/10 ring-1 ring-primary/30'
-                                                : 'border-border/40 bg-background/35 hover:bg-background/60'
-                                            }`}
-                                          >
-                                            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                              <div className="flex items-start gap-3 min-w-0">
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
+                                              );
+                                              const selected =
+                                                !!selectedTalentKeys[key];
+                                              return (
+                                                <div
+                                                  key={key}
+                                                  onClick={() =>
                                                     toggleTalentSelection(
                                                       recommendation,
                                                       mode,
-                                                    );
-                                                  }}
-                                                  className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                                    )
+                                                  }
+                                                  className={`rounded-xl border p-4 transition-all cursor-pointer hover:border-primary/60 hover:shadow-md ${
                                                     selected
-                                                      ? 'bg-primary border-primary text-primary-foreground'
-                                                      : 'border-border/60 hover:border-primary'
+                                                      ? 'border-primary/60 bg-primary/10 ring-1 ring-primary/30'
+                                                      : 'border-border/40 bg-background/35 hover:bg-background/60'
                                                   }`}
-                                                  title="Select talent"
                                                 >
-                                                  {selected ? '✓' : ''}
-                                                </button>
-                                                <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-                                                  <span className="text-primary font-bold">
-                                                    {recommendation.user.name?.[0]?.toUpperCase() ??
-                                                      'T'}
-                                                  </span>
-                                                </div>
-                                                <div className="min-w-0">
-                                                  <div className="flex items-center gap-2 flex-wrap">
-                                                    <h3 className="text-base font-semibold truncate">
-                                                      {recommendation.user.name}
-                                                    </h3>
-                                                    <span
-                                                      className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
-                                                    >
-                                                      {recommendation.user
-                                                        .availabilityLabel ??
-                                                        (recommendation.user
-                                                          .isOnline
-                                                          ? 'Available now'
-                                                          : 'Not available rn')}
-                                                    </span>
-                                                    {recommendation.user
-                                                      .location && (
-                                                      <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
-                                                        {
-                                                          recommendation.user
-                                                            .location
-                                                        }
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                                  <p className="text-sm text-primary mt-1">
-                                                    {
-                                                      recommendation.credential
-                                                        .skillDomain
-                                                    }
-                                                  </p>
-                                                  <p className="text-xs text-muted-foreground mt-1">
-                                                    L
-                                                    {
-                                                      recommendation.credential
-                                                        .level
-                                                    }{' '}
-                                                    -{' '}
-                                                    {
-                                                      recommendation.credential
-                                                        .reputationScore
-                                                    }{' '}
-                                                    rep -{' '}
-                                                    {
-                                                      recommendation.credential
-                                                        .projectsCompleted
-                                                    }{' '}
-                                                    projects - GitHub{' '}
-                                                    {
-                                                      recommendation.credential
-                                                        .githubScore
-                                                    }
-                                                  </p>
-                                                  {recommendation.matchedKeywords
-                                                    ?.length ? (
-                                                    <div className="flex flex-wrap gap-1.5 mt-3">
-                                                      {recommendation.matchedKeywords
-                                                        .slice(0, 8)
-                                                        .map((keyword: string) => (
+                                                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                                    <div className="flex items-start gap-3 min-w-0">
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          toggleTalentSelection(
+                                                            recommendation,
+                                                            mode,
+                                                          );
+                                                        }}
+                                                        className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                                          selected
+                                                            ? 'bg-primary border-primary text-primary-foreground'
+                                                            : 'border-border/60 hover:border-primary'
+                                                        }`}
+                                                        title="Select talent"
+                                                      >
+                                                        {selected ? '✓' : ''}
+                                                      </button>
+                                                      <div className="w-11 h-11 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                                                        <span className="text-primary font-bold">
+                                                          {recommendation.user.name?.[0]?.toUpperCase() ??
+                                                            'T'}
+                                                        </span>
+                                                      </div>
+                                                      <div className="min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                          <h3 className="text-base font-semibold truncate">
+                                                            {
+                                                              recommendation
+                                                                .user.name
+                                                            }
+                                                          </h3>
                                                           <span
-                                                            key={keyword}
-                                                            className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
+                                                            className={`text-[10px] rounded border px-2 py-0.5 ${(recommendation.user.availabilityRank ?? 0) >= 2 ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}
                                                           >
-                                                            {keyword}
+                                                            {recommendation.user
+                                                              .availabilityLabel ??
+                                                              (recommendation
+                                                                .user.isOnline
+                                                                ? 'Available now'
+                                                                : 'Not available rn')}
                                                           </span>
-                                                        ))}
+                                                          {recommendation.user
+                                                            .location && (
+                                                            <span className="text-[10px] rounded border border-border/40 px-2 py-0.5 text-muted-foreground">
+                                                              {
+                                                                recommendation
+                                                                  .user.location
+                                                              }
+                                                            </span>
+                                                          )}
+                                                        </div>
+                                                        <p className="text-sm text-primary mt-1">
+                                                          {
+                                                            recommendation
+                                                              .credential
+                                                              .skillDomain
+                                                          }
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                          L
+                                                          {
+                                                            recommendation
+                                                              .credential.level
+                                                          }{' '}
+                                                          -{' '}
+                                                          {
+                                                            recommendation
+                                                              .credential
+                                                              .reputationScore
+                                                          }{' '}
+                                                          rep -{' '}
+                                                          {
+                                                            recommendation
+                                                              .credential
+                                                              .projectsCompleted
+                                                          }{' '}
+                                                          projects - GitHub{' '}
+                                                          {
+                                                            recommendation
+                                                              .credential
+                                                              .githubScore
+                                                          }
+                                                        </p>
+                                                        {recommendation
+                                                          .matchedKeywords
+                                                          ?.length ? (
+                                                          <div className="flex flex-wrap gap-1.5 mt-3">
+                                                            {recommendation.matchedKeywords
+                                                              .slice(0, 8)
+                                                              .map(
+                                                                (
+                                                                  keyword: string,
+                                                                ) => (
+                                                                  <span
+                                                                    key={
+                                                                      keyword
+                                                                    }
+                                                                    className="text-[10px] border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 rounded px-1.5 py-0.5"
+                                                                  >
+                                                                    {keyword}
+                                                                  </span>
+                                                                ),
+                                                              )}
+                                                          </div>
+                                                        ) : null}
+                                                        {recommendation
+                                                          .missingKeywords
+                                                          ?.length ? (
+                                                          <p className="text-[10px] text-muted-foreground/70 mt-2">
+                                                            Missing/weak:{' '}
+                                                            {recommendation.missingKeywords
+                                                              .slice(0, 5)
+                                                              .join(', ')}
+                                                          </p>
+                                                        ) : null}
+                                                      </div>
                                                     </div>
-                                                  ) : null}
-                                                  {recommendation.missingKeywords
-                                                    ?.length ? (
-                                                    <p className="text-[10px] text-muted-foreground/70 mt-2">
-                                                      Missing/weak:{' '}
-                                                      {recommendation.missingKeywords
-                                                        .slice(0, 5)
-                                                        .join(', ')}
-                                                    </p>
-                                                  ) : null}
-                                                </div>
-                                              </div>
-                                              <div className="shrink-0 text-left lg:text-right space-y-2">
-                                                <div>
-                                                  <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                                                    Score
+                                                    <div className="shrink-0 text-left lg:text-right space-y-2">
+                                                      <div>
+                                                        <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                                                          Score
+                                                        </div>
+                                                        <div className="text-3xl font-bold font-mono text-primary">
+                                                          {
+                                                            recommendation.finalScore
+                                                          }
+                                                        </div>
+                                                      </div>
+                                                      <div className="text-xs text-muted-foreground">
+                                                        <div>
+                                                          $
+                                                          {
+                                                            recommendation.estimatedHourlyRateUsd
+                                                          }
+                                                          /hr
+                                                        </div>
+                                                        <div>
+                                                          {formatCurrency(
+                                                            recommendation.weeklyRateUsd ??
+                                                              recommendation.estimatedHourlyRateUsd *
+                                                                40,
+                                                          )}
+                                                          /week
+                                                        </div>
+                                                        <div>
+                                                          {formatCurrency(
+                                                            recommendation.monthlyRateUsd ??
+                                                              (recommendation.weeklyRateUsd ??
+                                                                recommendation.estimatedHourlyRateUsd *
+                                                                  40) * 4,
+                                                          )}
+                                                          /month
+                                                        </div>
+                                                      </div>
+                                                      <div className="flex gap-2 lg:justify-end">
+                                                        <Button
+                                                          size="sm"
+                                                          variant={
+                                                            selected
+                                                              ? 'default'
+                                                              : 'outline'
+                                                          }
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleTalentSelection(
+                                                              recommendation,
+                                                              mode,
+                                                            );
+                                                          }}
+                                                        >
+                                                          {selected
+                                                            ? 'Selected'
+                                                            : 'Select'}
+                                                        </Button>
+                                                        <Button
+                                                          size="sm"
+                                                          variant="ghost"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(
+                                                              `/talent/profile/${recommendation.talentId}`,
+                                                            );
+                                                          }}
+                                                        >
+                                                          Profile
+                                                        </Button>
+                                                      </div>
+                                                    </div>
                                                   </div>
-                                                  <div className="text-3xl font-bold font-mono text-primary">
-                                                    {recommendation.finalScore}
-                                                  </div>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">
-                                                  <div>
-                                                    $
-                                                    {
-                                                      recommendation.estimatedHourlyRateUsd
-                                                    }
-                                                    /hr
-                                                  </div>
-                                                  <div>
-                                                    {formatCurrency(
-                                                      recommendation.weeklyRateUsd ??
-                                                        recommendation.estimatedHourlyRateUsd *
-                                                          40,
-                                                    )}
-                                                    /week
-                                                  </div>
-                                                  <div>
-                                                    {formatCurrency(
-                                                      recommendation.monthlyRateUsd ??
-                                                        (recommendation.weeklyRateUsd ??
-                                                          recommendation.estimatedHourlyRateUsd *
-                                                            40) * 4,
-                                                    )}
-                                                    /month
-                                                  </div>
-                                                </div>
-                                                <div className="flex gap-2 lg:justify-end">
-                                                  <Button
-                                                    size="sm"
-                                                    variant={
-                                                      selected
-                                                        ? 'default'
-                                                        : 'outline'
-                                                    }
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      toggleTalentSelection(
-                                                        recommendation,
-                                                        mode,
-                                                      );
-                                                    }}
-                                                  >
-                                                    {selected
-                                                      ? 'Selected'
-                                                      : 'Select'}
-                                                  </Button>
-                                                  <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      navigate(
-                                                        `/talent/profile/${recommendation.talentId}`,
-                                                      );
-                                                    }}
-                                                  >
-                                                    Profile
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                            </div>
 
-                                            <div className="grid gap-2 md:grid-cols-3 mt-4">
-                                              <ScorePill
-                                                label="Keyword match"
-                                                value={
-                                                  recommendation.scoreBreakdown
-                                                    .skillMatchScore
-                                                }
-                                              />
-                                              <ScorePill
-                                                label="Availability"
-                                                value={
-                                                  recommendation.scoreBreakdown
-                                                    .availabilityScore
-                                                }
-                                              />
-                                              <ScorePill
-                                                label="Budget fit"
-                                                value={
-                                                  recommendation.scoreBreakdown
-                                                    .budgetFitScore
-                                                }
-                                              />
-                                            </div>
+                                                  <div className="grid gap-2 md:grid-cols-3 mt-4">
+                                                    <ScorePill
+                                                      label="Keyword match"
+                                                      value={
+                                                        recommendation
+                                                          .scoreBreakdown
+                                                          .skillMatchScore
+                                                      }
+                                                    />
+                                                    <ScorePill
+                                                      label="Availability"
+                                                      value={
+                                                        recommendation
+                                                          .scoreBreakdown
+                                                          .availabilityScore
+                                                      }
+                                                    />
+                                                    <ScorePill
+                                                      label="Budget fit"
+                                                      value={
+                                                        recommendation
+                                                          .scoreBreakdown
+                                                          .budgetFitScore
+                                                      }
+                                                    />
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                ) : null,
-                              )}
-                            </section>
-                          );
-                        })
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-            ))}
+                                        </div>
+                                      ) : null,
+                                    )}
+                                  </section>
+                                );
+                              },
+                            )
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ))}
             </>
           )}
         </main>

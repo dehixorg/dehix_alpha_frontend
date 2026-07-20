@@ -558,13 +558,16 @@ export default function LiveRoomPage() {
     const ids = new Set(selectedChannel.participantIds.map(String));
     return talentParticipants.filter((participant: any) => {
       const person = participant.user ?? participant.userId;
-      const personId = String(person?._id ?? participant.talentId ?? participant.userId);
-      
+      const personId = String(
+        person?._id ?? participant.talentId ?? participant.userId,
+      );
+
       if (ids.has(personId)) return true;
-      
+
       if (selectedChannel.type === 'custom' && selectedChannel.roleId) {
-        if (String(participant.roleId) === String(selectedChannel.roleId)) return true;
-        
+        if (String(participant.roleId) === String(selectedChannel.roleId))
+          return true;
+
         const channelRole = workspace?.roles?.find(
           (r: any) => String(r._id) === String(selectedChannel.roleId),
         );
@@ -2980,9 +2983,16 @@ export default function LiveRoomPage() {
                                         </span>
                                       )}
                                     </div>
-                                    {participant.matchedRoles && participant.matchedRoles.length > 0 ? (
-                                      <div className="text-[10px] text-muted-foreground truncate leading-none mt-1" title={participant.matchedRoles.join(', ')}>
-                                        Roles: {participant.matchedRoles.join(', ')}
+                                    {participant.matchedRoles &&
+                                    participant.matchedRoles.length > 0 ? (
+                                      <div
+                                        className="text-[10px] text-muted-foreground truncate leading-none mt-1"
+                                        title={participant.matchedRoles.join(
+                                          ', ',
+                                        )}
+                                      >
+                                        Roles:{' '}
+                                        {participant.matchedRoles.join(', ')}
                                       </div>
                                     ) : (
                                       role?.roleTitle && (
@@ -3241,9 +3251,18 @@ export default function LiveRoomPage() {
                                             </span>
                                           )}
                                         </div>
-                                        {participant.matchedRoles && participant.matchedRoles.length > 0 ? (
-                                          <div className="text-[10px] text-muted-foreground truncate leading-none mt-1" title={participant.matchedRoles.join(', ')}>
-                                            Roles: {participant.matchedRoles.join(', ')}
+                                        {participant.matchedRoles &&
+                                        participant.matchedRoles.length > 0 ? (
+                                          <div
+                                            className="text-[10px] text-muted-foreground truncate leading-none mt-1"
+                                            title={participant.matchedRoles.join(
+                                              ', ',
+                                            )}
+                                          >
+                                            Roles:{' '}
+                                            {participant.matchedRoles.join(
+                                              ', ',
+                                            )}
                                           </div>
                                         ) : (
                                           role?.roleTitle && (
@@ -4048,10 +4067,8 @@ function PlatformSyncCockpit({
             <div className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-primary" />
               <span>
-                Candidate Sync (
-                {filteredCandidateRows.length}
-                {syncRoleFilter !== 'all' ? ` / ${candidateRows.length}` : ''}
-                )
+                Candidate Sync ({filteredCandidateRows.length}
+                {syncRoleFilter !== 'all' ? ` / ${candidateRows.length}` : ''})
               </span>
             </div>
             <ChevronDown
@@ -4078,7 +4095,9 @@ function PlatformSyncCockpit({
                     onChange={(e) => setSyncRoleFilter(e.target.value)}
                     className="w-full text-[11px] font-medium bg-background border border-border/50 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer"
                   >
-                    <option value="all">All Roles ({candidateRows.length})</option>
+                    <option value="all">
+                      All Roles ({candidateRows.length})
+                    </option>
                     {availableCandidateRoles.map((roleTitle) => {
                       const count = candidateRows.filter(
                         (r: any) => r?.role === roleTitle,
@@ -4105,7 +4124,9 @@ function PlatformSyncCockpit({
                   filteredCandidateRows.map((row: any) => (
                     <button
                       key={row.id}
-                      onClick={() => row.channelId && onSelectChannel(row.channelId)}
+                      onClick={() =>
+                        row.channelId && onSelectChannel(row.channelId)
+                      }
                       disabled={!row.channelId}
                       className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45 cursor-pointer"
                     >

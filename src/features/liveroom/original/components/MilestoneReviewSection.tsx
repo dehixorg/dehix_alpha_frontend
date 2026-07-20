@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PackageOpen, Sparkles, CheckCircle } from 'lucide-react';
+
 import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import StoriesSection from '@/components/shared/StoriesSection';
 import { Milestone, Story, MilestoneStatus } from '@/utils/types/Milestone';
@@ -19,17 +20,24 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   isFindingTalent,
 }) => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<number | null>(0);
+  const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<
+    number | null
+  >(0);
 
   useEffect(() => {
     // Parse milestones from the blueprint
     // We expect them to be in blueprint.development_roadmap.phases or similar
     const extractedMilestones: Milestone[] = [];
-    
+
     // Look for roadmap data in various common blueprint keys
     let rawPhases: any[] = [];
-    const possibleKeys = ['development_roadmap', 'roadmap', 'milestones', 'phases'];
-    
+    const possibleKeys = [
+      'development_roadmap',
+      'roadmap',
+      'milestones',
+      'phases',
+    ];
+
     for (const key of possibleKeys) {
       if (blueprint[key]) {
         const val = blueprint[key];
@@ -45,26 +53,35 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             break;
           } else {
             // It might be an object where values are phases
-            rawPhases = Object.values(val).filter(v => typeof v === 'object' && v !== null);
+            rawPhases = Object.values(val).filter(
+              (v) => typeof v === 'object' && v !== null,
+            );
             if (rawPhases.length > 0) break;
           }
         }
       }
     }
-    
+
     if (rawPhases.length > 0) {
       rawPhases.forEach((p, idx) => {
         // Create dummy stories/tasks based on deliverables
-        const deliverables = p.deliverables || p.tasks || p.milestones || p.key_tasks || [];
-        
-        const stories: Story[] = Array.isArray(deliverables) ? deliverables.map((d: any, dIdx: number) => ({
-          _id: `story-${idx}-${dIdx}`,
-          title: typeof d === 'string' ? d : (d.title || d.name || d.task || `Task ${dIdx + 1}`),
-          summary: typeof d === 'string' ? '' : (d.description || d.purpose || ''),
-          storyStatus: 'NOT_STARTED',
-          importantUrls: [],
-          tasks: []
-        })) : [];
+        const deliverables =
+          p.deliverables || p.tasks || p.milestones || p.key_tasks || [];
+
+        const stories: Story[] = Array.isArray(deliverables)
+          ? deliverables.map((d: any, dIdx: number) => ({
+              _id: `story-${idx}-${dIdx}`,
+              title:
+                typeof d === 'string'
+                  ? d
+                  : d.title || d.name || d.task || `Task ${dIdx + 1}`,
+              summary:
+                typeof d === 'string' ? '' : d.description || d.purpose || '',
+              storyStatus: 'NOT_STARTED',
+              importantUrls: [],
+              tasks: [],
+            }))
+          : [];
 
         extractedMilestones.push({
           _id: `milestone-${idx}`,
@@ -73,8 +90,12 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
           amount: 0,
           status: MilestoneStatus.NOT_STARTED,
           startDate: { expected: new Date().toISOString() },
-          endDate: { expected: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() },
-          stories: stories
+          endDate: {
+            expected: new Date(
+              Date.now() + 7 * 24 * 60 * 60 * 1000,
+            ).toISOString(),
+          },
+          stories: stories,
         } as Milestone);
       });
     }
@@ -85,43 +106,48 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   // Keep selected index within bounds
   useEffect(() => {
     if (milestones.length === 0) return;
-    if (selectedMilestoneIndex == null || selectedMilestoneIndex >= milestones.length) {
+    if (
+      selectedMilestoneIndex == null ||
+      selectedMilestoneIndex >= milestones.length
+    ) {
       setSelectedMilestoneIndex(0);
     }
   }, [milestones, selectedMilestoneIndex]);
 
   // Mock handlers since we don't save to backend yet
   const fetchMilestones = () => {};
-  
+
   const handleStorySubmit = async (
     e: React.FormEvent,
     storyData: Story,
     updateMilestone: Milestone,
     isTask = false,
-    newTask: any = null
+    newTask: any = null,
   ) => {
     e.preventDefault();
     // Local state update only for review phase
-    setMilestones(prev => prev.map(m => {
-      if (m._id === updateMilestone._id) {
-        let updatedStories = m.stories || [];
-        if (isTask && newTask) {
-          updatedStories = updatedStories.map(story => {
-            if (story._id === newTask.storyId) {
-              return {
-                ...story,
-                tasks: [...(story.tasks || []), newTask.formData]
-              };
-            }
-            return story;
-          });
-        } else {
-          updatedStories = [...updatedStories, storyData];
+    setMilestones((prev) =>
+      prev.map((m) => {
+        if (m._id === updateMilestone._id) {
+          let updatedStories = m.stories || [];
+          if (isTask && newTask) {
+            updatedStories = updatedStories.map((story) => {
+              if (story._id === newTask.storyId) {
+                return {
+                  ...story,
+                  tasks: [...(story.tasks || []), newTask.formData],
+                };
+              }
+              return story;
+            });
+          } else {
+            updatedStories = [...updatedStories, storyData];
+          }
+          return { ...m, stories: updatedStories };
         }
-        return { ...m, stories: updatedStories };
-      }
-      return m;
-    }));
+        return m;
+      }),
+    );
   };
 
   return (
@@ -132,9 +158,12 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
               Phase 3 output
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">Milestones Review</h2>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Milestones Review
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Review and approve the generated milestones before proceeding to talent selection.
+              Review and approve the generated milestones before proceeding to
+              talent selection.
             </p>
           </div>
 
@@ -176,14 +205,19 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                     milestones={milestones}
                     handleStorySubmit={handleStorySubmit}
                     selectedIndex={selectedMilestoneIndex}
-                    onMilestoneSelect={(index) => setSelectedMilestoneIndex(index)}
+                    onMilestoneSelect={(index) =>
+                      setSelectedMilestoneIndex(index)
+                    }
                   />
                 </div>
 
                 {selectedMilestoneIndex !== null && (
                   <div className="w-full mt-4">
                     <StoriesSection
-                      key={milestones[selectedMilestoneIndex]?._id ?? selectedMilestoneIndex}
+                      key={
+                        milestones[selectedMilestoneIndex]?._id ??
+                        selectedMilestoneIndex
+                      }
                       milestone={milestones[selectedMilestoneIndex]}
                       fetchMilestones={fetchMilestones}
                       handleStorySubmit={handleStorySubmit}
@@ -195,9 +229,16 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             ) : (
               <div className="flex justify-center items-center h-[40vh] w-full">
                 <div className="text-center">
-                  <PackageOpen className="mx-auto text-muted-foreground/50 mb-4" size="64" />
-                  <p className="text-muted-foreground font-medium">No milestones generated in blueprint</p>
-                  <p className="text-xs text-muted-foreground/70 mt-2">Try updating your blueprint roadmap</p>
+                  <PackageOpen
+                    className="mx-auto text-muted-foreground/50 mb-4"
+                    size="64"
+                  />
+                  <p className="text-muted-foreground font-medium">
+                    No milestones generated in blueprint
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-2">
+                    Try updating your blueprint roadmap
+                  </p>
                 </div>
               </div>
             )}
