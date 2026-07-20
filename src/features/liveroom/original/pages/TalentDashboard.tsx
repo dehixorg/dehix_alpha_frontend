@@ -277,6 +277,8 @@ export default function TalentDashboard() {
     },
   });
 
+  const inviteList = Array.isArray(invites) ? invites : [];
+
   // Build Unified Needs Action Priority Feed Items
   const priorityFeedItems = useMemo(() => {
     const items: Array<{
@@ -357,7 +359,6 @@ export default function TalentDashboard() {
   }
 
   const credList = Array.isArray(credentials) ? credentials : [];
-  const inviteList = Array.isArray(invites) ? invites : [];
   const pendingEnquiries = projectEnquiries.filter(
     (enquiry) => enquiry.responseStatus === 'pending',
   );
