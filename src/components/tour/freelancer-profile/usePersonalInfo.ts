@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -55,8 +56,8 @@ export function usePersonalInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'personal-info-intro',
-      title: 'Personal Information',
-      text: 'Keep your profile details updated so businesses can find and trust you faster.',
+      title: '👤 Onboarding & Identity Details',
+      text: 'Welcome to your Personal Information settings. Maintaining highly detailed profiles directly increases the probability of matching with premium organizations. Start by filling out your legal name, username, and professional description.',
       when: withProgress(tour),
       buttons: [
         {
@@ -72,8 +73,8 @@ export function usePersonalInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'profile-picture',
-      title: 'Profile picture',
-      text: 'Upload or change your profile picture here. Changes are saved instantly — no need to click Save.',
+      title: '📸 Profile Avatar Upload',
+      text: 'Click here or drag-and-drop a professional profile image (JPG, PNG, max 5MB). Once uploaded, your avatar is securely stored and updated instantly across all client directories.',
       attachTo: { element: '[data-tour="profile-picture"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -84,8 +85,8 @@ export function usePersonalInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'non-editable',
-      title: 'Locked fields',
-      text: 'These details are verified and cannot be edited for security reasons.',
+      title: '🔒 Secure Lock Information',
+      text: 'For regulatory compliance, verified fields such as your registration email and phone numbers are locked here. If you need to update these parameters, please open a verification dispute ticket in the Reports section.',
       attachTo: { element: '[data-tour="non-editable-field"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
@@ -96,8 +97,8 @@ export function usePersonalInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'skills-domains',
-      title: 'Skills & Domains',
-      text: 'Add or update your skills and domains here. These details can be saved here too and used for matching.',
+      title: '🛠️ Skill & Domain Mapping',
+      text: 'Select your primary work domains and add tech-stack tags (e.g. React, Rust, Solidity). These attributes determine which marketplace projects appear on your feed, and are checked by our matching algorithms.',
       attachTo: {
         element: '[data-tour="skills-domains"]',
         on: 'top',
@@ -111,14 +112,14 @@ export function usePersonalInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'save-profile',
-      title: 'Save updates',
-      text: 'Update your skills and domains here to improve visibility and matching.',
+      title: '💾 Save Profile Modifications',
+      text: 'Always click Save Changes to push updates to the live databases. Verified changes will automatically recalculate your profile completion indicators.',
       attachTo: { element: '[data-tour="profile-save"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

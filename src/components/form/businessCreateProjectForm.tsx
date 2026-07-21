@@ -23,6 +23,7 @@ import ProjectFormIllustration from './ProjectFormIllustration';
 import ProjectFormStepper from './ProjectFormStepper';
 import BudgetSection from './BudgetSection';
 
+import { useAddProjectTour } from '@/components/tour/business/useAddProjectTour';
 import { updateConnectsBalance } from '@/lib/updateConnects';
 import {
   Card,
@@ -284,6 +285,7 @@ export function CreateProjectBusinessForm() {
   const [activeProfile, setActiveProfile] = useState(0);
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode') as 'single' | 'multiple';
+  useAddProjectTour(true);
   const { hasOtherValues, hasProfiles } = useDraft({});
 
   const schema = useMemo(() => {
@@ -746,7 +748,7 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderProjectInfoStep = () => (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2" data-tour="add-project-details">
       <FormField
         control={form.control}
         name="projectName"
@@ -874,7 +876,10 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderProfileInfoStep = () => (
-    <div className="lg:col-span-2 xl:col-span-2">
+    <div
+      className="lg:col-span-2 xl:col-span-2"
+      data-tour="add-project-requirements"
+    >
       {/* Tabs moved inside card header; no standalone bar here */}
       {profileFields.map((field, index) => {
         if (mode === 'single' && index > 0) return null;
@@ -1172,7 +1177,10 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderBudgetStep = () => (
-    <div className="lg:col-span-2 xl:col-span-2">
+    <div
+      className="lg:col-span-2 xl:col-span-2"
+      data-tour="add-project-milestones"
+    >
       {mode === 'multiple' && (
         <div className="mb-3">
           <ProfileTabs />

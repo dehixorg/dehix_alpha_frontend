@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useBusinessProfileViewTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'biz-profile-view-intro',
+      title: '🏢 Company Profile View',
+      text: "Welcome to this business's public profile. Here you can check their corporate details, verify past postings, review active project contracts, or establish a direct communication link.",
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,13 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'biz-profile-view-actions',
+      title: '✉️ Connect & Chat',
+      text: 'Click here to start a direct message thread with the business manager to ask about open positions or project requirements.',
+      attachTo: {
+        element: '[data-tour="biz-profile-view-actions"]',
+        on: 'bottom',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,22 +87,13 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'biz-profile-view-projects',
+      title: '📁 Open Projects List',
+      text: 'Browse all open contracts posted by this business. You can view the technical stacks, budget details, and apply to relevant roles.',
+      attachTo: {
+        element: '[data-tour="biz-profile-view-projects"]',
+        on: 'top',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +119,13 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'business-profile-view') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="biz-profile-view-actions"]') ||
+      el('[data-tour="biz-profile-view-projects"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

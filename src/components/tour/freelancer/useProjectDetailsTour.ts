@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useProjectDetailsTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'project-details-intro',
+      title: '📁 Project Specification Details',
+      text: 'Welcome to the Project Specification Details page. Here you can inspect all parameters of the project description, active status flags, requirements profiles, and scheduled milestone structures.',
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'project-details-info',
+      title: '✨ Project Overview Card',
+      text: 'This card displays core parameters: project name, long descriptions, required technologies, start/end timelines, and client contact email configurations.',
+      attachTo: { element: '[data-tour="project-info"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,22 +84,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'project-details-profiles',
+      title: '👥 Requirement Profiles list',
+      text: 'Click here to inspect individual specialized profiles required by the client. Each profile details: desired role experience years, minimum connects required to bid, max hourly rate limits, and skills checklists.',
+      attachTo: { element: '[data-tour="project-profiles"]', on: 'left' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +113,13 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'project-details') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="project-info"]') ||
+      el('[data-tour="project-profiles"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

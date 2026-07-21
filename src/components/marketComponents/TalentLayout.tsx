@@ -135,6 +135,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({
             value={activeTab}
             onValueChange={handleTabChange}
             className="w-full"
+            data-tour="business-talent-tabs"
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="overview">

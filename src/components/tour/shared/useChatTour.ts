@@ -55,49 +55,67 @@ export function useChatTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
-    if (userType === 'business') {
-      tour.addStep({
-        id: 'chat-main',
-        title: 'Chats',
-        text: 'This is where you communicate with freelancers, discuss project details, and collaborate in real time.',
-        // attachTo: {
-        //   element: '[data-tour="chat-main"]',
-        //   on: 'top',
-        // },
-        when: withProgress(tour),
-        buttons: [
-          {
-            text: 'Got it',
-            action: () => {
-              tour.complete();
-              dispatch(clearTour());
-            },
+    tour.addStep({
+      id: 'chat-intro',
+      title: '💬 Real-Time Messaging Hub',
+      text:
+        userType === 'business'
+          ? 'Welcome to the Dehix Messaging Center. This is where you communicate directly with freelancers, discuss project requirements, arrange milestones, and coordinate deliverables. Direct interaction helps keep your projects on schedule.'
+          : 'Welcome to the Dehix Messaging Center. This workspace allows you to converse directly with client organizations, discuss proposal details, ask questions about tasks, and receive real-time updates.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
           },
-        ],
-      });
-    }
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
 
-    if (userType === 'freelancer') {
-      tour.addStep({
-        id: 'chat-main',
-        title: 'Chats',
-        text: 'This is where you chat with clients, receive updates, and coordinate on projects.',
-        // attachTo: {
-        //   element: '[data-tour="chat-main"]',
-        //   on: 'top',
-        // },
-        when: withProgress(tour),
-        buttons: [
-          {
-            text: 'Got it',
-            action: () => {
-              tour.complete();
-              dispatch(clearTour());
-            },
+    tour.addStep({
+      id: 'chat-list-step',
+      title: '📂 Conversation Registry',
+      text: "This left-hand sidebar lists all your ongoing conversations. Each row displays the recipient's avatar name, role indicators, a preview of the last message, and orange notification bubbles for unread items.",
+      attachTo: { element: '[data-tour="chat-main"]', on: 'right' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'chat-search-step',
+      title: '🔍 Search & Filter Chats',
+      text: 'Use this input field to quickly locate conversations. You can filter discussions by user names, email addresses, or specific project title keywords.',
+      attachTo: { element: '[data-tour="chat-main"]', on: 'right' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'chat-new-step',
+      title: '➕ Start New Discussions',
+      text: 'Click this button to launch the user search directory modal. You can search verified Dehix profiles, select matching users, and instantly start a real-time chat session.',
+      attachTo: { element: '[data-tour="chat-main"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        {
+          text: 'Complete',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
           },
-        ],
-      });
-    }
+        },
+      ],
+    });
 
     tourRef.current = tour;
 

@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function usePublicProfileTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'public-profile-intro',
+      title: '🌐 Public Visibility Board',
+      text: 'Welcome to your Public Profile settings. This workspace is how external clients, partners, and other developers view your professional portfolio, verified credentials, and activity metrics.',
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'public-profile-share',
+      title: '🔗 Share & Copy Profile Link',
+      text: 'Copy your unique profile address or share it directly to social platforms (LinkedIn, GitHub, Twitter). Clients visiting this link will see your verified Dehix profile.',
+      attachTo: { element: '[data-tour="profile-share"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,22 +84,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
-      when: withProgress(tour),
-      buttons: [
-        { text: 'Back', action: tour.back },
-        { text: 'Next', action: tour.next },
-      ],
-    });
-
-    tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'public-profile-preview',
+      title: '👁️ Live Profile Preview',
+      text: 'Verify how your details appear. This preview displays your profile avatar, banner, bio, website link, and verified skills/domains exactly as clients see them.',
+      attachTo: { element: '[data-tour="profile-preview"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +113,13 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'public-profile') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="profile-share"]') ||
+      el('[data-tour="profile-preview"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

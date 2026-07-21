@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -55,8 +56,8 @@ export function useDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'profile-completion',
-      title: 'Profile completion',
-      text: 'Complete your profile to unlock more features.',
+      title: '📈 Onboarding & Profile Strength',
+      text: 'This metric monitors the completeness of your public presence on Dehix. Providing details for your bio, skill set, work experiences, and undergoing KYC validation directly improves your profile strength, boosting your visibility index to hiring client organizations.',
       attachTo: { element: '[data-tour="profile-completion"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -76,8 +77,8 @@ export function useDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'stats',
-      title: 'Stats overview',
-      text: 'Track your progress and revenue here.',
+      title: '📊 Overall Key Metrics',
+      text: 'Monitor your platform career performance parameters from a single row. This layout aggregates your count of Active Contracts, Pending proposal bids, successfully Delivered Projects, and Total Net Earnings (USD). Hovering on each card exposes monthly comparison indicators.',
       attachTo: { element: '[data-tour="stats"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
@@ -88,8 +89,8 @@ export function useDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'projects',
-      title: 'Projects',
-      text: 'Manage all your projects here.',
+      title: '📁 Project Contracts Pipeline',
+      text: 'This panel showcases your active milestones and deliverables. You can review ongoing contracts, check deadlines, and access files or feedback dashboards directly by selecting any active card.',
       attachTo: { element: '[data-tour="projects"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
@@ -100,8 +101,8 @@ export function useDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interview',
-      title: 'Interview Schedule',
-      text: 'Your upcoming meetings and interview slots.',
+      title: '📅 Screening & Interview Timeline',
+      text: 'Access scheduled technical screenings, live evaluations, or consultation slots here. Hovering or clicking on an upcoming session will reveal meeting links, interviewer details, and candidate requirements.',
       attachTo: { element: '[data-tour="interviews"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [

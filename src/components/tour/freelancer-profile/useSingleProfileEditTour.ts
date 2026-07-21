@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useSingleProfileEditTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'profile-edit-intro',
+      title: '✏️ Role Profile Designer',
+      text: 'Welcome to the role profile configurations dashboard. This workspace enables you to tailor your resume details, skills weight, github repositories, projects portfolio, and rate limits for this specialized role profile.',
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'profile-edit-rate',
+      title: '💵 Base Billing Rate Limit',
+      text: 'Define your hourly rate in USD. This rate will be displayed on client proposals and is used to match you with suitable organization budgets.',
+      attachTo: { element: '[data-tour="profile-edit-rate"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,10 +84,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      id: 'profile-edit-git',
+      title: '🐙 GitHub Sync Integration',
+      text: 'Synchronize your public and private GitHub repositories to display real-time contribution metrics, commit histories, and verify development stacks.',
+      attachTo: { element: '[data-tour="profile-edit-git"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -95,10 +96,22 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'profile-edit-portfolio',
+      title: '📁 Portfolio Projects',
+      text: 'Publish or link individual project links. Showcasing actual applications, code snippets, and deployment links builds high trust with business clients.',
+      attachTo: { element: '[data-tour="profile-edit-portfolio"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'profile-edit-save',
+      title: '💾 Save Profile Configuration',
+      text: 'Once you are satisfied with your changes, click here to push updates. Changes are processed instantly and synced to the Dehix Talent Marketplace.',
+      attachTo: { element: '[data-tour="profile-edit-save"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +137,15 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'single-profile-edit') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="profile-edit-rate"]') &&
+      el('[data-tour="profile-edit-git"]') &&
+      el('[data-tour="profile-edit-portfolio"]') &&
+      el('[data-tour="profile-edit-save"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

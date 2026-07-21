@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,9 +33,10 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useMilestoneTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
+  const user = useSelector((s: RootState) => s.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -53,10 +55,13 @@ export function useKycTour(isReady: boolean) {
     tour.on('cancel', () => dispatch(clearTour()));
     tour.on('complete', () => dispatch(clearTour()));
 
+    const isBusiness =
+      user?.userType === 'business' || user?.type === 'business';
+
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'milestones-intro',
+      title: '🪜 Project Milestones & Tasks Board',
+      text: 'Welcome to your active project workspace. This board tracks scheduled milestones, features/stories required for the milestone, specific sub-tasks, and assigned developer teams.',
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +76,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'milestones-timeline',
+      title: '📈 Milestone Timeline',
+      text: 'Your milestone sequence is displayed here. Select any milestone node to view its specific stories, assigned sub-tasks, budget weight allocations, and active deadline details.',
+      attachTo: { element: '[data-tour="milestone-timeline"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,10 +88,12 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      id: 'milestones-stories',
+      title: '📝 Stories & Sub-tasks Panel',
+      text: isBusiness
+        ? "This section details the selected milestone's requirements. Each story card breaks down into actionable developer sub-tasks. You can track progress checkmarks, review submitted code deliverables links, and approve completed features for payout release."
+        : "This section details the selected milestone's requirements. Each story card breaks down into actionable developer sub-tasks. You can assign tasks to yourself, track status checkmarks, update code deliverables links, and submit completed features for client review.",
+      attachTo: { element: '[data-tour="milestone-stories"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -95,10 +102,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'milestones-freelancers',
+      title: '👥 Co-working Developer Team',
+      text: 'Lists all verified freelancers collaborating on this project. Click the Chat icon on any member card to initiate real-time secure messaging.',
+      attachTo: { element: '[data-tour="milestone-freelancers"]', on: 'left' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -119,16 +126,19 @@ export function useKycTour(isReady: boolean) {
       tourRef.current = null;
       dispatch(clearTour());
     };
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'milestones') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="milestone-timeline"]') ||
+      el('[data-tour="milestone-stories"]') ||
+      el('[data-tour="milestone-freelancers"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useAddProjectTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'add-project-intro',
+      title: '➕ Create Project Wizard',
+      text: 'Welcome to the Project Creation Wizard. Follow these steps to define your project requirements, specify technical skills, establish budget parameters, and structure milestones for candidate developers.',
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'add-project-details',
+      title: '📝 Core Project Details',
+      text: 'Enter your project title, select the high-level business domain categories, and write a comprehensive description detailing the technical requirements, scope of work, and key expectations.',
+      attachTo: { element: '[data-tour="add-project-details"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,10 +84,13 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      id: 'add-project-requirements',
+      title: '🛠️ Candidate Qualifications',
+      text: 'Add technical skill tags (e.g. Solidity, Next.js), set minimum experience years required, specify desired hourly rates, and define minimum connects required for developers to place proposals.',
+      attachTo: {
+        element: '[data-tour="add-project-requirements"]',
+        on: 'bottom',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -95,10 +99,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'add-project-milestones',
+      title: '📅 Milestone Scheduling',
+      text: 'Add and configure development milestones. Each milestone must specify a description, budget percentage weight allocation (totalling 100%), and a calendar deadline date.',
+      attachTo: { element: '[data-tour="add-project-milestones"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +128,14 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'add-project') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="add-project-details"]') ||
+      el('[data-tour="add-project-requirements"]') ||
+      el('[data-tour="add-project-milestones"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

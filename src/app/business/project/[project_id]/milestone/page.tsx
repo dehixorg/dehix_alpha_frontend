@@ -17,6 +17,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
+import { useMilestoneTour } from '@/components/tour/freelancer/useMilestoneTour';
 
 const CreateMilestoneDialog = dynamic(
   () =>
@@ -71,6 +72,7 @@ const Page = () => {
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<
     number | null
   >(0);
+  useMilestoneTour(!loading);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
 
   const handleChatClick = useCallback(
@@ -296,7 +298,10 @@ const Page = () => {
           </div>
         ) : milestones.length > 0 ? (
           <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
-            <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
+            <div
+              className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full"
+              data-tour="milestone-freelancers"
+            >
               <FreelancerList
                 projectId={project_id}
                 onChatClick={handleChatClick}
@@ -305,25 +310,31 @@ const Page = () => {
             </div>
 
             <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
-              <MilestoneTimeline
-                fetchMilestones={fetchMilestones}
-                milestones={milestones}
-                handleStorySubmit={handleStorySubmit}
-                selectedIndex={selectedMilestoneIndex}
-                onMilestoneSelect={(index) => setSelectedMilestoneIndex(index)}
-              />
+              <div data-tour="milestone-timeline">
+                <MilestoneTimeline
+                  fetchMilestones={fetchMilestones}
+                  milestones={milestones}
+                  handleStorySubmit={handleStorySubmit}
+                  selectedIndex={selectedMilestoneIndex}
+                  onMilestoneSelect={(index) =>
+                    setSelectedMilestoneIndex(index)
+                  }
+                />
+              </div>
 
               {selectedMilestoneIndex !== null && (
-                <StoriesSection
-                  key={
-                    milestones[selectedMilestoneIndex]?._id ??
-                    selectedMilestoneIndex
-                  }
-                  milestone={milestones[selectedMilestoneIndex]}
-                  fetchMilestones={fetchMilestones}
-                  handleStorySubmit={handleStorySubmit}
-                  isFreelancer={false}
-                />
+                <div data-tour="milestone-stories">
+                  <StoriesSection
+                    key={
+                      milestones[selectedMilestoneIndex]?._id ??
+                      selectedMilestoneIndex
+                    }
+                    milestone={milestones[selectedMilestoneIndex]}
+                    fetchMilestones={fetchMilestones}
+                    handleStorySubmit={handleStorySubmit}
+                    isFreelancer={false}
+                  />
+                </div>
               )}
             </div>
           </div>

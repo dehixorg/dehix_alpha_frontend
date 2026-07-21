@@ -53,10 +53,9 @@ export function useBusinessInfoTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'business-info',
-      title: 'Business Information',
-      scrollTo: false,
-      text: 'Keep your business profile accurate. It helps freelancers trust and recognize you.',
+      id: 'business-info-intro',
+      title: '🏢 Company Profile Settings',
+      text: 'Welcome to your Business Information panel. Keeping your details accurate (e.g. company sizes, active websites, LinkedIn profiles) directly enhances trust with freelancers and peer verification networks.',
       when: withProgress(tour),
       buttons: [
         {
@@ -75,8 +74,8 @@ export function useBusinessInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-profile-picture',
-      title: 'Profile Picture',
-      text: 'Upload or change your profile picture here. The image is saved automatically — no need to click save.',
+      title: '📸 Company Logo Upload',
+      text: 'Click here or drag-and-drop a company logo (JPG, PNG, max 5MB). Once uploaded, your brand identity is saved automatically and updated across all platform listings.',
       attachTo: {
         element: '[data-tour="profile-picture"]',
         on: 'bottom',
@@ -90,8 +89,8 @@ export function useBusinessInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-readonly-fields',
-      title: 'Contact Information',
-      text: 'Email and phone number are non-editable, enter it carefully.',
+      title: '🔒 Secure Lock Contacts',
+      text: 'For regulatory compliance and account security, verified contact parameters such as your registration email and phone numbers are locked here. If you need to make changes, please raise a ticket in the Reports section.',
       attachTo: {
         element: '[data-tour="business-readonly-fields"]',
         on: 'top',
@@ -104,8 +103,8 @@ export function useBusinessInfoTour(isReady: boolean) {
 
     tour.addStep({
       id: 'save-changes',
-      title: 'Save Changes',
-      text: 'Use this button to save updates made on this page. Profile picture uploads are saved automatically.',
+      title: '💾 Save Profile Modifications',
+      text: 'Make sure to click the Save Changes button to push any edited company size ranges, websites, or contact roles to the live platform database.',
       attachTo: {
         element: '[data-tour="save"]',
         on: 'top',
@@ -113,7 +112,7 @@ export function useBusinessInfoTour(isReady: boolean) {
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

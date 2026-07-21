@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useConsultancyTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'consultancy-intro',
+      title: '💼 Expert Consultancy Hub',
+      text: 'Welcome to your Consultancy Workspace. This page allows you to list direct-hire consultancy packages, configure your hourly billing rates, review project contracts, and manage booking invitations.',
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'add-consultancy-btn',
+      title: '➕ Offer a Consultancy Service',
+      text: 'Click here to publish a new consultancy offer. You can define specialized topics, upload portfolios, and set your target hourly billing rates.',
+      attachTo: { element: '[data-tour="add-consultancy-btn"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,10 +84,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      id: 'consultancy-list',
+      title: '📋 Published Offers',
+      text: 'This section renders your active consultancy offers. Client organizations can view these packages and book your services directly.',
+      attachTo: { element: '[data-tour="consultancy-list"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -95,10 +96,25 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'consultancy-projects',
+      title: '📊 Project Milestones & Contracts',
+      text: 'Track your ongoing and completed projects associated with booked consultancies. Monitor milestones, review deadlines, and upload deliverables.',
+      attachTo: { element: '[data-tour="consultancy-projects"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'consultancy-invitations',
+      title: '✉️ Inbound Booking Invitations',
+      text: 'Check pending consultation requests from organizations. Here you can accept, renegotiate, or reject booking bids.',
+      attachTo: {
+        element: '[data-tour="consultancy-invitations"]',
+        on: 'left',
+      },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +140,15 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'consultancy') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="add-consultancy-btn"]') ||
+      el('[data-tour="consultancy-list"]') ||
+      el('[data-tour="consultancy-projects"]') ||
+      el('[data-tour="consultancy-invitations"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

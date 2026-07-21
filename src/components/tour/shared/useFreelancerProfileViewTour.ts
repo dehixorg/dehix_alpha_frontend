@@ -11,6 +11,7 @@ import { clearTour } from '@/lib/tourSlice';
 function el(selector: string) {
   return document.querySelector(selector);
 }
+
 function withProgress(tour: Tour) {
   return {
     show(this: any) {
@@ -32,7 +33,7 @@ function withProgress(tour: Tour) {
   };
 }
 
-export function useKycTour(isReady: boolean) {
+export function useFreelancerProfileViewTour(isReady: boolean) {
   const tourRef = useRef<Tour | null>(null);
   const { trigger, mode, target } = useSelector((s: RootState) => s.tour);
   const dispatch = useDispatch();
@@ -54,9 +55,9 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc-intro',
-      title: '🆔 KYC Identity Verification',
-      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      id: 'profile-view-intro',
+      title: '👤 Professional Portfolio',
+      text: "Welcome to this freelancer's public profile. This page compiles the developer's full credentials, certified work history, verified skills, and technical portfolios.",
       when: withProgress(tour),
       buttons: [
         {
@@ -71,10 +72,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-stepper-step',
-      title: '🪜 Verification Process Stepper',
-      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
-      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      id: 'profile-view-actions',
+      title: '✉️ Initiate Collaboration',
+      text: 'If you are logged in as a business, you can invite this freelancer to your active projects or initiate a direct chat session to discuss contract requirements.',
+      attachTo: { element: '[data-tour="profile-view-actions"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -83,10 +84,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-upload-step',
-      title: '📁 Document Upload Panel',
-      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
-      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      id: 'profile-view-skills',
+      title: '🛠️ Certified Technical Skills',
+      text: "Browse the developer's matching skills and project domains. Verified badges indicate credentials certified by Dehix smart contract history.",
+      attachTo: { element: '[data-tour="profile-view-skills"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -95,10 +96,10 @@ export function useKycTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'kyc-submit-step',
-      title: '🚀 Submit Verification Files',
-      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
-      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'profile-view-projects',
+      title: '📁 Portfolio Projects',
+      text: 'Explore individual projects built by the freelancer. You can check source code links, live demo links, and review peer ratings.',
+      attachTo: { element: '[data-tour="profile-view-projects"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
@@ -124,11 +125,14 @@ export function useKycTour(isReady: boolean) {
   useEffect(() => {
     if (!trigger) return;
     if (!isReady) return;
-
     if (mode !== 'page') return;
-    if (target !== 'kyc') return;
+    if (target !== 'freelancer-profile-view') return;
 
-    if (el('[data-tour="kyc"]')) {
+    if (
+      el('[data-tour="profile-view-actions"]') ||
+      el('[data-tour="profile-view-skills"]') ||
+      el('[data-tour="profile-view-projects"]')
+    ) {
       tourRef.current?.start();
     }
   }, [trigger, mode, target, isReady]);

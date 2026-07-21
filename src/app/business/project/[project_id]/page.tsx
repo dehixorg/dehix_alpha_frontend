@@ -28,6 +28,7 @@ import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 import type { Milestone } from '@/utils/types/Milestone';
 import BusinessDashboardLayout from '@/components/layout/BusinessDashboardLayout';
+import { useBusinessProjectDetailsTour } from '@/components/tour/business/useBusinessProjectDetailsTour';
 
 interface ProjectProfile {
   _id?: string;
@@ -89,6 +90,7 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
+  useBusinessProjectDetailsTour(project !== null);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -297,22 +299,24 @@ export default function Dashboard() {
 
             <TabsContent value="Project-Info" className="m-0">
               <CardContent className="p-4 sm:p-6 space-y-6">
-                <ProjectDetailCard
-                  projectName={project.projectName}
-                  description={project.description}
-                  email={project.email}
-                  status={project.status}
-                  startDate={project.createdAt}
-                  endDate={project.end}
-                  projectDomain={project.projectDomain}
-                  skills={project.skillsRequired}
-                  projectId={project._id}
-                  handleCompleteProject={handleCompleteProject}
-                  handleStartProject={handleStartProject}
-                  handleIncompleteProject={handleIncompleteProject}
-                  userRole="Business"
-                  milestones={project.milestones}
-                />
+                <div data-tour="biz-project-info">
+                  <ProjectDetailCard
+                    projectName={project.projectName}
+                    description={project.description}
+                    email={project.email}
+                    status={project.status}
+                    startDate={project.createdAt}
+                    endDate={project.end}
+                    projectDomain={project.projectDomain}
+                    skills={project.skillsRequired}
+                    projectId={project._id}
+                    handleCompleteProject={handleCompleteProject}
+                    handleStartProject={handleStartProject}
+                    handleIncompleteProject={handleIncompleteProject}
+                    userRole="Business"
+                    milestones={project.milestones}
+                  />
+                </div>
 
                 <div className="pb-3">
                   <div className="flex items-start justify-between gap-3">
@@ -324,7 +328,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div>
+                <div data-tour="biz-project-profiles">
                   {!project.profiles || project.profiles.length === 0 ? (
                     <div className="rounded-xl border bg-muted/20 p-8 sm:p-10 text-center">
                       <div className="mx-auto mb-5 h-14 w-14 rounded-2xl border bg-background flex items-center justify-center">
@@ -397,7 +401,10 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="w-full lg:col-span-1 lg:w-auto mt-8 lg:mt-0 space-y-6 min-w-0">
+      <div
+        className="w-full lg:col-span-1 lg:w-auto mt-8 lg:mt-0 space-y-6 min-w-0"
+        data-tour="biz-project-team"
+      >
         <CardTitle className="group flex items-center gap-2 text-xl">
           Interviews
         </CardTitle>

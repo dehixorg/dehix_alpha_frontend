@@ -55,9 +55,9 @@ export function useTalentTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'talent',
-      title: 'Talent Marketplace',
-      text: 'Explore professionals, review profiles, and connect with talent here.',
+      id: 'talent-intro',
+      title: '👥 Talent Pool Management',
+      text: 'Welcome to your Talent Listings board. This dashboard allows you to define your core professional skill categories, set your target monthly rates, and highlight your seniorities. Clients search this registry to invite matching profiles directly to active interviews.',
       when: withProgress(tour),
       buttons: [
         {
@@ -73,8 +73,8 @@ export function useTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'skill',
-      title: 'Add Dehix Skill',
-      text: 'Choose one of your profile skills, set your seniority level, and define your expected monthly pay. This helps clients understand where you shine.',
+      title: '🛠️ Configure Skill-Based Contracts',
+      text: 'Click here to choose one of your verified skills, set your seniority level (Entry, Intermediate, Expert), and define your expected monthly payout rate. Listing specific skills makes you eligible for skill-specific client searches.',
       attachTo: { element: '[data-tour="skill"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -85,14 +85,14 @@ export function useTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'domain',
-      title: 'Add Dehix Domain',
-      text: 'Select one of your profile domains, set your seniority level, and define your expected monthly pay for domain-based work.',
+      title: '📂 Configure Domain-Based Contracts',
+      text: 'Select your broader professional domain area, set your seniority levels, and define your expected monthly rate for domain-based engagements. Setting up domain criteria enables businesses to invite you for long-term project roles.',
       attachTo: { element: '[data-tour="domain"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

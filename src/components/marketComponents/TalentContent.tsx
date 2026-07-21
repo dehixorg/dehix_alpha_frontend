@@ -485,6 +485,7 @@ const TalentContent: React.FC<TalentContentProps> = ({
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-2"
+                    data-tour="business-talent-filter"
                   >
                     <Sliders className="h-4 w-4" />
                     <span>Filters</span>
@@ -511,14 +512,22 @@ const TalentContent: React.FC<TalentContentProps> = ({
 
           <div className="flex flex-1 flex-col lg:flex-row">
             {isLargeScreen && (
-              <aside className="w-full lg:w-80 flex-shrink-0 lg:pr-6">
+              <aside
+                className="w-full lg:w-80 flex-shrink-0 lg:pr-6"
+                data-tour="business-talent-filter"
+              >
                 <div className="lg:sticky lg:top-20">
                   <FiltersPanel onReset={handleReset} />
                 </div>
               </aside>
             )}
 
-            <div className="flex-1 overflow-y-auto pr-1">{cards}</div>
+            <div
+              className="flex-1 overflow-y-auto pr-1"
+              data-tour="business-talent-list"
+            >
+              {cards}
+            </div>
           </div>
         </div>
       );
