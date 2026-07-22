@@ -50,6 +50,9 @@ import { liveRoomApiFetch as fetch } from '../api/runtime';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import MilestoneReviewSection from '../components/MilestoneReviewSection';
+import TalentRequirementPlanner, {
+  type TalentRequirement,
+} from '../components/TalentRequirementPlanner';
 import {
   Tooltip,
   TooltipTrigger,
@@ -65,6 +68,7 @@ type WizardPhase =
   | 'analysis'
   | 'technical'
   | 'blueprint'
+  | 'talent_requirements'
   | 'milestones'
   | 'recommendations';
 type PhaseJobStatus = 'queued' | 'generating' | 'ready' | 'failed';
@@ -6147,6 +6151,126 @@ function buildSmartSuggestions({
     },
   ];
 }
+function estimateTalentRequirements(
+  blueprint: BlueprintResult | null,
+  analysis?: AnalysisResult | null,
+): TalentRequirement[] {
+  const requirements: TalentRequirement[] = [];
+
+  if (blueprint) {
+    const team = asRecord(blueprint.team_requirements);
+    const recTeam = asRecordList(
+      team.recommended_team ??
+        team.recommended ??
+        team.roles ??
+        blueprint.team_requirements,
+    );
+
+    if (recTeam.length > 0) {
+      recTeam.forEach((item, idx) => {
+        const title = String(
+          item.role ??
+            item.role_title ??
+            item.title ??
+            item.name ??
+            item.position ??
+            `Role ${idx + 1}`,
+        );
+        const purpose = String(
+          item.purpose ?? item.description ?? item.responsibilities ?? '',
+        );
+        const priorityStr = String(item.priority ?? '').toLowerCase();
+        const priority: 'required' | 'recommended' | 'optional' =
+          priorityStr.includes('opt')
+            ? 'optional'
+            : priorityStr.includes('rec')
+              ? 'recommended'
+              : 'required';
+
+        let count = 1;
+        const countVal =
+          item.count ?? item.quantity ?? item.size ?? item.aiSuggestedCount;
+        if (typeof countVal === 'number' && countVal >= 0) count = countVal;
+        else if (typeof countVal === 'string' && !isNaN(Number(countVal)))
+          count = Number(countVal);
+
+        let skillDomain = 'Full-Stack / Product Development';
+        const titleLower = title.toLowerCase();
+        if (titleLower.includes('front') || titleLower.includes('ui'))
+          skillDomain = 'React / Next.js / TypeScript';
+        else if (titleLower.includes('back') || titleLower.includes('api'))
+          skillDomain = 'Node.js / Express / Database';
+        else if (titleLower.includes('design') || titleLower.includes('ux'))
+          skillDomain = 'Figma / Product Design';
+        else if (titleLower.includes('qa') || titleLower.includes('test'))
+          skillDomain = 'QA Automation / Playwright';
+        else if (titleLower.includes('devops') || titleLower.includes('cloud'))
+          skillDomain = 'AWS / Docker / CI/CD';
+
+        requirements.push({
+          roleTitle: title,
+          skillDomain: item.skillDomain ? String(item.skillDomain) : skillDomain,
+          reason: purpose || `AI recommended role for ${title}`,
+          aiSuggestedCount: count,
+          businessSelectedCount: count,
+          minCount: priority === 'required' ? 1 : 0,
+          maxCount: Math.max(count + 2, 5),
+          priority,
+        });
+      });
+    }
+  }
+
+  if (requirements.length === 0) {
+    return [
+      {
+        roleTitle: 'Frontend Developer',
+        skillDomain: 'React / Next.js / TypeScript',
+        reason:
+          'The MVP has dashboards, authentication, marketplace views, and LiveRoom UI.',
+        aiSuggestedCount: 2,
+        businessSelectedCount: 2,
+        minCount: 1,
+        maxCount: 4,
+        priority: 'required',
+      },
+      {
+        roleTitle: 'Backend Developer',
+        skillDomain: 'Node.js / API / Database',
+        reason:
+          'The product needs APIs, auth, data models, and room/project workflows.',
+        aiSuggestedCount: 1,
+        businessSelectedCount: 1,
+        minCount: 1,
+        maxCount: 3,
+        priority: 'required',
+      },
+      {
+        roleTitle: 'UI/UX Designer',
+        skillDomain: 'Figma / Design Systems',
+        reason:
+          'Needed for user journey flows, wireframes, and component layout consistency.',
+        aiSuggestedCount: 1,
+        businessSelectedCount: 1,
+        minCount: 0,
+        maxCount: 2,
+        priority: 'recommended',
+      },
+      {
+        roleTitle: 'QA Tester',
+        skillDomain: 'Automated & E2E Testing',
+        reason: 'Optional role for quality assurance and release validation.',
+        aiSuggestedCount: 0,
+        businessSelectedCount: 0,
+        minCount: 0,
+        maxCount: 2,
+        priority: 'optional',
+      },
+    ];
+  }
+
+  return requirements;
+}
 
 export default function CreateRoom() {
   const [, navigate] = useLocation();
@@ -6161,6 +6285,9 @@ export default function CreateRoom() {
   );
   const [phase1ReviewTouched, setPhase1ReviewTouched] = useState(false);
   const [blueprint, setBlueprint] = useState<BlueprintResult | null>(null);
+  const [talentRequirements, setTalentRequirements] = useState<
+    TalentRequirement[]
+  >([]);
   const [activeTab, setActiveTab] = useState('executive_summary');
   const [mandatoryQuestions, setMandatoryQuestions] = useState<Question[]>([]);
   const [optionalQuestions, setOptionalQuestions] = useState<Question[]>([]);
@@ -6218,6 +6345,7 @@ export default function CreateRoom() {
   >(null);
   const [creationError, setCreationError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const canUseChat = phase !== 'idea' && phase !== 'analysis';
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const blueprintReportRef = useRef<HTMLDivElement | null>(null);
@@ -6713,6 +6841,9 @@ Please return ONLY the modified answer itself, without any introductory or conve
     }
     if (phase !== 'analysis' && phase !== 'blueprint') {
       setActiveReportSection(null);
+    }
+    if (phase === 'analysis') {
+      setChatOpen(false);
     }
   }, [phase]);
 
@@ -7292,6 +7423,7 @@ Please return ONLY the modified text itself, without any introductory or convers
       }
       const data = await res.json();
       setBlueprint(data.blueprint ?? null);
+      setTalentRequirements([]);
       if (data.session) {
         setSessionData(data.session);
       }
@@ -7320,11 +7452,28 @@ Please return ONLY the modified text itself, without any introductory or convers
     setLoadingRecommendations(true);
     setError('');
     try {
+      const currentReqs =
+        talentRequirements.length > 0
+          ? talentRequirements
+          : estimateTalentRequirements(blueprint, analysis);
+const payload = {
+        talentRequirements: currentReqs.map((r) => ({
+          roleTitle: r.roleTitle,
+          businessSelectedCount: r.businessSelectedCount,
+          aiSuggestedCount: r.aiSuggestedCount,
+          skillDomain: r.skillDomain,
+        })),
+      };
+
       const res = await fetch(
         `/api/launch/${sessionData._id}/talent-recommendations`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${getToken()}` },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify(payload),
         },
       );
       if (!res.ok) {
@@ -7347,7 +7496,7 @@ Please return ONLY the modified text itself, without any introductory or convers
           : [],
       };
       setTalentRecommendationReport(report);
-      setSelectedTalentKeys(buildDefaultSelectedTalentKeys(report));
+      setSelectedTalentKeys(buildDefaultSelectedTalentKeys(report, currentReqs));
       setPhase('recommendations');
     } catch (err: any) {
       const msg = err?.message ?? 'Failed to generate talent recommendations';
@@ -7379,8 +7528,10 @@ Please return ONLY the modified text itself, without any introductory or convers
 
   const buildDefaultSelectedTalentKeys = (
     report: TalentRecommendationReport,
+    activeReqs?: TalentRequirement[],
   ) => {
     const defaults: Record<string, boolean> = {};
+    const reqsList = activeReqs || talentRequirements;
     const groups =
       Array.isArray(report.recommendedTeams) &&
       report.recommendedTeams.length > 0
@@ -7413,19 +7564,32 @@ Please return ONLY the modified text itself, without any introductory or convers
 
     const alreadyPickedTalentIds = new Set<string>();
     for (const group of groups) {
+      const roleTitle = group.role?.roleTitle;
+      const matchingReq = reqsList.find(
+        (r) =>
+          r.roleTitle.toLowerCase() === roleTitle?.toLowerCase() ||
+          r.roleTitle.toLowerCase().includes(roleTitle?.toLowerCase() || '') ||
+          (roleTitle || '').toLowerCase().includes(r.roleTitle.toLowerCase()),
+      );
+      const targetCount = matchingReq ? matchingReq.businessSelectedCount : 1;
+
       const ordered = [
         ...(group.availableMatches ?? []),
         ...(group.topMatches ?? []),
         ...(group.unavailableMatches ?? []),
       ];
-      const selected =
-        ordered.find(
-          (recommendation) =>
-            !alreadyPickedTalentIds.has(String(recommendation.talentId)),
-        ) ?? ordered[0];
-      if (!selected) continue;
-      alreadyPickedTalentIds.add(String(selected.talentId));
-      defaults[recommendationKey(selected, 'ai')] = true;
+
+      let pickedForGroup = 0;
+      for (const recommendation of ordered) {
+        if (pickedForGroup >= targetCount) break;
+        const key = String(recommendation.talentId);
+        if (!alreadyPickedTalentIds.has(key)) {
+          alreadyPickedTalentIds.add(key);
+          defaults[recommendationKey(recommendation, 'ai')] = true;
+          defaults[recommendationKey(recommendation, 'manual')] = true;
+          pickedForGroup++;
+        }
+      }
     }
     return defaults;
   };
@@ -7513,6 +7677,29 @@ Please return ONLY the modified text itself, without any introductory or convers
       return;
     }
 
+    if (talentRequirements.length > 0) {
+      for (const req of talentRequirements) {
+        if (req.businessSelectedCount > 0) {
+          const selectedForRole = selectedTalentRecommendations.filter(
+            (t) =>
+              t.matchedRole?.roleTitle?.toLowerCase() ===
+                req.roleTitle.toLowerCase() ||
+              t.matchedRole?.roleTitle
+                ?.toLowerCase()
+                .includes(req.roleTitle.toLowerCase()) ||
+              req.roleTitle
+                .toLowerCase()
+                .includes(t.matchedRole?.roleTitle?.toLowerCase() || ''),
+          ).length;
+          if (selectedForRole < req.businessSelectedCount) {
+            toast.warning(
+              `${req.roleTitle} requires ${req.businessSelectedCount} talents. You selected ${selectedForRole}.`,
+            );
+          }
+        }
+      }
+    }
+
     setCreatingRoom(true);
     setCreationError(null);
     setIsRedirecting(false);
@@ -7586,12 +7773,29 @@ Please return ONLY the modified text itself, without any introductory or convers
     let shouldResetState = true;
 
     try {
-      // 1. Fetch talent recommendations
+      // 1. Fetch talent recommendations using selected headcount per role
+      const currentReqs =
+        talentRequirements.length > 0
+          ? talentRequirements
+          : estimateTalentRequirements(blueprint, analysis);
+      const payload = {
+        talentRequirements: currentReqs.map((r) => ({
+          roleTitle: r.roleTitle,
+          businessSelectedCount: r.businessSelectedCount,
+          aiSuggestedCount: r.aiSuggestedCount,
+          skillDomain: r.skillDomain,
+        })),
+      };
+
       const recommendationsRes = await fetch(
         `/api/launch/${sessionData._id}/talent-recommendations`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${getToken()}` },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify(payload),
         },
       );
       if (!recommendationsRes.ok) {
@@ -7691,7 +7895,7 @@ Please return ONLY the modified text itself, without any introductory or convers
     <div className="min-h-screen bg-background text-foreground">
       <div className="sticky top-0 z-10 border-b border-border/40 bg-background/90 backdrop-blur-sm">
         <div
-          className={`${phase === 'idea' || !isChatOpen ? 'max-w-5xl' : 'max-w-[1400px]'} mx-auto px-6 h-14 flex items-center justify-between transition-all duration-300`}
+          className={`${!canUseChat || !isChatOpen ? 'max-w-5xl' : 'max-w-[1400px]'} mx-auto px-6 h-14 flex items-center justify-between transition-all duration-300`}
         >
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -7711,7 +7915,7 @@ Please return ONLY the modified text itself, without any introductory or convers
               </>
             )}
           </div>
-          {phase !== 'idea' && (
+          {canUseChat && (
             <Button
               variant="outline"
               size="sm"
@@ -7732,7 +7936,7 @@ Please return ONLY the modified text itself, without any introductory or convers
 
       <div
         className={`${
-          phase === 'idea' || !isChatOpen
+          !canUseChat || !isChatOpen
             ? 'max-w-5xl'
             : 'max-w-[1400px] grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]'
         } mx-auto px-6 py-10 transition-all duration-300`}
@@ -7748,6 +7952,7 @@ Please return ONLY the modified text itself, without any introductory or convers
               const active =
                 phase === key ||
                 (phase === 'blueprint' && key === 'technical') ||
+                (phase === 'talent_requirements' && key === 'technical') ||
                 (phase === 'milestones' && key === 'technical');
               return (
                 <div
@@ -8684,13 +8889,18 @@ Please return ONLY the modified text itself, without any introductory or convers
                               setPhase('technical');
                               return;
                             }
-                            setPhase('milestones');
+                            if (talentRequirements.length === 0) {
+                              setTalentRequirements(
+                                estimateTalentRequirements(blueprint, analysis),
+                              );
+                            }
+                            setPhase('talent_requirements');
                           }}
                           disabled={loadingRecommendations || creatingRoom}
-                          className="gap-1.5"
+                          className="gap-1.5 font-bold"
                         >
                           <Sparkles className="h-3.5 w-3.5" />
-                          Review Milestones
+                          Talent Requirement Planner
                         </Button>
                       </div>
                     </div>
@@ -8706,11 +8916,28 @@ Please return ONLY the modified text itself, without any introductory or convers
                   </div>
                 ))}
 
+              {phase === 'talent_requirements' && (
+                <TalentRequirementPlanner
+                  idea={description || sessionData?.rawIdea || ''}
+                  analysis={analysis}
+                  blueprint={blueprint}
+                  technicalAnswers={answers}
+                  requirements={
+                    talentRequirements.length > 0
+                      ? talentRequirements
+                      : estimateTalentRequirements(blueprint, analysis)
+                  }
+                  onChange={setTalentRequirements}
+                  onContinue={() => setPhase('milestones')}
+                  onBack={() => setPhase('blueprint')}
+                />
+              )}
+
               {phase === 'milestones' && (
                 <MilestoneReviewSection
                   blueprint={blueprint || {}}
                   onApproveAndFindTalent={() => setShowTalentChoiceModal(true)}
-                  onBack={() => setPhase('blueprint')}
+                  onBack={() => setPhase('talent_requirements')}
                   isFindingTalent={loadingRecommendations}
                 />
               )}
@@ -9054,7 +9281,62 @@ Please return ONLY the modified text itself, without any introductory or convers
                                           </div>
                                         ) : null}
                                       </div>
-                                      <div className="text-xs text-muted-foreground md:text-right">
+                                      <div className="text-xs text-muted-foreground md:text-right space-y-1.5">
+                                        {(() => {
+                                          const matchingReq = talentRequirements.find(
+                                            (r) =>
+                                              r.roleTitle.toLowerCase() ===
+                                                group.role.roleTitle.toLowerCase() ||
+                                              r.roleTitle
+                                                .toLowerCase()
+                                                .includes(
+                                                  group.role.roleTitle.toLowerCase(),
+                                                ) ||
+                                              group.role.roleTitle
+                                                .toLowerCase()
+                                                .includes(
+                                                  r.roleTitle.toLowerCase(),
+                                                ),
+                                          );
+                                          const requiredCount = matchingReq
+                                            ? matchingReq.businessSelectedCount
+                                            : 1;
+
+                                          const allMatches = [
+                                            ...(group.availableMatches || []),
+                                            ...(group.unavailableMatches || []),
+                                            ...(group.topMatches || []),
+                                          ];
+                                          const uniqueMatchesMap = new Map();
+                                          allMatches.forEach((m) =>
+                                            uniqueMatchesMap.set(
+                                              recommendationKey(m, mode),
+                                              m,
+                                            ),
+                                          );
+
+                                          let selectedForRoleCount = 0;
+                                          uniqueMatchesMap.forEach((m, key) => {
+                                            if (selectedTalentKeys[key])
+                                              selectedForRoleCount++;
+                                          });
+
+                                          const isUnder =
+                                            selectedForRoleCount < requiredCount;
+
+                                          return (
+                                            <div
+                                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                                                isUnder
+                                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                                                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                                              }`}
+                                            >
+                                              Selected {selectedForRoleCount} /
+                                              Required {requiredCount}
+                                            </div>
+                                          );
+                                        })()}
                                         <div>
                                           <span className="font-mono text-foreground">
                                             {group.availableMatches.length}
@@ -9348,7 +9630,7 @@ Please return ONLY the modified text itself, without any introductory or convers
           )}
         </main>
 
-        {phase !== 'idea' && isChatOpen && (
+        {canUseChat && isChatOpen && (
           <aside className="lg:sticky lg:top-20 h-[min(720px,calc(100vh-6rem))] rounded-2xl border border-border/60 bg-gradient-to-b from-card/95 to-background/95 flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-right duration-300 relative">
             {/* Subtle decoration orb */}
             <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
@@ -9527,7 +9809,7 @@ Please return ONLY the modified text itself, without any introductory or convers
         )}
       </div>
 
-      {phase !== 'idea' && !isChatOpen && (
+      {canUseChat && !isChatOpen && (
         <Button
           onClick={() => {
             setChatOpen(true);
@@ -9543,9 +9825,9 @@ Please return ONLY the modified text itself, without any introductory or convers
         <Button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className={`fixed h-12 w-12 rounded-full shadow-2xl flex items-center justify-center bg-card border border-border/80 text-foreground hover:bg-muted hover:scale-105 transition-all duration-200 z-50 animate-in fade-in zoom-in-50 ${
-            phase !== 'idea' && isChatOpen
+            canUseChat && isChatOpen
               ? 'bottom-6 left-6 md:left-auto md:right-[412px]'
-              : phase !== 'idea' && !isChatOpen
+              : canUseChat && !isChatOpen
                 ? 'bottom-6 right-20'
                 : 'bottom-6 right-6'
           }`}
@@ -9625,8 +9907,8 @@ Please return ONLY the modified text itself, without any introductory or convers
                       Choose Talent Matching Method
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Select how you want to invite matched freelancers to your
-                      workspace channels.
+                      Select how you want to match freelancers for your planned
+                      team requirements.
                     </p>
                   </div>
                 </div>
@@ -9641,7 +9923,7 @@ Please return ONLY the modified text itself, without any introductory or convers
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 mt-2">
-                {/* AI Selected Card */}
+                {/* AI Auto-Match Card */}
                 <button
                   onClick={() => {
                     setShowTalentChoiceModal(false);
@@ -9650,7 +9932,6 @@ Please return ONLY the modified text itself, without any introductory or convers
                   }}
                   className="group relative flex flex-col justify-between text-left rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-card/50 p-6 shadow-md transition-all duration-300 hover:border-primary/60 hover:scale-[1.02] focus:outline-none hover:shadow-primary/5 hover:shadow-lg"
                 >
-                  {/* Subtle pulsing background glow inside the card */}
                   <div className="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                   <div className="space-y-4 relative z-10">
@@ -9665,12 +9946,12 @@ Please return ONLY the modified text itself, without any introductory or convers
 
                     <div className="space-y-1.5">
                       <h4 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-200">
-                        AI Selected Freelancers
+                        AI Auto-Match
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Auto-selects the top 3 verified freelancers for each
-                        recommended role and puts them directly in the
-                        discussion workspace channels.
+                        Auto-selects top verified freelancers for each role based
+                        on your team headcount from the Talent Requirement
+                        Planner.
                       </p>
                     </div>
                   </div>
@@ -9699,9 +9980,9 @@ Please return ONLY the modified text itself, without any introductory or convers
                         Manual Selection List
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Browse verified candidate profiles, inspect technical
-                        skills, past work, reputation scores, and manually
-                        choose who to invite.
+                        Browse candidate profiles, inspect technical skills, past
+                        work, and manually choose freelancers for your planned
+                        roles.
                       </p>
                     </div>
                   </div>

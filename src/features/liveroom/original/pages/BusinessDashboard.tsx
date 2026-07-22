@@ -259,13 +259,6 @@ export default function BusinessDashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate('/talent/discovery')}
-            >
-              Find Talent
-            </Button>
             <Button size="sm" onClick={() => navigate('/room/create')}>
               New Live Room
             </Button>
@@ -559,26 +552,7 @@ export default function BusinessDashboard() {
                             tickets
                           </span>
                         )}
-                        {room.milestoneStats?.total > 0 && (
-                          <div className="flex items-center gap-2 bg-background/35 px-2.5 py-1 rounded border border-border/10">
-                            <div className="w-16 h-1.5 bg-muted/70 rounded-full overflow-hidden shrink-0">
-                              <div
-                                className="h-full bg-emerald-500 rounded-full transition-all"
-                                style={{
-                                  width: `${Math.min(100, Math.round((room.milestoneStats.releasedUsd / (room.milestoneStats.totalUsd || 1)) * 100))}%`,
-                                }}
-                              />
-                            </div>
-                            <span className="text-[11px] text-muted-foreground/90 font-bold font-mono">
-                              $
-                              {room.milestoneStats.releasedUsd?.toLocaleString() ??
-                                0}
-                              /$
-                              {room.milestoneStats.totalUsd?.toLocaleString() ??
-                                0}
-                            </span>
-                          </div>
-                        )}
+
                       </div>
                       <div className="flex items-center gap-2">
                         {(room.projectId || room.project?._id) &&
@@ -599,12 +573,7 @@ export default function BusinessDashboard() {
                                 : 'Publish'}
                             </button>
                           )}
-                        <button
-                          onClick={() => navigate(`/talent/discovery`)}
-                          className="text-[11px] font-semibold text-primary hover:underline transition-colors flex items-center gap-0.5"
-                        >
-                          Find talent →
-                        </button>
+
                         {room.status === 'assembling' && (
                           <button
                             onClick={async (e) => {

@@ -38,6 +38,7 @@ import {
   Video,
   X,
   Trash2,
+  Globe,
 } from 'lucide-react';
 
 type Channel = {
@@ -1480,6 +1481,28 @@ export default function LiveRoomPage() {
   };
 
   const grantFullAccessToParticipant = async (talent: PermissionTalent) => {
+    const targetParticipantId = talent.participantId || (talent as any)._id;
+    if (!targetParticipantId) return;
+
+    setWorkspace((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        permissionMatrix: prev.permissionMatrix.map((item) => {
+          if (
+            String(item.participantId) === String(targetParticipantId) ||
+            String((item as any)._id) === String(targetParticipantId)
+          ) {
+            return {
+              ...item,
+              documents: item.documents.map((d) => ({ ...d, canView: true })),
+            };
+          }
+          return item;
+        }),
+      };
+    });
+
     const promises = talent.documents
       .filter((doc) => !doc.canView)
       .map((doc) => {
@@ -1487,7 +1510,7 @@ export default function LiveRoomPage() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({
-            participantId: talent.participantId,
+            participantId: targetParticipantId,
             docType: doc.docType,
             canView: true,
           }),
@@ -1501,9 +1524,7 @@ export default function LiveRoomPage() {
 
     try {
       toast.loading('Granting full access...', { id: 'grant-permissions' });
-      const results = await Promise.all(promises);
-      const failed = results.find((r) => !r.ok);
-      if (failed) throw new Error('Some permissions failed to update');
+      await Promise.all(promises);
       toast.success(`Granted full access for ${talent.name}`, {
         id: 'grant-permissions',
       });
@@ -1512,10 +1533,33 @@ export default function LiveRoomPage() {
       toast.error(err.message ?? 'Failed to grant access', {
         id: 'grant-permissions',
       });
+      await loadWorkspace(selectedChannelId, true);
     }
   };
 
   const revokeAllAccessForParticipant = async (talent: PermissionTalent) => {
+    const targetParticipantId = talent.participantId || (talent as any)._id;
+    if (!targetParticipantId) return;
+
+    setWorkspace((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        permissionMatrix: prev.permissionMatrix.map((item) => {
+          if (
+            String(item.participantId) === String(targetParticipantId) ||
+            String((item as any)._id) === String(targetParticipantId)
+          ) {
+            return {
+              ...item,
+              documents: item.documents.map((d) => ({ ...d, canView: false })),
+            };
+          }
+          return item;
+        }),
+      };
+    });
+
     const promises = talent.documents
       .filter((doc) => doc.canView)
       .map((doc) => {
@@ -1523,7 +1567,7 @@ export default function LiveRoomPage() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({
-            participantId: talent.participantId,
+            participantId: targetParticipantId,
             docType: doc.docType,
             canView: false,
           }),
@@ -1537,9 +1581,7 @@ export default function LiveRoomPage() {
 
     try {
       toast.loading('Revoking all access...', { id: 'revoke-permissions' });
-      const results = await Promise.all(promises);
-      const failed = results.find((r) => !r.ok);
-      if (failed) throw new Error('Some permissions failed to update');
+      await Promise.all(promises);
       toast.success(`Revoked all access for ${talent.name}`, {
         id: 'revoke-permissions',
       });
@@ -1548,12 +1590,25 @@ export default function LiveRoomPage() {
       toast.error(err.message ?? 'Failed to revoke access', {
         id: 'revoke-permissions',
       });
+      await loadWorkspace(selectedChannelId, true);
     }
   };
 
   const grantFullAccessToAll = async () => {
+    setWorkspace((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        permissionMatrix: prev.permissionMatrix.map((item) => ({
+          ...item,
+          documents: item.documents.map((d) => ({ ...d, canView: true })),
+        })),
+      };
+    });
+
     const promises: Promise<any>[] = [];
     workspace?.permissionMatrix.forEach((talent) => {
+      const pid = talent.participantId || (talent as any)._id;
       talent.documents.forEach((doc) => {
         if (!doc.canView) {
           promises.push(
@@ -1561,7 +1616,7 @@ export default function LiveRoomPage() {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json', ...authHeaders() },
               body: JSON.stringify({
-                participantId: talent.participantId,
+                participantId: pid,
                 docType: doc.docType,
                 canView: true,
               }),
@@ -1578,9 +1633,7 @@ export default function LiveRoomPage() {
 
     try {
       toast.loading('Granting full access to all...', { id: 'grant-all' });
-      const results = await Promise.all(promises);
-      const failed = results.find((r) => !r.ok);
-      if (failed) throw new Error('Some permissions failed to update');
+      await Promise.all(promises);
       toast.success('Granted full access to all participants', {
         id: 'grant-all',
       });
@@ -1589,12 +1642,25 @@ export default function LiveRoomPage() {
       toast.error(err.message ?? 'Failed to grant access to all', {
         id: 'grant-all',
       });
+      await loadWorkspace(selectedChannelId, true);
     }
   };
 
   const revokeFullAccessFromAll = async () => {
+    setWorkspace((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        permissionMatrix: prev.permissionMatrix.map((item) => ({
+          ...item,
+          documents: item.documents.map((d) => ({ ...d, canView: false })),
+        })),
+      };
+    });
+
     const promises: Promise<any>[] = [];
     workspace?.permissionMatrix.forEach((talent) => {
+      const pid = talent.participantId || (talent as any)._id;
       talent.documents.forEach((doc) => {
         if (doc.canView) {
           promises.push(
@@ -1602,7 +1668,7 @@ export default function LiveRoomPage() {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json', ...authHeaders() },
               body: JSON.stringify({
-                participantId: talent.participantId,
+                participantId: pid,
                 docType: doc.docType,
                 canView: false,
               }),
@@ -1613,16 +1679,14 @@ export default function LiveRoomPage() {
     });
 
     if (promises.length === 0) {
-      toast.info('All participants already have no document access');
+      toast.info('All access already revoked for all participants');
       return;
     }
 
     try {
-      toast.loading('Revoking all access...', { id: 'revoke-all' });
-      const results = await Promise.all(promises);
-      const failed = results.find((r) => !r.ok);
-      if (failed) throw new Error('Some permissions failed to update');
-      toast.success('Revoked all document access for all participants', {
+      toast.loading('Revoking all access from all...', { id: 'revoke-all' });
+      await Promise.all(promises);
+      toast.success('Revoked all access from all participants', {
         id: 'revoke-all',
       });
       await loadWorkspace(selectedChannelId, true);
@@ -1630,6 +1694,7 @@ export default function LiveRoomPage() {
       toast.error(err.message ?? 'Failed to revoke access from all', {
         id: 'revoke-all',
       });
+      await loadWorkspace(selectedChannelId, true);
     }
   };
 
@@ -2117,17 +2182,22 @@ export default function LiveRoomPage() {
                                         disabled={
                                           permissionSaving === permissionKey
                                         }
-                                        className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 relative cursor-pointer ${
+                                        className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 relative cursor-pointer border ${
                                           doc.canView
-                                            ? 'bg-primary'
-                                            : 'bg-muted-foreground/30'
+                                            ? 'bg-foreground border-foreground'
+                                            : 'bg-muted/60 border-border'
                                         }`}
+                                        title={
+                                          doc.canView
+                                            ? 'Access Granted'
+                                            : 'Access Revoked'
+                                        }
                                       >
                                         <div
-                                          className={`bg-white w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                          className={`w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
                                             doc.canView
-                                              ? 'translate-x-3.5'
-                                              : 'translate-x-0'
+                                              ? 'translate-x-3.5 bg-background'
+                                              : 'translate-x-0 bg-muted-foreground/50'
                                           }`}
                                         />
                                       </button>
@@ -3087,45 +3157,49 @@ export default function LiveRoomPage() {
                               {isOwner &&
                                 expandedPermissions[participant._id] &&
                                 talentMatrix && (
-                                  <div className="mt-2.5 border-t border-border/20 pt-2 space-y-2 animate-fadeIn">
-                                    <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-0.5">
-                                      <span>Document Access</span>
-                                      <div className="flex gap-1.5">
+                                  <div className="mt-3 border-t border-border/50 pt-2.5 space-y-2 animate-fadeIn">
+                                    <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider pl-0.5">
+                                      <span className="flex items-center gap-1 text-foreground font-semibold">
+                                        <Lock className="h-3 w-3 text-foreground" />
+                                        Document Access
+                                      </span>
+                                      <div className="flex items-center gap-2 text-[10px]">
                                         <button
                                           onClick={() =>
                                             void grantFullAccessToParticipant(
                                               talentMatrix,
                                             )
                                           }
-                                          className="text-primary hover:underline cursor-pointer"
+                                          className="font-bold text-foreground hover:underline transition-colors cursor-pointer"
                                         >
                                           Grant All
                                         </button>
-                                        <span>·</span>
+                                        <span className="text-muted-foreground/40">·</span>
                                         <button
                                           onClick={() =>
                                             void revokeAllAccessForParticipant(
                                               talentMatrix,
                                             )
                                           }
-                                          className="text-destructive hover:underline cursor-pointer"
+                                          className="font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                         >
                                           Revoke All
                                         </button>
                                       </div>
                                     </div>
-                                    <div className="space-y-1">
+
+                                    <div className="space-y-1.5">
                                       {talentMatrix.documents.map((doc) => {
                                         const permissionKey = `${talentMatrix.participantId}:${doc.docType}`;
                                         return (
                                           <div
                                             key={doc.docType}
-                                            className="flex items-center justify-between text-[10px] p-1.5 rounded-lg bg-background/50 border border-border/10"
+                                            className="flex items-center justify-between text-xs px-2.5 py-2 rounded-xl bg-card border border-border hover:border-foreground/30 transition-all shadow-xs"
                                           >
-                                            <div className="flex items-center gap-1.5 min-w-0 mr-2">
-                                              <FileText className="h-3 w-3 text-muted-foreground/75 shrink-0" />
+                                            <div className="flex items-center gap-2 min-w-0 mr-2">
+                                              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                               <span
-                                                className="truncate text-foreground/80 font-medium"
+                                                className="truncate text-foreground font-medium"
                                                 title={getCanonicalDocTitle(
                                                   doc.docType,
                                                   doc.title,
@@ -3137,6 +3211,7 @@ export default function LiveRoomPage() {
                                                 )}
                                               </span>
                                             </div>
+
                                             <button
                                               onClick={() =>
                                                 void togglePermission(
@@ -3148,17 +3223,22 @@ export default function LiveRoomPage() {
                                                 permissionSaving ===
                                                 permissionKey
                                               }
-                                              className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 shrink-0 relative cursor-pointer ${
+                                              className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 shrink-0 relative cursor-pointer border ${
                                                 doc.canView
-                                                  ? 'bg-primary'
-                                                  : 'bg-muted-foreground/30'
+                                                  ? 'bg-foreground border-foreground'
+                                                  : 'bg-muted/60 border-border'
                                               }`}
+                                              title={
+                                                doc.canView
+                                                  ? 'Access Granted'
+                                                  : 'Access Revoked'
+                                              }
                                             >
                                               <div
-                                                className={`bg-white w-3 h-3 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                                className={`w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
                                                   doc.canView
-                                                    ? 'translate-x-3'
-                                                    : 'translate-x-0'
+                                                    ? 'translate-x-3.5 bg-background'
+                                                    : 'translate-x-0 bg-muted-foreground/50'
                                                 }`}
                                               />
                                             </button>
@@ -3421,28 +3501,7 @@ export default function LiveRoomPage() {
                         )}
                     </div>
                   )}
-                  <div className="rounded-xl border border-border/40 bg-background/45 p-3">
-                    <div className="flex items-center justify-between gap-2 text-xs">
-                      <span className="font-bold text-foreground">
-                        Escrow Simulation
-                      </span>
-                      <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
-                        $
-                        {workspace.milestones
-                          .filter((m: any) => m.status === 'released')
-                          .reduce(
-                            (sum: number, m: any) => sum + (m.amountUsd ?? 0),
-                            0,
-                          )
-                          .toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-[10px] text-muted-foreground">
-                      {workspace.milestones.length} milestone
-                      {workspace.milestones.length !== 1 ? 's' : ''}
-                    </div>
-                  </div>
-                </section>
+                  </section>
 
                 {/* Documents Section with Accordion List */}
                 <section className="space-y-3">
@@ -3943,89 +4002,51 @@ function PlatformSyncCockpit({
         count={pipeline.length}
       />
 
-      <div className="rounded-xl border border-primary/20 bg-background/70 p-3 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-foreground">
-              LiveRoom cockpit
+      {/* Marketplace Publishing Section */}
+      {isOwner && projectId && marketplaceStatus !== 'live' && (
+        <div className="rounded-xl border border-border bg-card p-3 shadow-xs space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-foreground" />
+              <span className="text-xs font-bold text-foreground">
+                Marketplace
+              </span>
             </div>
-            <div className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
-              {room.roomCode} · platform project mirror
-            </div>
+            <span className="rounded bg-muted px-2 py-0.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+              Draft
+            </span>
           </div>
-          <span
-            className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${
-              marketplaceStatus === 'live'
-                ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                : 'border-zinc-500/25 bg-zinc-500/10 text-zinc-500 dark:text-zinc-300'
-            }`}
-          >
-            {marketplaceStatus === 'live' ? 'market live' : 'hidden'}
-          </span>
-        </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <SyncMetric
-            label="Roles"
-            value={roles.length}
-            detail={`${openRoles.length} open`}
-          />
-          <SyncMetric
-            label="Team"
-            value={selectedParticipants.length}
-            detail={`${completedOffers.length} selected`}
-          />
-          <SyncMetric
-            label="Milestones"
-            value={milestones.length}
-            detail={`$${releasedUsd.toLocaleString()} released`}
-          />
-          <SyncMetric
-            label="Docs"
-            value={visibleDocuments.length}
-            detail={
-              workspace.nda?.status?.replace(/_/g, ' ') ?? 'agreement pending'
-            }
-          />
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            onClick={() =>
-              onNavigate(isOwner ? '/business/dashboard' : '/talent/dashboard')
-            }
-            className="rounded-lg border border-border/40 bg-muted/25 px-2.5 py-2 text-left text-[10px] font-bold text-foreground hover:bg-muted/45 transition-colors"
-          >
-            Main platform
-            <span className="block pt-0.5 text-[9px] font-medium text-muted-foreground">
-              {isOwner ? 'Business project access' : 'Talent project access'}
-            </span>
-          </button>
-          <button
-            onClick={() => onNavigate('/room/create')}
-            className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-2 text-left text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors"
-          >
-            New LiveRoom
-            <span className="block pt-0.5 text-[9px] font-medium text-muted-foreground">
-              AI launch to project
-            </span>
-          </button>
-        </div>
-        {isOwner && projectId && marketplaceStatus !== 'live' && (
           <button
             onClick={onPublishMarketplace}
             disabled={isPublishingMarketplace}
-            className="mt-2 w-full rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-2 text-left text-[10px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/15 disabled:opacity-50 dark:text-emerald-400"
+            className="w-full rounded-lg bg-foreground text-background hover:bg-foreground/90 font-bold text-xs py-2 px-3 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            {isPublishingMarketplace
-              ? 'Publishing...'
-              : 'Publish to marketplace'}
-            <span className="block pt-0.5 text-[9px] font-medium text-muted-foreground">
-              Deducts project creation connects once
-            </span>
+            {isPublishingMarketplace ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <span>Publishing...</span>
+              </>
+            ) : (
+              <span>Publish to Marketplace</span>
+            )}
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {marketplaceStatus === 'live' && (
+        <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-foreground" />
+            <div className="text-xs font-bold text-foreground">
+              Marketplace Live
+            </div>
+          </div>
+          <span className="rounded bg-foreground text-background px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+            Live
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-5 gap-1">
         {pipeline.map((stage) => (
@@ -4039,21 +4060,6 @@ function PlatformSyncCockpit({
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="rounded-xl border border-border/40 bg-background/45 p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs font-bold text-foreground">
-            {isOwner ? 'Business cockpit' : 'Talent cockpit'}
-          </div>
-          <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground capitalize">
-            {userRole ?? 'member'}
-          </span>
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
-          <SyncLane active label="LiveRoom" detail="manage here" />
-          <SyncLane active label="Main platform" detail="optional access" />
-        </div>
       </div>
 
       {isOwner && (

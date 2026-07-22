@@ -153,8 +153,8 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   return (
     <div className="space-y-7 animate-in fade-in duration-300">
       <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/10 pb-4">
-          <div>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/10 pb-4">
+          <div className="max-w-xl">
             <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
               Phase 3 output
             </div>
@@ -167,18 +167,19 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Button
               variant="outline"
               onClick={onBack}
               disabled={isFindingTalent}
+              className="whitespace-nowrap"
             >
-              Back to Blueprint
+              Back to Talent Requirements
             </Button>
             <Button
               onClick={onApproveAndFindTalent}
               disabled={isFindingTalent || milestones.length === 0}
-              className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold"
+              className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold whitespace-nowrap"
             >
               {isFindingTalent ? (
                 <>

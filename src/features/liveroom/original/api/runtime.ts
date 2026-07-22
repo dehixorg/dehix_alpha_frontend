@@ -470,9 +470,22 @@ export async function liveRoomApiFetch(
       /^\/launch\/([^/]+)\/talent-recommendations$/,
     );
     if (recommendations) {
-      const data = await backendJson(
-        `/liveroom/launch/${recommendations[1]}/recommendations`,
-      );
+      const body = method === 'POST' ? await parseJson(init).catch(() => ({})) : undefined;
+      let data;
+      try {
+        data = await backendJson(
+          `/liveroom/launch/${recommendations[1]}/recommendations`,
+          body ? { method: 'POST', body: JSON.stringify(body) } : undefined,
+        );
+      } catch (err) {
+        if (method === 'POST') {
+          data = await backendJson(
+            `/liveroom/launch/${recommendations[1]}/recommendations`,
+          );
+        } else {
+          throw err;
+        }
+      }
       return jsonResponse(data);
     }
 
