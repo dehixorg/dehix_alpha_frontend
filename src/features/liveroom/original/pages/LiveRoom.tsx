@@ -3174,7 +3174,9 @@ export default function LiveRoomPage() {
                                         >
                                           Grant All
                                         </button>
-                                        <span className="text-muted-foreground/40">·</span>
+                                        <span className="text-muted-foreground/40">
+                                          ·
+                                        </span>
                                         <button
                                           onClick={() =>
                                             void revokeAllAccessForParticipant(
@@ -3501,7 +3503,7 @@ export default function LiveRoomPage() {
                         )}
                     </div>
                   )}
-                  </section>
+                </section>
 
                 {/* Documents Section with Accordion List */}
                 <section className="space-y-3">

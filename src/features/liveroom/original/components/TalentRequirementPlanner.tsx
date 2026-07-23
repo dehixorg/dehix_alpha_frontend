@@ -38,12 +38,7 @@ interface TalentRequirementPlannerProps {
 
 export const TalentRequirementPlanner: React.FC<
   TalentRequirementPlannerProps
-> = ({
-  requirements,
-  onChange,
-  onContinue,
-  onBack,
-}) => {
+> = ({ requirements, onChange, onContinue, onBack }) => {
   const handleUpdateCount = (index: number, delta: number) => {
     const updated = [...requirements];
     const item = updated[index];
@@ -136,11 +131,13 @@ export const TalentRequirementPlanner: React.FC<
               </span>
             ) : totalSelectedTalents > totalSuggestedTalents ? (
               <span className="text-primary font-semibold">
-                +{totalSelectedTalents - totalSuggestedTalents} more than AI suggested
+                +{totalSelectedTalents - totalSuggestedTalents} more than AI
+                suggested
               </span>
             ) : (
               <span className="text-amber-500 font-semibold">
-                -{totalSuggestedTalents - totalSelectedTalents} fewer than AI suggested
+                -{totalSuggestedTalents - totalSelectedTalents} fewer than AI
+                suggested
               </span>
             )}
           </div>
@@ -155,7 +152,9 @@ export const TalentRequirementPlanner: React.FC<
             Recommended Team
           </h2>
           <span className="text-xs text-muted-foreground font-medium">
-            Use <span className="font-mono text-foreground font-bold">[-]</span> and <span className="font-mono text-foreground font-bold">[+]</span> to adjust headcount per role
+            Use <span className="font-mono text-foreground font-bold">[-]</span>{' '}
+            and <span className="font-mono text-foreground font-bold">[+]</span>{' '}
+            to adjust headcount per role
           </span>
         </div>
 

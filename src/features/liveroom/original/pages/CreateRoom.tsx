@@ -6209,7 +6209,9 @@ function estimateTalentRequirements(
 
         requirements.push({
           roleTitle: title,
-          skillDomain: item.skillDomain ? String(item.skillDomain) : skillDomain,
+          skillDomain: item.skillDomain
+            ? String(item.skillDomain)
+            : skillDomain,
           reason: purpose || `AI recommended role for ${title}`,
           aiSuggestedCount: count,
           businessSelectedCount: count,
@@ -7456,7 +7458,7 @@ Please return ONLY the modified text itself, without any introductory or convers
         talentRequirements.length > 0
           ? talentRequirements
           : estimateTalentRequirements(blueprint, analysis);
-const payload = {
+      const payload = {
         talentRequirements: currentReqs.map((r) => ({
           roleTitle: r.roleTitle,
           businessSelectedCount: r.businessSelectedCount,
@@ -7496,7 +7498,9 @@ const payload = {
           : [],
       };
       setTalentRecommendationReport(report);
-      setSelectedTalentKeys(buildDefaultSelectedTalentKeys(report, currentReqs));
+      setSelectedTalentKeys(
+        buildDefaultSelectedTalentKeys(report, currentReqs),
+      );
       setPhase('recommendations');
     } catch (err: any) {
       const msg = err?.message ?? 'Failed to generate talent recommendations';
@@ -9283,21 +9287,22 @@ const payload = {
                                       </div>
                                       <div className="text-xs text-muted-foreground md:text-right space-y-1.5">
                                         {(() => {
-                                          const matchingReq = talentRequirements.find(
-                                            (r) =>
-                                              r.roleTitle.toLowerCase() ===
-                                                group.role.roleTitle.toLowerCase() ||
-                                              r.roleTitle
-                                                .toLowerCase()
-                                                .includes(
-                                                  group.role.roleTitle.toLowerCase(),
-                                                ) ||
-                                              group.role.roleTitle
-                                                .toLowerCase()
-                                                .includes(
-                                                  r.roleTitle.toLowerCase(),
-                                                ),
-                                          );
+                                          const matchingReq =
+                                            talentRequirements.find(
+                                              (r) =>
+                                                r.roleTitle.toLowerCase() ===
+                                                  group.role.roleTitle.toLowerCase() ||
+                                                r.roleTitle
+                                                  .toLowerCase()
+                                                  .includes(
+                                                    group.role.roleTitle.toLowerCase(),
+                                                  ) ||
+                                                group.role.roleTitle
+                                                  .toLowerCase()
+                                                  .includes(
+                                                    r.roleTitle.toLowerCase(),
+                                                  ),
+                                            );
                                           const requiredCount = matchingReq
                                             ? matchingReq.businessSelectedCount
                                             : 1;
@@ -9322,7 +9327,8 @@ const payload = {
                                           });
 
                                           const isUnder =
-                                            selectedForRoleCount < requiredCount;
+                                            selectedForRoleCount <
+                                            requiredCount;
 
                                           return (
                                             <div
@@ -9949,8 +9955,8 @@ const payload = {
                         AI Auto-Match
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Auto-selects top verified freelancers for each role based
-                        on your team headcount from the Talent Requirement
+                        Auto-selects top verified freelancers for each role
+                        based on your team headcount from the Talent Requirement
                         Planner.
                       </p>
                     </div>
@@ -9980,9 +9986,9 @@ const payload = {
                         Manual Selection List
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Browse candidate profiles, inspect technical skills, past
-                        work, and manually choose freelancers for your planned
-                        roles.
+                        Browse candidate profiles, inspect technical skills,
+                        past work, and manually choose freelancers for your
+                        planned roles.
                       </p>
                     </div>
                   </div>

@@ -470,7 +470,8 @@ export async function liveRoomApiFetch(
       /^\/launch\/([^/]+)\/talent-recommendations$/,
     );
     if (recommendations) {
-      const body = method === 'POST' ? await parseJson(init).catch(() => ({})) : undefined;
+      const body =
+        method === 'POST' ? await parseJson(init).catch(() => ({})) : undefined;
       let data;
       try {
         data = await backendJson(

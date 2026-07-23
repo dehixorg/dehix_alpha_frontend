@@ -552,7 +552,6 @@ export default function BusinessDashboard() {
                             tickets
                           </span>
                         )}
-
                       </div>
                       <div className="flex items-center gap-2">
                         {(room.projectId || room.project?._id) &&
