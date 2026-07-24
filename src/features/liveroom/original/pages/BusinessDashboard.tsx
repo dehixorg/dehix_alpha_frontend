@@ -245,6 +245,51 @@ export default function BusinessDashboard() {
     }
   };
 
+  const totalContractedFreelancers = roomList.reduce((acc: number, r: any) => {
+    if (typeof r.ndaSignedFreelancerCount === 'number') {
+      return acc + r.ndaSignedFreelancerCount;
+    }
+    if (typeof r.signedNdaCount === 'number') {
+      return acc + r.signedNdaCount;
+    }
+    if (Array.isArray(r.participants)) {
+      const signed = r.participants.filter(
+        (p: any) =>
+          p.permittedDocs?.includes('nda_signed') ||
+          p.ndaSigned ||
+          p.status === 'ACCEPTED' ||
+          p.status === 'CONTRACTED',
+      ).length;
+      if (signed > 0) return acc + signed;
+    }
+    if (Array.isArray(r.offers)) {
+      const accepted = r.offers.filter((o: any) => o.status === 'ACCEPTED').length;
+      if (accepted > 0) return acc + accepted;
+    }
+    if (r.status === 'contracted' || r.status === 'CONTRACTED') {
+      return acc + Math.max(1, r.joinedParticipantCount || 1);
+    }
+    return acc;
+  }, 0);
+
+  const completedLiveRoomProjects = roomList.filter(
+    (r: any) =>
+      r.status === 'closed' ||
+      r.status === 'CLOSED' ||
+      r.status === 'completed' ||
+      r.status === 'COMPLETED' ||
+      r.project?.status === 'completed' ||
+      r.project?.status === 'COMPLETED',
+  ).length;
+
+  const totalUsedConnects = roomList.reduce((acc: number, r: any) => {
+    const cost =
+      typeof r.connectsUsed === 'number'
+        ? r.connectsUsed
+        : r.usedConnects || 150;
+    return acc + cost;
+  }, 0);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="sticky top-0 z-10 border-b border-border/40 bg-background/80 backdrop-blur-sm">
@@ -325,26 +370,28 @@ export default function BusinessDashboard() {
               {
                 label: 'Projects Created',
                 value: roomList.length,
+                sub: 'LiveRoom projects',
                 mono: false,
                 icon: <FolderPlus className="h-4 w-4 text-primary" />,
               },
               {
                 label: 'Contracted',
-                value: roomList.filter((r: any) => r.status === 'contracted')
-                  .length,
+                value: totalContractedFreelancers,
+                sub: 'Freelancers accepted & signed NDA',
                 mono: false,
                 icon: <FileCheck className="h-4 w-4 text-emerald-400" />,
               },
               {
                 label: 'Closed',
-                value: pastRooms.length,
+                value: completedLiveRoomProjects,
+                sub: 'Projects completed via LiveRoom',
                 mono: false,
                 icon: <Archive className="h-4 w-4 text-muted-foreground" />,
               },
               {
                 label: 'Total Used Connects',
-                value: (roomList.length * 150).toLocaleString(),
-                sub: '150 connects per room',
+                value: totalUsedConnects.toLocaleString(),
+                sub: 'Connects used in LiveRoom',
                 mono: true,
                 isAmber: true,
                 icon: (

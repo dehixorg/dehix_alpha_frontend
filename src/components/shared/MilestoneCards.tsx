@@ -19,6 +19,20 @@ interface MilestoneProps {
   isSelected: boolean;
 }
 
+const formatDateDisplay = (val: string) => {
+  if (!val) return '';
+  if (val.includes('-') || val.includes(',')) {
+    return val;
+  }
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 const MilestoneCards: React.FC<MilestoneProps> = ({
   date,
   title,
@@ -33,6 +47,8 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
     }
     return text;
   };
+
+  const formattedDate = formatDateDisplay(date);
 
   return (
     <div
@@ -88,13 +104,11 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
             )}
           </div>
 
-          <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-[10px] md:text-xs text-muted-foreground">
-            {new Date(date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </span>
+          {formattedDate ? (
+            <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-[10px] md:text-xs text-muted-foreground font-medium">
+              {formattedDate}
+            </span>
+          ) : null}
         </div>
       </Card>
     </div>

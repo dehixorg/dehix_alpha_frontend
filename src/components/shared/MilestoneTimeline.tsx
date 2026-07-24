@@ -42,6 +42,53 @@ export const truncateDescription = (text: string, maxLength = 50): string => {
   return text;
 };
 
+export const formatMilestoneDate = (milestone: any): string => {
+  if (!milestone) return '';
+
+  const parseSingleDate = (raw: any): Date | null => {
+    if (!raw) return null;
+    if (typeof raw === 'string' || typeof raw === 'number') {
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+    if (typeof raw === 'object') {
+      if (raw.expected) {
+        const d = new Date(raw.expected);
+        if (!isNaN(d.getTime())) return d;
+      }
+      if (raw.actual) {
+        const d = new Date(raw.actual);
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+    return null;
+  };
+
+  const startD = parseSingleDate(milestone.startDate);
+  const endD = parseSingleDate(milestone.endDate);
+  const createdD = parseSingleDate(milestone.createdAt);
+
+  const formatShort = (d: Date) =>
+    d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+  if (startD && endD) {
+    if (startD.toDateString() === endD.toDateString()) {
+      return formatShort(startD);
+    }
+    return `${formatShort(startD)} - ${formatShort(endD)}`;
+  }
+  if (startD) return formatShort(startD);
+  if (endD) return formatShort(endD);
+  if (createdD) return formatShort(createdD);
+
+  return '';
+};
+
 const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   milestones,
   selectedIndex: externalSelectedIndex,
@@ -187,7 +234,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
 
                     {/* Milestone Details */}
                     <MilestoneCards
-                      date={milestone.createdAt || ''}
+                      date={formatMilestoneDate(milestone)}
                       title={milestone.title}
                       summary={milestone.description}
                       position={index % 2 === 0 ? 'bottom' : 'top'}
@@ -220,16 +267,8 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                       <Card className="p-6 w-full max-w-[85vw]">
                         {/* Card Content */}
                         <div className="text-center">
-                          <p className="text-xs">
-                            {milestone.createdAt &&
-                              new Date(milestone.createdAt).toLocaleDateString(
-                                'en-US',
-                                {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                },
-                              )}
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {formatMilestoneDate(milestone)}
                           </p>
                           <h3 className="font-medium text-lg mt-2">
                             {truncateDescription(milestone.title, 16)}

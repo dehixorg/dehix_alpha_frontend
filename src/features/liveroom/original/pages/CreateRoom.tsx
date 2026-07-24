@@ -6290,6 +6290,8 @@ export default function CreateRoom() {
   const [talentRequirements, setTalentRequirements] = useState<
     TalentRequirement[]
   >([]);
+  const [showMilestoneDateDialogOnEnter, setShowMilestoneDateDialogOnEnter] =
+    useState(false);
   const [activeTab, setActiveTab] = useState('executive_summary');
   const [mandatoryQuestions, setMandatoryQuestions] = useState<Question[]>([]);
   const [optionalQuestions, setOptionalQuestions] = useState<Question[]>([]);
@@ -8932,7 +8934,10 @@ Please return ONLY the modified text itself, without any introductory or convers
                       : estimateTalentRequirements(blueprint, analysis)
                   }
                   onChange={setTalentRequirements}
-                  onContinue={() => setPhase('milestones')}
+                  onContinue={() => {
+                    setPhase('milestones');
+                    setShowMilestoneDateDialogOnEnter(true);
+                  }}
                   onBack={() => setPhase('blueprint')}
                 />
               )}
@@ -8943,6 +8948,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                   onApproveAndFindTalent={() => setShowTalentChoiceModal(true)}
                   onBack={() => setPhase('talent_requirements')}
                   isFindingTalent={loadingRecommendations}
+                  openDateDialogOnMount={showMilestoneDateDialogOnEnter}
                 />
               )}
 
