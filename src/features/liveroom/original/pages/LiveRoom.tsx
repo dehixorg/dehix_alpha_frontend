@@ -373,10 +373,19 @@ export default function LiveRoomPage() {
   const isOwner = Boolean(workspace?.currentUserAccess?.isOwner);
   const visibleDocuments = useMemo(() => {
     if (!workspace?.documents) return [];
-    return isOwner
-      ? workspace.documents
-      : workspace.documents.filter((doc) => doc.canView);
-  }, [workspace?.documents, isOwner]);
+    const isNdaSigned =
+      (workspace.nda?.signedBy?.length ?? 0) > 0 ||
+      workspace.nda?.status === 'signed';
+
+    const docs = workspace.documents.filter((doc) => {
+      if (doc.docType === 'nda' && !isNdaSigned) {
+        return false;
+      }
+      return true;
+    });
+
+    return isOwner ? docs : docs.filter((doc) => doc.canView);
+  }, [workspace?.documents, workspace?.nda, isOwner]);
   const room = workspace?.room;
 
   useEffect(() => {
@@ -1207,15 +1216,29 @@ export default function LiveRoomPage() {
     }
   };
 
+  const [pendingOfferAcceptId, setPendingOfferAcceptId] = useState<
+    string | null
+  >(null);
+
   const handleRespondToOffer = async (
     offerId: string,
     action: 'accept' | 'decline',
   ) => {
     if (action === 'accept') {
-      const hasNda = !!workspace?.nda;
-      const ndaSigned = workspace?.nda?.signedBy?.includes(user?._id);
-      if (hasNda && !ndaSigned) {
-        toast.error('Please read and sign the NDA agreement first.');
+      const participant = workspace?.participants?.find(
+        (p: any) =>
+          String(p.userId?._id ?? p.freelancerId ?? p.userId) ===
+          String(user?._id),
+      );
+      const isNdaSignedByUser =
+        Boolean(participant?.permittedDocs?.includes('nda_signed')) ||
+        Boolean(workspace?.nda?.signedBy?.includes(user?._id));
+
+      if (!isNdaSignedByUser) {
+        setPendingOfferAcceptId(offerId);
+        toast.info(
+          'Please read and sign the NDA agreement to accept your offer.',
+        );
         setShowNdaModal(true);
         setHasReadNda(false);
         return;
@@ -1249,6 +1272,30 @@ export default function LiveRoomPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? 'Failed to sign NDA');
       toast.success('NDA agreement signed successfully');
+
+      if (pendingOfferAcceptId) {
+        setRespondingOfferId(pendingOfferAcceptId);
+        try {
+          const offerRes = await fetch(
+            `/api/offers/${pendingOfferAcceptId}/respond`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', ...authHeaders() },
+              body: JSON.stringify({ action: 'accept' }),
+            },
+          );
+          const offerData = await offerRes.json().catch(() => ({}));
+          if (!offerRes.ok)
+            throw new Error(offerData.error ?? 'Failed to accept offer');
+          toast.success('Offer accepted successfully');
+        } catch (offerErr: any) {
+          toast.error(offerErr.message ?? 'Failed to accept offer');
+        } finally {
+          setPendingOfferAcceptId(null);
+          setRespondingOfferId(null);
+        }
+      }
+
       await loadWorkspace(selectedChannelId, true);
       setShowNdaModal(false);
     } catch (err: any) {
@@ -1504,7 +1551,7 @@ export default function LiveRoomPage() {
     });
 
     const promises = talent.documents
-      .filter((doc) => !doc.canView)
+      .filter((doc) => doc.docType !== 'nda' && !doc.canView)
       .map((doc) => {
         return fetch(`/api/rooms/${roomId}/document-permissions`, {
           method: 'PATCH',
@@ -1552,7 +1599,9 @@ export default function LiveRoomPage() {
           ) {
             return {
               ...item,
-              documents: item.documents.map((d) => ({ ...d, canView: false })),
+              documents: item.documents.map((d) =>
+                d.docType === 'nda' ? d : { ...d, canView: false },
+              ),
             };
           }
           return item;
@@ -1561,7 +1610,7 @@ export default function LiveRoomPage() {
     });
 
     const promises = talent.documents
-      .filter((doc) => doc.canView)
+      .filter((doc) => doc.docType !== 'nda' && doc.canView)
       .map((doc) => {
         return fetch(`/api/rooms/${roomId}/document-permissions`, {
           method: 'PATCH',
@@ -1609,21 +1658,26 @@ export default function LiveRoomPage() {
     const promises: Promise<any>[] = [];
     workspace?.permissionMatrix.forEach((talent) => {
       const pid = talent.participantId || (talent as any)._id;
-      talent.documents.forEach((doc) => {
-        if (!doc.canView) {
-          promises.push(
-            fetch(`/api/rooms/${roomId}/document-permissions`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', ...authHeaders() },
-              body: JSON.stringify({
-                participantId: pid,
-                docType: doc.docType,
-                canView: true,
+      talent.documents
+        .filter((doc) => doc.docType !== 'nda')
+        .forEach((doc) => {
+          if (!doc.canView) {
+            promises.push(
+              fetch(`/api/rooms/${roomId}/document-permissions`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...authHeaders(),
+                },
+                body: JSON.stringify({
+                  participantId: pid,
+                  docType: doc.docType,
+                  canView: true,
+                }),
               }),
-            }),
-          );
-        }
-      });
+            );
+          }
+        });
     });
 
     if (promises.length === 0) {
@@ -1653,7 +1707,9 @@ export default function LiveRoomPage() {
         ...prev,
         permissionMatrix: prev.permissionMatrix.map((item) => ({
           ...item,
-          documents: item.documents.map((d) => ({ ...d, canView: false })),
+          documents: item.documents.map((d) =>
+            d.docType === 'nda' ? d : { ...d, canView: false },
+          ),
         })),
       };
     });
@@ -1661,21 +1717,26 @@ export default function LiveRoomPage() {
     const promises: Promise<any>[] = [];
     workspace?.permissionMatrix.forEach((talent) => {
       const pid = talent.participantId || (talent as any)._id;
-      talent.documents.forEach((doc) => {
-        if (doc.canView) {
-          promises.push(
-            fetch(`/api/rooms/${roomId}/document-permissions`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', ...authHeaders() },
-              body: JSON.stringify({
-                participantId: pid,
-                docType: doc.docType,
-                canView: false,
+      talent.documents
+        .filter((doc) => doc.docType !== 'nda')
+        .forEach((doc) => {
+          if (doc.canView) {
+            promises.push(
+              fetch(`/api/rooms/${roomId}/document-permissions`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...authHeaders(),
+                },
+                body: JSON.stringify({
+                  participantId: pid,
+                  docType: doc.docType,
+                  canView: false,
+                }),
               }),
-            }),
-          );
-        }
-      });
+            );
+          }
+        });
     });
 
     if (promises.length === 0) {
@@ -2002,8 +2063,11 @@ export default function LiveRoomPage() {
                       Quick Filter
                     </div>
                     {workspace.permissionMatrix.map((talent) => {
-                      const totalDocs = talent.documents.length;
-                      const grantedViewCount = talent.documents.filter(
+                      const docs = talent.documents.filter(
+                        (d) => d.docType !== 'nda',
+                      );
+                      const totalDocs = docs.length;
+                      const grantedViewCount = docs.filter(
                         (d) => d.canView,
                       ).length;
                       const isFullyGranted = grantedViewCount === totalDocs;
@@ -2153,59 +2217,61 @@ export default function LiveRoomPage() {
 
                           {/* Document grid inside participant block */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {talent.documents.map((doc) => {
-                              const permissionKey = `${talent.participantId}:${doc.docType}`;
-                              return (
-                                <div
-                                  key={doc.docType}
-                                  className="flex items-center justify-between p-3 rounded-xl border border-border/30 bg-background/50 hover:bg-background/80 transition-colors"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0 mr-3">
-                                    <FileText className="h-4 w-4 text-muted-foreground/70 shrink-0" />
-                                    <span className="text-xs font-semibold text-foreground/90 truncate">
-                                      {getCanonicalDocTitle(
-                                        doc.docType,
-                                        doc.title,
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-4 shrink-0">
-                                    {/* View Permission Toggle */}
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-[10px] text-muted-foreground font-medium">
-                                        View Access
+                            {talent.documents
+                              .filter((doc) => doc.docType !== 'nda')
+                              .map((doc) => {
+                                const permissionKey = `${talent.participantId}:${doc.docType}`;
+                                return (
+                                  <div
+                                    key={doc.docType}
+                                    className="flex items-center justify-between p-3 rounded-xl border border-border/30 bg-background/50 hover:bg-background/80 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0 mr-3">
+                                      <FileText className="h-4 w-4 text-muted-foreground/70 shrink-0" />
+                                      <span className="text-xs font-semibold text-foreground/90 truncate">
+                                        {getCanonicalDocTitle(
+                                          doc.docType,
+                                          doc.title,
+                                        )}
                                       </span>
-                                      <button
-                                        onClick={() =>
-                                          void togglePermission(talent, doc)
-                                        }
-                                        disabled={
-                                          permissionSaving === permissionKey
-                                        }
-                                        className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 relative cursor-pointer border ${
-                                          doc.canView
-                                            ? 'bg-foreground border-foreground'
-                                            : 'bg-muted/60 border-border'
-                                        }`}
-                                        title={
-                                          doc.canView
-                                            ? 'Access Granted'
-                                            : 'Access Revoked'
-                                        }
-                                      >
-                                        <div
-                                          className={`w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                    </div>
+                                    <div className="flex items-center gap-4 shrink-0">
+                                      {/* View Permission Toggle */}
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] text-muted-foreground font-medium">
+                                          View Access
+                                        </span>
+                                        <button
+                                          onClick={() =>
+                                            void togglePermission(talent, doc)
+                                          }
+                                          disabled={
+                                            permissionSaving === permissionKey
+                                          }
+                                          className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 relative cursor-pointer border ${
                                             doc.canView
-                                              ? 'translate-x-3.5 bg-background'
-                                              : 'translate-x-0 bg-muted-foreground/50'
+                                              ? 'bg-foreground border-foreground'
+                                              : 'bg-muted/60 border-border'
                                           }`}
-                                        />
-                                      </button>
+                                          title={
+                                            doc.canView
+                                              ? 'Access Granted'
+                                              : 'Access Revoked'
+                                          }
+                                        >
+                                          <div
+                                            className={`w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                              doc.canView
+                                                ? 'translate-x-3.5 bg-background'
+                                                : 'translate-x-0 bg-muted-foreground/50'
+                                            }`}
+                                          />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
                           </div>
                         </div>
                       );
@@ -3191,62 +3257,64 @@ export default function LiveRoomPage() {
                                     </div>
 
                                     <div className="space-y-1.5">
-                                      {talentMatrix.documents.map((doc) => {
-                                        const permissionKey = `${talentMatrix.participantId}:${doc.docType}`;
-                                        return (
-                                          <div
-                                            key={doc.docType}
-                                            className="flex items-center justify-between text-xs px-2.5 py-2 rounded-xl bg-card border border-border hover:border-foreground/30 transition-all shadow-xs"
-                                          >
-                                            <div className="flex items-center gap-2 min-w-0 mr-2">
-                                              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                              <span
-                                                className="truncate text-foreground font-medium"
-                                                title={getCanonicalDocTitle(
-                                                  doc.docType,
-                                                  doc.title,
-                                                )}
-                                              >
-                                                {getCanonicalDocTitle(
-                                                  doc.docType,
-                                                  doc.title,
-                                                )}
-                                              </span>
-                                            </div>
-
-                                            <button
-                                              onClick={() =>
-                                                void togglePermission(
-                                                  talentMatrix,
-                                                  doc,
-                                                )
-                                              }
-                                              disabled={
-                                                permissionSaving ===
-                                                permissionKey
-                                              }
-                                              className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 shrink-0 relative cursor-pointer border ${
-                                                doc.canView
-                                                  ? 'bg-foreground border-foreground'
-                                                  : 'bg-muted/60 border-border'
-                                              }`}
-                                              title={
-                                                doc.canView
-                                                  ? 'Access Granted'
-                                                  : 'Access Revoked'
-                                              }
+                                      {talentMatrix.documents
+                                        .filter((doc) => doc.docType !== 'nda')
+                                        .map((doc) => {
+                                          const permissionKey = `${talentMatrix.participantId}:${doc.docType}`;
+                                          return (
+                                            <div
+                                              key={doc.docType}
+                                              className="flex items-center justify-between text-xs px-2.5 py-2 rounded-xl bg-card border border-border hover:border-foreground/30 transition-all shadow-xs"
                                             >
-                                              <div
-                                                className={`w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                              <div className="flex items-center gap-2 min-w-0 mr-2">
+                                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                                <span
+                                                  className="truncate text-foreground font-medium"
+                                                  title={getCanonicalDocTitle(
+                                                    doc.docType,
+                                                    doc.title,
+                                                  )}
+                                                >
+                                                  {getCanonicalDocTitle(
+                                                    doc.docType,
+                                                    doc.title,
+                                                  )}
+                                                </span>
+                                              </div>
+
+                                              <button
+                                                onClick={() =>
+                                                  void togglePermission(
+                                                    talentMatrix,
+                                                    doc,
+                                                  )
+                                                }
+                                                disabled={
+                                                  permissionSaving ===
+                                                  permissionKey
+                                                }
+                                                className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 shrink-0 relative cursor-pointer border ${
                                                   doc.canView
-                                                    ? 'translate-x-3.5 bg-background'
-                                                    : 'translate-x-0 bg-muted-foreground/50'
+                                                    ? 'bg-foreground border-foreground'
+                                                    : 'bg-muted/60 border-border'
                                                 }`}
-                                              />
-                                            </button>
-                                          </div>
-                                        );
-                                      })}
+                                                title={
+                                                  doc.canView
+                                                    ? 'Access Granted'
+                                                    : 'Access Revoked'
+                                                }
+                                              >
+                                                <div
+                                                  className={`w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${
+                                                    doc.canView
+                                                      ? 'translate-x-3.5 bg-background'
+                                                      : 'translate-x-0 bg-muted-foreground/50'
+                                                  }`}
+                                                />
+                                              </button>
+                                            </div>
+                                          );
+                                        })}
                                     </div>
                                   </div>
                                 )}
@@ -3379,6 +3447,13 @@ export default function LiveRoomPage() {
                   </div>
                 </section>
 
+                {/* Candidate Sync Section */}
+                <CandidateSyncSection
+                  workspace={workspace}
+                  isOwner={isOwner}
+                  onSelectChannel={setSelectedChannelId}
+                />
+
                 {/* Hiring Flow Section */}
                 <section className="space-y-3">
                   <PanelHeader
@@ -3472,7 +3547,7 @@ export default function LiveRoomPage() {
                       ))
                     )}
                   </div>
-                  {workspace.nda && (
+                  {isOwner && workspace.nda && (
                     <div className="rounded-xl border border-border/40 bg-background/45 p-3">
                       <div className="flex items-center justify-between gap-2 text-xs">
                         <span className="font-bold text-foreground">
@@ -3486,21 +3561,6 @@ export default function LiveRoomPage() {
                       <div className="mt-1 text-[10px] text-muted-foreground">
                         {`${workspace.nda.signedBy?.length ?? 0}/2 signatures recorded`}
                       </div>
-                      {!isOwner &&
-                        workspace.nda.status === 'pending_signatures' &&
-                        !workspace.nda.signedBy.includes(user?._id) && (
-                          <div className="mt-2.5">
-                            <button
-                              onClick={() => {
-                                setShowNdaModal(true);
-                                setHasReadNda(false);
-                              }}
-                              className="w-full text-center text-xs font-bold bg-primary hover:bg-primary/95 text-primary-foreground py-1.5 rounded-lg transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
-                            >
-                              Read & Sign NDA
-                            </button>
-                          </div>
-                        )}
                     </div>
                   )}
                 </section>
@@ -3938,7 +3998,7 @@ function PlatformSyncCockpit({
       0,
     );
   const openRoles = roles.filter((role) => role.status !== 'filled');
-  const [syncRoleFilter, setSyncRoleFilter] = useState<string>('all');
+  const [syncRoleFilter, setSyncRoleFilter] = useState<string>('');
   const [candidateSyncOpen, setCandidateSyncOpen] = useState(true);
 
   const candidateRows = participants
@@ -3953,9 +4013,13 @@ function PlatformSyncCockpit({
     ),
   );
 
+  const activeRoleFilter = availableCandidateRoles.includes(syncRoleFilter)
+    ? syncRoleFilter
+    : (availableCandidateRoles[0] ?? '');
+
   const filteredCandidateRows = candidateRows.filter((row: any) => {
-    if (syncRoleFilter === 'all') return true;
-    return row?.role === syncRoleFilter;
+    if (!activeRoleFilter) return true;
+    return row?.role === activeRoleFilter;
   });
 
   const pipeline = [
@@ -4063,108 +4127,144 @@ function PlatformSyncCockpit({
           </div>
         ))}
       </div>
+    </section>
+  );
+}
 
-      {isOwner && (
-        <div className="space-y-2 pt-2 border-t border-border/10">
-          {/* Collapsible Header Dropdown similar to Invited / Pending */}
-          <button
-            type="button"
-            onClick={() => setCandidateSyncOpen(!candidateSyncOpen)}
-            className="w-full flex items-center justify-between text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5 py-1.5 hover:text-foreground transition-all cursor-pointer"
-          >
+function CandidateSyncSection({
+  workspace,
+  isOwner,
+  onSelectChannel,
+}: {
+  workspace: WorkspacePayload;
+  isOwner: boolean;
+  onSelectChannel: (channelId: string) => void;
+}) {
+  const { participants } = workspace;
+  const [syncRoleFilter, setSyncRoleFilter] = useState<string>('');
+  const [candidateSyncOpen, setCandidateSyncOpen] = useState(true);
+
+  if (!isOwner) return null;
+
+  const candidateRows = participants
+    .map((participant) => buildCandidateSyncRow(participant, workspace))
+    .filter(Boolean);
+
+  const availableCandidateRoles = Array.from(
+    new Set(
+      candidateRows
+        .map((row: any) => row?.role)
+        .filter((r: any): r is string => Boolean(r) && typeof r === 'string'),
+    ),
+  );
+
+  const activeRoleFilter = availableCandidateRoles.includes(syncRoleFilter)
+    ? syncRoleFilter
+    : (availableCandidateRoles[0] ?? '');
+
+  const filteredCandidateRows = candidateRows.filter((row: any) => {
+    if (!activeRoleFilter) return true;
+    return row?.role === activeRoleFilter;
+  });
+
+  return (
+    <section className="space-y-3 border-t border-border/20 pt-4">
+      <button
+        type="button"
+        onClick={() => setCandidateSyncOpen(!candidateSyncOpen)}
+        className="w-full flex items-center justify-between text-[10px] font-bold text-muted-foreground/70 tracking-wider uppercase pl-0.5 py-1.5 hover:text-foreground transition-all cursor-pointer"
+      >
+        <div className="flex items-center gap-1.5">
+          <Users className="h-3.5 w-3.5 text-primary" />
+          <span>
+            Candidate Sync ({filteredCandidateRows.length}
+            {candidateRows.length > filteredCandidateRows.length
+              ? ` / ${candidateRows.length}`
+              : ''}
+            )
+          </span>
+        </div>
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
+            candidateSyncOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {candidateSyncOpen && (
+        <div className="space-y-2.5 animate-fadeIn mt-1">
+          {/* Role Dropdown Filter Bar */}
+          {availableCandidateRoles.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              <span>
-                Candidate Sync ({filteredCandidateRows.length}
-                {syncRoleFilter !== 'all' ? ` / ${candidateRows.length}` : ''})
-              </span>
-            </div>
-            <ChevronDown
-              className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
-                candidateSyncOpen ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          {candidateSyncOpen && (
-            <div className="space-y-2.5 animate-fadeIn mt-1">
-              {/* Role Dropdown Filter Bar */}
-              {availableCandidateRoles.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <label
-                    htmlFor="sync-role-filter"
-                    className="text-[10px] text-muted-foreground font-semibold shrink-0"
-                  >
-                    Role:
-                  </label>
-                  <select
-                    id="sync-role-filter"
-                    value={syncRoleFilter}
-                    onChange={(e) => setSyncRoleFilter(e.target.value)}
-                    className="w-full text-[11px] font-medium bg-background border border-border/50 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer"
-                  >
-                    <option value="all">
-                      All Roles ({candidateRows.length})
+              <label
+                htmlFor="sync-role-filter"
+                className="text-[10px] text-muted-foreground font-semibold shrink-0"
+              >
+                Role:
+              </label>
+              <select
+                id="sync-role-filter"
+                value={activeRoleFilter}
+                onChange={(e) => setSyncRoleFilter(e.target.value)}
+                className="w-full text-[11px] font-medium bg-background border border-border/50 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer"
+              >
+                {availableCandidateRoles.map((roleTitle) => {
+                  const count = candidateRows.filter(
+                    (r: any) => r?.role === roleTitle,
+                  ).length;
+                  return (
+                    <option key={roleTitle} value={roleTitle}>
+                      {roleTitle} ({count})
                     </option>
-                    {availableCandidateRoles.map((roleTitle) => {
-                      const count = candidateRows.filter(
-                        (r: any) => r?.role === roleTitle,
-                      ).length;
-                      return (
-                        <option key={roleTitle} value={roleTitle}>
-                          {roleTitle} ({count})
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )}
-
-              {/* No internal vertical scrollbar - expand naturally */}
-              <div className="space-y-2">
-                {filteredCandidateRows.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground text-center">
-                    {syncRoleFilter === 'all'
-                      ? 'Invites, bids, interviews, and selected talent will mirror here.'
-                      : `No candidates found for ${syncRoleFilter}.`}
-                  </p>
-                ) : (
-                  filteredCandidateRows.map((row: any) => (
-                    <button
-                      key={row.id}
-                      onClick={() =>
-                        row.channelId && onSelectChannel(row.channelId)
-                      }
-                      disabled={!row.channelId}
-                      className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="truncate text-xs font-bold text-foreground">
-                            {row.name}
-                          </div>
-                          <div className="truncate text-[10px] text-muted-foreground">
-                            {row.role}
-                          </div>
-                        </div>
-                        <span
-                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${row.className}`}
-                        >
-                          {row.stage}
-                        </span>
-                      </div>
-                      <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
-                        <span className="truncate">{row.detail}</span>
-                        {row.channelId ? (
-                          <span className="font-bold text-primary">open</span>
-                        ) : null}
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
+                  );
+                })}
+              </select>
             </div>
           )}
+
+          {/* No internal vertical scrollbar - expand naturally */}
+          <div className="space-y-2">
+            {filteredCandidateRows.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border/40 p-3 text-xs text-muted-foreground text-center">
+                {activeRoleFilter
+                  ? `No candidates found for ${activeRoleFilter}.`
+                  : 'Invites, bids, interviews, and selected talent will mirror here.'}
+              </p>
+            ) : (
+              filteredCandidateRows.map((row: any) => (
+                <button
+                  key={row.id}
+                  onClick={() =>
+                    row.channelId && onSelectChannel(row.channelId)
+                  }
+                  disabled={!row.channelId}
+                  className="w-full rounded-xl border border-border/40 bg-background/45 p-2.5 text-left shadow-sm transition-all hover:border-border/70 hover:bg-background disabled:cursor-default disabled:hover:border-border/40 disabled:hover:bg-background/45 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-bold text-foreground">
+                        {row.name}
+                      </div>
+                      <div className="truncate text-[10px] text-muted-foreground">
+                        {row.role}
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${row.className}`}
+                    >
+                      {row.stage}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                    <span className="truncate">{row.detail}</span>
+                    {row.channelId ? (
+                      <span className="font-bold text-primary">open</span>
+                    ) : null}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
         </div>
       )}
     </section>

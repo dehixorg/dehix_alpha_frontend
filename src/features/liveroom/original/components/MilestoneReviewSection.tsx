@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Edit3,
 } from 'lucide-react';
+import { format } from 'date-fns';
+
 import {
   Dialog,
   DialogContent,
@@ -16,11 +18,107 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import StoriesSection from '@/components/shared/StoriesSection';
 import { Milestone, Story, MilestoneStatus } from '@/utils/types/Milestone';
 import { Button } from '@/components/ui/button';
+
+const parseDateString = (str?: string) => {
+  if (!str) return undefined;
+  const parts = str.split('-');
+  if (parts.length !== 3) return undefined;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  const date = new Date(y, m, d);
+  return isNaN(date.getTime()) ? undefined : date;
+};
+
+const formatDateString = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+function TimelineDatePicker({
+  value,
+  onChange,
+  placeholder,
+  minDateStr,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+  minDateStr?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedDate = parseDateString(value);
+  const minDate = parseDateString(minDateStr);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isDateDisabled = (date: Date) => {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    if (d < today) return true;
+    if (minDate) {
+      const minD = new Date(
+        minDate.getFullYear(),
+        minDate.getMonth(),
+        minDate.getDate(),
+      );
+      if (d < minD) return true;
+    }
+    return false;
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="w-full flex items-center justify-between rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all hover:bg-background cursor-pointer"
+        >
+          <span
+            className={
+              selectedDate
+                ? 'text-foreground font-medium'
+                : 'text-muted-foreground'
+            }
+          >
+            {selectedDate ? format(selectedDate, 'MMM d, yyyy') : placeholder}
+          </span>
+          <Calendar className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto p-0 bg-card border border-border shadow-xl rounded-2xl overflow-hidden z-[100]"
+        align="start"
+      >
+        <CalendarUI
+          mode="single"
+          selected={selectedDate}
+          showOutsideDays={false}
+          disabled={isDateDisabled}
+          onSelect={(date) => {
+            if (date) {
+              onChange(formatDateString(date));
+              setOpen(false);
+            }
+          }}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface MilestoneReviewSectionProps {
   blueprint: Record<string, any>;
@@ -51,18 +149,18 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   // Validate dates: start and end date must both be filled, and start < end
   const isDateValid = Boolean(
     startDate &&
-      endDate &&
-      !isNaN(new Date(startDate).getTime()) &&
-      !isNaN(new Date(endDate).getTime()) &&
-      new Date(startDate) < new Date(endDate),
+    endDate &&
+    !isNaN(new Date(startDate).getTime()) &&
+    !isNaN(new Date(endDate).getTime()) &&
+    new Date(startDate) < new Date(endDate),
   );
 
   const isInvalidRange = Boolean(
     startDate &&
-      endDate &&
-      !isNaN(new Date(startDate).getTime()) &&
-      !isNaN(new Date(endDate).getTime()) &&
-      new Date(startDate) >= new Date(endDate),
+    endDate &&
+    !isNaN(new Date(startDate).getTime()) &&
+    !isNaN(new Date(endDate).getTime()) &&
+    new Date(startDate) >= new Date(endDate),
   );
 
   useEffect(() => {
@@ -125,7 +223,10 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
     return { days: diffDays, weeks };
   };
 
-  const generateLocalMilestonesFromDates = (startStr: string, endStr: string) => {
+  const generateLocalMilestonesFromDates = (
+    startStr: string,
+    endStr: string,
+  ) => {
     const sDate = new Date(startStr);
     const eDate = new Date(endStr);
     const totalTimeSpan = eDate.getTime() - sDate.getTime();
@@ -167,18 +268,33 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
       rawPhases = [
         {
           phase_name: 'Phase 1: Discovery & Architecture',
-          description: 'Define technical requirements, design mockups, and setup infrastructure.',
-          deliverables: ['System Architecture Document', 'Database Schema', 'UI/UX Prototypes'],
+          description:
+            'Define technical requirements, design mockups, and setup infrastructure.',
+          deliverables: [
+            'System Architecture Document',
+            'Database Schema',
+            'UI/UX Prototypes',
+          ],
         },
         {
           phase_name: 'Phase 2: Core Feature Implementation',
-          description: 'Develop core frontend components, API endpoints, and authentication.',
-          deliverables: ['API Service Module', 'Frontend Components', 'Core User Flow Integration'],
+          description:
+            'Develop core frontend components, API endpoints, and authentication.',
+          deliverables: [
+            'API Service Module',
+            'Frontend Components',
+            'Core User Flow Integration',
+          ],
         },
         {
           phase_name: 'Phase 3: Testing & Final Launch',
-          description: 'Perform end-to-end testing, bug fixing, and production deployment.',
-          deliverables: ['Security & Quality Audit', 'Deployment & CI/CD Pipeline', 'Final Delivery'],
+          description:
+            'Perform end-to-end testing, bug fixing, and production deployment.',
+          deliverables: [
+            'Security & Quality Audit',
+            'Deployment & CI/CD Pipeline',
+            'Final Delivery',
+          ],
         },
       ];
     }
@@ -187,10 +303,15 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
     const numPhases = rawPhases.length;
 
     rawPhases.forEach((p, idx) => {
-      const phaseStart = new Date(sDate.getTime() + (idx / numPhases) * totalTimeSpan);
-      const phaseEnd = new Date(sDate.getTime() + ((idx + 1) / numPhases) * totalTimeSpan);
+      const phaseStart = new Date(
+        sDate.getTime() + (idx / numPhases) * totalTimeSpan,
+      );
+      const phaseEnd = new Date(
+        sDate.getTime() + ((idx + 1) / numPhases) * totalTimeSpan,
+      );
 
-      const deliverables = p.deliverables || p.tasks || p.milestones || p.key_tasks || [];
+      const deliverables =
+        p.deliverables || p.tasks || p.milestones || p.key_tasks || [];
 
       const stories: Story[] = Array.isArray(deliverables)
         ? deliverables.map((d: any, dIdx: number) => ({
@@ -233,18 +354,21 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
       const token = localStorage.getItem('dehix_token');
 
       if (roomId) {
-        const res = await fetch(`/api/liveroom/rooms/${roomId}/milestones/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        const res = await fetch(
+          `/api/liveroom/rooms/${roomId}/milestones/generate`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              startDate: new Date(startDate).toISOString(),
+              endDate: new Date(endDate).toISOString(),
+              blueprint,
+            }),
           },
-          body: JSON.stringify({
-            startDate: new Date(startDate).toISOString(),
-            endDate: new Date(endDate).toISOString(),
-            blueprint,
-          }),
-        });
+        );
 
         if (res.ok) {
           const data = await res.json();
@@ -255,7 +379,10 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 
       // If backend was not called or failed/returned empty, calculate locally with respect to tentative dates
       if (!generatedMilestones || generatedMilestones.length === 0) {
-        generatedMilestones = generateLocalMilestonesFromDates(startDate, endDate);
+        generatedMilestones = generateLocalMilestonesFromDates(
+          startDate,
+          endDate,
+        );
       }
 
       setMilestones(generatedMilestones);
@@ -274,7 +401,10 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   };
 
   const handleApproveClick = () => {
-    if (!hasConfirmedDates && (milestones.length === 0 || !startDate || !endDate)) {
+    if (
+      !hasConfirmedDates &&
+      (milestones.length === 0 || !startDate || !endDate)
+    ) {
       setShowDateDialog(true);
       return;
     }
@@ -318,13 +448,15 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   return (
     <div className="space-y-7 animate-in fade-in duration-300">
       {/* Date Dialog Pop-up */}
-      <Dialog open={showDateDialog} onOpenChange={(open) => {
-        // Prevent closing if dates have not been configured yet
-        if (!open && !hasConfirmedDates && milestones.length === 0) {
-          return;
-        }
-        setShowDateDialog(open);
-      }}>
+      <Dialog
+        open={showDateDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowDateDialog(false);
+            onBack();
+          }
+        }}
+      >
         <DialogContent className="max-w-md bg-card border-border shadow-2xl rounded-2xl p-6">
           <DialogHeader className="space-y-2 text-left">
             <div className="flex items-center gap-2.5 text-primary">
@@ -336,7 +468,9 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              Please specify the tentative start and completion dates. AI will generate project milestones and user stories fitted to this timeframe.
+              Please specify the tentative start and completion dates. AI will
+              generate project milestones and user stories fitted to this
+              timeframe.
             </DialogDescription>
           </DialogHeader>
 
@@ -369,26 +503,26 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground/80 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative Start
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative
+                  Start
                 </label>
-                <input
-                  type="date"
+                <TimelineDatePicker
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  onChange={setStartDate}
+                  placeholder="Select start date"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground/80 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative End
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative
+                  End
                 </label>
-                <input
-                  type="date"
+                <TimelineDatePicker
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || undefined}
-                  className="w-full rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  onChange={setEndDate}
+                  minDateStr={startDate}
+                  placeholder="Select end date"
                 />
               </div>
             </div>
@@ -403,7 +537,9 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 
             {isDateValid && durationInfo && (
               <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs">
-                <span className="font-medium text-foreground">Calculated Duration:</span>
+                <span className="font-medium text-foreground">
+                  Calculated Duration:
+                </span>
                 <span className="font-bold text-primary px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/30">
                   {durationInfo.days} Days ({durationInfo.weeks} Weeks)
                 </span>
@@ -411,17 +547,18 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             )}
 
             {/* Submit Action */}
-            <div className="flex justify-end gap-2.5 mt-2 pt-2 border-t border-border/40">
-              {hasConfirmedDates && (
-                <button
-                  type="button"
-                  onClick={() => setShowDateDialog(false)}
-                  disabled={generating}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              )}
+            <div className="flex items-center justify-between gap-2.5 mt-2 pt-2 border-t border-border/40">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDateDialog(false);
+                  onBack();
+                }}
+                disabled={generating}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
               <button
                 type="button"
                 onClick={handleGenerate}
@@ -465,7 +602,8 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               Milestones & Timeline Review
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Review AI-generated milestones and user stories mapped to your tentative project dates.
+              Review AI-generated milestones and user stories mapped to your
+              tentative project dates.
             </p>
           </div>
 
@@ -485,7 +623,9 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               className="whitespace-nowrap flex items-center gap-1.5"
             >
               <Edit3 className="h-3.5 w-3.5" />
-              {startDate && endDate ? 'Edit Tentative Dates' : 'Set Tentative Dates'}
+              {startDate && endDate
+                ? 'Edit Tentative Dates'
+                : 'Set Tentative Dates'}
             </Button>
             <Button
               onClick={handleApproveClick}
@@ -550,13 +690,15 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                     No tentative dates or milestones generated yet
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-2 mb-4">
-                    Set project tentative dates to let AI build your milestone timeline and user stories.
+                    Set project tentative dates to let AI build your milestone
+                    timeline and user stories.
                   </p>
                   <Button
                     onClick={() => setShowDateDialog(true)}
                     className="bg-primary text-primary-foreground font-bold"
                   >
-                    <Calendar className="mr-2 h-4 w-4" /> Set Project Tentative Dates
+                    <Calendar className="mr-2 h-4 w-4" /> Set Project Tentative
+                    Dates
                   </Button>
                 </div>
               </div>
@@ -569,4 +711,3 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 };
 
 export default MilestoneReviewSection;
-

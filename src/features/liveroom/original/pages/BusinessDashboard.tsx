@@ -263,7 +263,9 @@ export default function BusinessDashboard() {
       if (signed > 0) return acc + signed;
     }
     if (Array.isArray(r.offers)) {
-      const accepted = r.offers.filter((o: any) => o.status === 'ACCEPTED').length;
+      const accepted = r.offers.filter(
+        (o: any) => o.status === 'ACCEPTED',
+      ).length;
       if (accepted > 0) return acc + accepted;
     }
     if (r.status === 'contracted' || r.status === 'CONTRACTED') {
