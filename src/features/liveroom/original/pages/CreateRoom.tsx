@@ -1587,7 +1587,9 @@ function calculateTotalRoadmapDuration(roadmapValue: unknown): {
       return calculateTotalRoadmapDuration(parsed);
     } catch {
       const matches =
-        roadmapValue.match(/(\d+(?:\.\d+)?)\s*(week|month|wks|mths|wk|mth)/gi) || [];
+        roadmapValue.match(
+          /(\d+(?:\.\d+)?)\s*(week|month|wks|mths|wk|mth)/gi,
+        ) || [];
       let totalWeeksCount = 0;
       for (const m of matches) {
         const parts = m.split(/\s+/);
@@ -1708,9 +1710,14 @@ function renderRoadmap(value: unknown): ReactNode {
             <span>
               Total Estimated Duration:{' '}
               <span className="text-foreground font-extrabold">
-                {durationData.totalMonths} {durationData.totalMonths.includes('-') || Number(durationData.totalMonths) > 1 ? 'Months' : 'Month'}
+                {durationData.totalMonths}{' '}
+                {durationData.totalMonths.includes('-') ||
+                Number(durationData.totalMonths) > 1
+                  ? 'Months'
+                  : 'Month'}
               </span>{' '}
-              ({durationData.totalWeeks} {durationData.totalWeeks === 1 ? 'Week' : 'Weeks'})
+              ({durationData.totalWeeks}{' '}
+              {durationData.totalWeeks === 1 ? 'Week' : 'Weeks'})
             </span>
           </div>
         </div>
@@ -5722,22 +5729,27 @@ function BlueprintReviewSection({
               </div>
               {tabInfo?.title}
             </h2>
-            {activeTab === 'development_roadmap' && (() => {
-              const { totalWeeks, totalMonths } = calculateTotalRoadmapDuration(blueprint.development_roadmap);
-              if (totalWeeks === 0) return null;
-              return (
-                <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/25 px-3 py-1.5 text-xs font-bold text-primary shrink-0 self-start sm:self-auto shadow-xs">
-                  <Clock className="h-4 w-4 text-primary shrink-0 animate-pulse" />
-                  <span>
-                    Total Estimated Duration:{' '}
-                    <span className="text-foreground font-extrabold">
-                      {totalMonths} {totalMonths.includes('-') || Number(totalMonths) > 1 ? 'Months' : 'Month'}
-                    </span>{' '}
-                    ({totalWeeks} {totalWeeks === 1 ? 'Week' : 'Weeks'})
-                  </span>
-                </div>
-              );
-            })()}
+            {activeTab === 'development_roadmap' &&
+              (() => {
+                const { totalWeeks, totalMonths } =
+                  calculateTotalRoadmapDuration(blueprint.development_roadmap);
+                if (totalWeeks === 0) return null;
+                return (
+                  <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/25 px-3 py-1.5 text-xs font-bold text-primary shrink-0 self-start sm:self-auto shadow-xs">
+                    <Clock className="h-4 w-4 text-primary shrink-0 animate-pulse" />
+                    <span>
+                      Total Estimated Duration:{' '}
+                      <span className="text-foreground font-extrabold">
+                        {totalMonths}{' '}
+                        {totalMonths.includes('-') || Number(totalMonths) > 1
+                          ? 'Months'
+                          : 'Month'}
+                      </span>{' '}
+                      ({totalWeeks} {totalWeeks === 1 ? 'Week' : 'Weeks'})
+                    </span>
+                  </div>
+                );
+              })()}
           </div>
           {/* @ts-ignore */}
           {tabInfo?.description && (
@@ -6113,9 +6125,14 @@ function buildSmartSuggestions({
     const total = totalQuestions || 5;
     const kind = activeQuestion.kind === 'mandatory' ? 'Mandatory' : 'Optional';
     const currentAnswer =
-      (answers && activeQuestion.questionId && answers[activeQuestion.questionId]) || '';
+      (answers &&
+        activeQuestion.questionId &&
+        answers[activeQuestion.questionId]) ||
+      '';
     const hasBeenSuggestedOrAnswered =
-      (usedAiSuggest && activeQuestion.questionId && usedAiSuggest[activeQuestion.questionId]) ||
+      (usedAiSuggest &&
+        activeQuestion.questionId &&
+        usedAiSuggest[activeQuestion.questionId]) ||
       Boolean(currentAnswer.trim());
     const improveCount =
       (improveAnswerCounts && improveAnswerCounts[activeQuestion.questionId]) ||
@@ -6280,7 +6297,11 @@ Rules:
       ];
     }
 
-    if (sectionId.includes('user') || sectionId.includes('target') || sectionId.includes('persona')) {
+    if (
+      sectionId.includes('user') ||
+      sectionId.includes('target') ||
+      sectionId.includes('persona')
+    ) {
       return [
         {
           label: 'Explain simply',
@@ -6305,7 +6326,10 @@ Rules:
       ];
     }
 
-    if (sectionId.includes('product_strategy') || sectionId.includes('strategy')) {
+    if (
+      sectionId.includes('product_strategy') ||
+      sectionId.includes('strategy')
+    ) {
       return [
         {
           label: 'Explain simply',
@@ -6380,7 +6404,11 @@ Rules:
       ];
     }
 
-    if (sectionId.includes('security') || sectionId.includes('compliance') || sectionId.includes('privacy')) {
+    if (
+      sectionId.includes('security') ||
+      sectionId.includes('compliance') ||
+      sectionId.includes('privacy')
+    ) {
       return [
         {
           label: 'Explain simply',
@@ -6681,9 +6709,13 @@ function calculateSmartRoleCount(
 
   const titleLower = title.toLowerCase();
   const purposeLower = purpose.toLowerCase();
-  const roadmapStr = JSON.stringify(blueprint?.development_roadmap ?? '').toLowerCase();
+  const roadmapStr = JSON.stringify(
+    blueprint?.development_roadmap ?? '',
+  ).toLowerCase();
   const mvpStr = JSON.stringify(blueprint?.mvp_definition ?? '').toLowerCase();
-  const archStr = JSON.stringify(blueprint?.technical_architecture ?? '').toLowerCase();
+  const archStr = JSON.stringify(
+    blueprint?.technical_architecture ?? '',
+  ).toLowerCase();
   const scopeText = `${titleLower} ${purposeLower} ${roadmapStr} ${mvpStr} ${archStr}`;
 
   const isHeavyScope =
@@ -7121,8 +7153,12 @@ Output: the final answer text only.`;
       await Promise.all(
         unanswered.map(async (question) => {
           try {
-            const qIndex = allQuestions.findIndex((q) => q._id === question._id);
-            const isMandatory = mandatoryQuestions.some((q) => q._id === question._id);
+            const qIndex = allQuestions.findIndex(
+              (q) => q._id === question._id,
+            );
+            const isMandatory = mandatoryQuestions.some(
+              (q) => q._id === question._id,
+            );
             const index = qIndex >= 0 ? qIndex + 1 : 1;
             const total = allQuestions.length || 5;
             const kind = isMandatory ? 'Mandatory' : 'Optional';
@@ -7573,7 +7609,13 @@ Please return ONLY the modified answer itself, without any introductory or conve
         title: humanizeKey(activeTab),
       });
     }
-  }, [phase, mandatoryQuestions, activeQuestion, activeReportSection, activeTab]);
+  }, [
+    phase,
+    mandatoryQuestions,
+    activeQuestion,
+    activeReportSection,
+    activeTab,
+  ]);
 
   useEffect(() => {
     if (!launchJob?.sessionId) return;
@@ -8833,7 +8875,10 @@ Please return ONLY the modified text itself, without any introductory or convers
                         onKeyDown={(e) => {
                           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                             e.preventDefault();
-                            if (!validating && description.trim().length >= 20) {
+                            if (
+                              !validating &&
+                              description.trim().length >= 20
+                            ) {
                               validateIdea();
                             }
                           }
