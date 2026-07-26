@@ -6697,7 +6697,7 @@ function calculateSmartRoleCount(
   purpose: string,
   itemCount: any,
   blueprint: BlueprintResult | null,
-  analysis?: AnalysisResult | null,
+  _analysis?: AnalysisResult | null,
 ): number {
   if (typeof itemCount === 'number' && itemCount > 0) {
     return itemCount;
