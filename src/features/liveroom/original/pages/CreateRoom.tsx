@@ -42,6 +42,7 @@ import {
   GripVertical,
   Filter,
   ArrowUpDown,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,6 +61,8 @@ import {
   TooltipProvider,
 } from '../../../../components/ui/tooltip';
 
+import LiveRoomPremiumPaywall from '@/components/liveroom/LiveRoomPremiumPaywall';
+import { axiosInstance } from '@/lib/axiosinstance';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import { updateConnectsBalance } from '@/lib/updateConnects';
 
@@ -6278,6 +6281,35 @@ export default function CreateRoom() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
 
+  const [checkingSub, setCheckingSub] = useState(true);
+  const [subStatus, setSubStatus] = useState<{
+    isSubscribed: boolean;
+    expiresAt?: string;
+    status?: string;
+  } | null>(null);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      setCheckingSub(true);
+      const res = await axiosInstance.get('/liveroom/subscription/status');
+      if (res?.data) {
+        setSubStatus(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Live Room subscription status:', err);
+    } finally {
+      setCheckingSub(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSubscriptionStatus();
+    } else {
+      setCheckingSub(false);
+    }
+  }, [isAuthenticated]);
+
   const [phase, setPhase] = useState<WizardPhase>('idea');
   const [description, setDescription] = useState('');
   const [sessionData, setSessionData] = useState<any>(null);
@@ -7896,6 +7928,26 @@ Please return ONLY the modified text itself, without any introductory or convers
     activeReportSection: activeReportSectionForSuggestions,
     activeQuestion,
   });
+
+  if (checkingSub) {
+    return (
+      <div className="min-h-[60vh] bg-background flex flex-col items-center justify-center p-6 text-center">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-3" />
+        <p className="text-sm text-muted-foreground font-medium">
+          Checking Live Room subscription...
+        </p>
+      </div>
+    );
+  }
+
+  if (!subStatus?.isSubscribed) {
+    return (
+      <LiveRoomPremiumPaywall
+        userId={user?._id}
+        onSuccess={() => fetchSubscriptionStatus()}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

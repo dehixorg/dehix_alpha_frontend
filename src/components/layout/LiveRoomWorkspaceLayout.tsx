@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ArrowLeft, Briefcase, MessageSquare, Shield } from 'lucide-react';
+import { ArrowLeft, Briefcase, MessageSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import Header from '@/components/header/header';
