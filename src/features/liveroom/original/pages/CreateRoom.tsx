@@ -96,7 +96,16 @@ type ActiveQuestion = {
 };
 type SmartSuggestion = {
   label: string;
+  displayText?: string;
   prompt: string;
+  action?:
+    | 'chat'
+    | 'suggest_answer'
+    | 'improve_answer'
+    | 'explain_question'
+    | 'blueprint_chat';
+  targetQuestionId?: string;
+  targetSectionId?: string;
 };
 
 type Question = {
@@ -1531,6 +1540,102 @@ function BlueprintValue({ value }: { value: unknown }): ReactNode {
   return null;
 }
 
+function formatDurationResults(totalWeeks: number): {
+  totalWeeks: number;
+  totalMonths: string;
+} {
+  if (totalWeeks <= 0) {
+    return { totalWeeks: 0, totalMonths: '0' };
+  }
+
+  const rawMonths = totalWeeks / 4.33;
+  const lowerMonth = Math.floor(rawMonths);
+  const upperMonth = Math.ceil(rawMonths);
+
+  let formattedMonths = '';
+  if (lowerMonth === upperMonth || lowerMonth === 0) {
+    const singleMonth = Math.max(1, Math.round(rawMonths));
+    formattedMonths = `${singleMonth}`;
+  } else if (upperMonth - lowerMonth === 1) {
+    const decimalPart = rawMonths - lowerMonth;
+    if (decimalPart < 0.15) {
+      formattedMonths = `${lowerMonth}`;
+    } else if (decimalPart > 0.85) {
+      formattedMonths = `${upperMonth}`;
+    } else {
+      formattedMonths = `${lowerMonth} - ${upperMonth}`;
+    }
+  } else {
+    formattedMonths = `${lowerMonth} - ${upperMonth}`;
+  }
+
+  return {
+    totalWeeks,
+    totalMonths: formattedMonths,
+  };
+}
+
+function calculateTotalRoadmapDuration(roadmapValue: unknown): {
+  totalWeeks: number;
+  totalMonths: string;
+} {
+  let phases: any[] = [];
+  if (Array.isArray(roadmapValue)) {
+    phases = roadmapValue;
+  } else if (typeof roadmapValue === 'object' && roadmapValue !== null) {
+    phases = Object.values(roadmapValue);
+  } else if (typeof roadmapValue === 'string') {
+    try {
+      const parsed = JSON.parse(roadmapValue);
+      return calculateTotalRoadmapDuration(parsed);
+    } catch {
+      const matches =
+        roadmapValue.match(
+          /(\d+(?:\.\d+)?)\s*(week|month|wks|mths|wk|mth)/gi,
+        ) || [];
+      let totalWeeksCount = 0;
+      for (const m of matches) {
+        const parts = m.split(/\s+/);
+        const val = parseFloat(parts[0]);
+        const unit = parts[1]?.toLowerCase() || '';
+        if (!isNaN(val)) {
+          if (unit.startsWith('month') || unit.startsWith('mth'))
+            totalWeeksCount += val * 4.33;
+          else totalWeeksCount += val;
+        }
+      }
+      return formatDurationResults(Math.round(totalWeeksCount));
+    }
+  }
+
+  let totalWeeks = 0;
+  for (const phase of phases) {
+    if (!phase) continue;
+    const dur =
+      typeof phase === 'object'
+        ? (phase.estimated_weeks ?? phase.duration ?? phase.weeks ?? phase.time)
+        : phase;
+    if (dur !== undefined && dur !== null) {
+      const str = String(dur).toLowerCase();
+      const match = str.match(/(\d+(?:\.\d+)?)/);
+      if (match) {
+        const num = parseFloat(match[1]);
+        if (!isNaN(num)) {
+          if (str.includes('month') || str.includes('mth')) {
+            totalWeeks += num * 4.33;
+          } else if (str.includes('day')) {
+            totalWeeks += num / 7;
+          } else {
+            totalWeeks += num;
+          }
+        }
+      }
+    }
+  }
+
+  return formatDurationResults(Math.round(totalWeeks));
+}
+
 function renderRoadmap(value: unknown): ReactNode {
   if (typeof value === 'string') {
     try {
@@ -1584,39 +1689,89 @@ function renderRoadmap(value: unknown): ReactNode {
     return <p className="text-xs text-muted-foreground">Not available</p>;
   }
 
-  return (
-    <div className="relative border-l border-primary/25 pl-6 ml-3 space-y-6 py-2">
-      {phasesList.map((phase, idx) => (
-        <div key={idx} className="relative group">
-          {/* Timeline Dot */}
-          <div className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-2 border-primary bg-background flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-          </div>
+  const durationData = calculateTotalRoadmapDuration(value);
 
-          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-background/50 p-5 shadow-sm transition-all duration-200 hover:border-primary/20">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/30 pb-3 mb-3">
-              <div>
-                <span className="text-[9px] text-primary uppercase font-bold tracking-wider">
-                  Phase {idx + 1}
-                </span>
-                <h3 className="text-xs font-bold text-foreground">
-                  {phase.title}
-                </h3>
-              </div>
-              {phase.duration !== undefined && (
-                <span className="w-fit rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                  â±ï¸ {formatPrimitive(phase.duration)}{' '}
-                  {typeof phase.duration === 'number' ||
-                  !isNaN(Number(phase.duration))
-                    ? 'weeks'
-                    : ''}
-                </span>
-              )}
+  return (
+    <div className="space-y-6">
+      {durationData.totalWeeks > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 mb-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+              <Clock className="h-4 w-4" />
             </div>
-            <BulletList items={phase.deliverables} />
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Roadmap Overview
+              </span>
+              <h3 className="text-xs font-bold text-foreground">
+                Phased Development Timeline
+              </h3>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg bg-card border border-primary/25 px-3 py-1.5 text-xs font-bold text-primary shrink-0 self-start sm:self-auto shadow-xs">
+            <Clock className="h-3.5 w-3.5 text-primary shrink-0 animate-pulse" />
+            <span>
+              Total Estimated Duration:{' '}
+              <span className="text-foreground font-extrabold">
+                {durationData.totalMonths}{' '}
+                {durationData.totalMonths.includes('-') ||
+                Number(durationData.totalMonths) > 1
+                  ? 'Months'
+                  : 'Month'}
+              </span>{' '}
+              ({durationData.totalWeeks}{' '}
+              {durationData.totalWeeks === 1 ? 'Week' : 'Weeks'})
+            </span>
           </div>
         </div>
-      ))}
+      )}
+
+      <div className="relative border-l border-primary/25 pl-6 ml-3 space-y-6 py-2">
+        {phasesList.map((phase, idx) => {
+          const rawTitle = phase.title.trim();
+          const hasPhasePrefix = /^phase\s*\d+/i.test(rawTitle);
+          const displayTitle = hasPhasePrefix
+            ? rawTitle
+            : `Phase ${idx + 1}: ${rawTitle}`;
+
+          return (
+            <div key={idx} className="relative group">
+              {/* Timeline Dot */}
+              <div className="absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-2 border-primary bg-background flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              </div>
+
+              <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card to-background/50 p-5 shadow-sm transition-all duration-200 hover:border-primary/20">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border/30 pb-3 mb-3">
+                  <div>
+                    {!hasPhasePrefix && (
+                      <span className="text-[9px] text-primary uppercase font-bold tracking-wider block mb-0.5">
+                        Phase {idx + 1}
+                      </span>
+                    )}
+                    <h3 className="text-xs font-bold text-foreground">
+                      {displayTitle}
+                    </h3>
+                  </div>
+                  {phase.duration !== undefined && (
+                    <span className="w-fit rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-primary shrink-0" />
+                      {formatPrimitive(phase.duration)}{' '}
+                      {typeof phase.duration === 'number' ||
+                      !isNaN(Number(phase.duration))
+                        ? Number(phase.duration) === 1
+                          ? 'week'
+                          : 'weeks'
+                        : ''}
+                    </span>
+                  )}
+                </div>
+                <BulletList items={phase.deliverables} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -2744,6 +2899,7 @@ function BlueprintReviewSection({
   sessionData,
   activeTab,
   setActiveTab,
+  onSectionChange,
 }: {
   blueprint: BlueprintResult;
   region: string;
@@ -2761,6 +2917,7 @@ function BlueprintReviewSection({
   sessionData: any;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onSectionChange?: (section: ActiveReportSection) => void;
 }) {
   const [refineTarget, setRefineTarget] = useState<{
     sectionId: string;
@@ -4211,11 +4368,20 @@ function BlueprintReviewSection({
                 );
 
                 const parsed = parseDuration(duration);
-                const handleNumberChange = (num: string) => {
-                  updatePhase(idx, 'duration', `${num} ${parsed.unit}`);
+                const handleNumberChange = (rawNum: string) => {
+                  const cleanNum = rawNum.replace(/[^0-9.]/g, '');
+                  if (!cleanNum) {
+                    updatePhase(idx, 'duration', '');
+                  } else {
+                    updatePhase(idx, 'duration', `${cleanNum} ${parsed.unit}`);
+                  }
                 };
                 const handleUnitChange = (unit: string) => {
-                  updatePhase(idx, 'duration', `${parsed.number} ${unit}`);
+                  if (!parsed.number) {
+                    updatePhase(idx, 'duration', '');
+                  } else {
+                    updatePhase(idx, 'duration', `${parsed.number} ${unit}`);
+                  }
                 };
 
                 return (
@@ -4232,7 +4398,7 @@ function BlueprintReviewSection({
                             </span>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-muted-foreground/80 whitespace-nowrap bg-muted/40 px-2 py-1.5 rounded-lg select-none">
-                                Phase {idx}:
+                                Phase {idx + 1}:
                               </span>
                               <textarea
                                 value={cleanPhaseName(name, idx)}
@@ -4240,7 +4406,7 @@ function BlueprintReviewSection({
                                   updatePhase(
                                     idx,
                                     'phase_name',
-                                    `Phase ${idx} - ${e.target.value}`,
+                                    `Phase ${idx + 1} - ${e.target.value}`,
                                   )
                                 }
                                 rows={getAutoRows(
@@ -5559,12 +5725,36 @@ function BlueprintReviewSection({
       <div className="space-y-6">
         <div className="mb-2 p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40 shadow-sm relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2.5 relative z-10">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              {tabInfo?.icon || <FileText className="h-4 w-4" />}
-            </div>
-            {tabInfo?.title}
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 relative z-10">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                {tabInfo?.icon || <FileText className="h-4 w-4" />}
+              </div>
+              {tabInfo?.title}
+            </h2>
+            {activeTab === 'development_roadmap' &&
+              (() => {
+                const { totalWeeks, totalMonths } =
+                  calculateTotalRoadmapDuration(blueprint.development_roadmap);
+                if (totalWeeks === 0) return null;
+                return (
+                  <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/25 px-3 py-1.5 text-xs font-bold text-primary shrink-0 self-start sm:self-auto shadow-xs">
+                    <Clock className="h-4 w-4 text-primary shrink-0 animate-pulse" />
+                    <span>
+                      Total Estimated Duration:{' '}
+                      <span className="text-foreground font-extrabold">
+                        {totalMonths}{' '}
+                        {totalMonths.includes('-') || Number(totalMonths) > 1
+                          ? 'Months'
+                          : 'Month'}
+                      </span>{' '}
+                      ({totalWeeks} {totalWeeks === 1 ? 'Week' : 'Weeks'})
+                    </span>
+                  </div>
+                );
+              })()}
+          </div>
+          {/* @ts-ignore */}
           {tabInfo?.description && (
             <p className="text-sm text-muted-foreground mt-2.5 leading-relaxed ml-11 relative z-10">
               {tabInfo.description}
@@ -5593,7 +5783,13 @@ function BlueprintReviewSection({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    onSectionChange?.({
+                      id: tab.id,
+                      title: tab.title,
+                    });
+                  }}
                   className={`w-full flex items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 text-[13px] font-semibold group ${
                     active
                       ? 'bg-gradient-to-r from-primary/15 via-primary/10 to-transparent text-primary shadow-sm ring-1 ring-primary/15'
@@ -5906,67 +6102,256 @@ function buildSmartSuggestions({
   phase,
   activeReportSection,
   activeQuestion,
+  idea,
+  region,
+  totalQuestions,
+  answers,
+  usedAiSuggest,
+  improveAnswerCounts,
+  activeReportSectionData,
 }: {
   phase: WizardPhase;
   activeReportSection: ActiveReportSection | null;
   activeQuestion: ActiveQuestion | null;
+  idea?: string;
+  region?: string;
+  totalQuestions?: number;
+  answers?: Record<string, string>;
+  usedAiSuggest?: Record<string, boolean>;
+  improveAnswerCounts?: Record<string, number>;
+  activeReportSectionData?: unknown;
 }): SmartSuggestion[] {
   if (phase === 'technical' && activeQuestion) {
-    const prefix =
-      activeQuestion.kind === 'mandatory'
-        ? `Mandatory question ${activeQuestion.index + 1}`
-        : `Optional question ${activeQuestion.index + 1}`;
-    return [
-      {
+    const questionText = activeQuestion.question;
+    const index = activeQuestion.index + 1;
+    const total = totalQuestions || 5;
+    const kind = activeQuestion.kind === 'mandatory' ? 'Mandatory' : 'Optional';
+    const currentAnswer =
+      (answers &&
+        activeQuestion.questionId &&
+        answers[activeQuestion.questionId]) ||
+      '';
+    const hasBeenSuggestedOrAnswered =
+      (usedAiSuggest &&
+        activeQuestion.questionId &&
+        usedAiSuggest[activeQuestion.questionId]) ||
+      Boolean(currentAnswer.trim());
+    const improveCount =
+      (improveAnswerCounts && improveAnswerCounts[activeQuestion.questionId]) ||
+      0;
+
+    const sharedContextBlock = `You are DEHIX AI, a startup technical advisor helping a non-technical founder answer a build-planning question.
+Business idea: "${idea || ''}"
+Region: ${region || 'India'}
+Question ${index} of ${total} [${kind}]: "${questionText}"
+Current answer (may be empty): "${currentAnswer}"
+
+Rules:
+- Ground every suggestion in the specific business idea above — no generic startup advice.
+- Never invent facts about the business that aren't stated or reasonably inferable from the idea/region.
+- Plain text only. No markdown headers, no bullet symbols unless the answer is inherently a list.
+- Max 120 words unless the question explicitly requires more (e.g. a feature list).`;
+
+    const suggestions: SmartSuggestion[] = [];
+
+    if (!hasBeenSuggestedOrAnswered) {
+      suggestions.push({
         label: 'Recommend answer',
-        prompt: `${prefix}: "${activeQuestion.question}"\n\nRecommend a strong, practical answer for this business idea. Keep it specific and non-technical enough for a founder.`,
-      },
-      {
-        label: 'Explain question',
-        prompt: `${prefix}: "${activeQuestion.question}"\n\nExplain what this question means, why it matters for the build plan, and what details I should include.`,
-      },
-      {
+        displayText: `Recommend answer for Question ${index}`,
+        action: 'suggest_answer',
+        targetQuestionId: activeQuestion.questionId,
+        prompt: `${sharedContextBlock}
+
+Task: Recommend a strong, practical answer to this question, written as if the founder wrote it themselves.
+Keep it specific, concrete, and free of jargon a non-technical founder wouldn't use.
+If the question is Optional and doesn't clearly apply to this idea, say so briefly and suggest the founder skip it — do not force a fabricated answer.
+Output: the answer text only, no preamble like "Here's a suggestion:".`,
+      });
+    }
+
+    suggestions.push({
+      label: 'Explain question',
+      displayText: `Explain Question ${index}`,
+      action: 'explain_question',
+      targetQuestionId: activeQuestion.questionId,
+      prompt: `${sharedContextBlock}
+
+Task: In 2-3 short paragraphs, explain:
+1. What this question is really asking, in plain language.
+2. Why it matters for the technical blueprint/build plan that gets generated later.
+3. What specific details the founder should include to get a useful blueprint.
+Output: explanation text only, no preamble.`,
+    });
+
+    if (improveCount < 2) {
+      suggestions.push({
         label: 'Improve my answer',
-        prompt: `${prefix}: "${activeQuestion.question}"\n\nReview my current answer from the form context and rewrite it to be clearer, more complete, and more useful for generating the blueprint.`,
-      },
-    ];
+        displayText: `Improve my answer for Question ${index}`,
+        action: 'improve_answer',
+        targetQuestionId: activeQuestion.questionId,
+        prompt: `${sharedContextBlock}
+
+Task:
+- If Current answer is non-empty: rewrite it to be clearer, more complete, and more useful for blueprint generation. Preserve the founder's original intent and any concrete facts they included — do not change their meaning.
+- If Current answer is empty: say "There's no answer yet to improve — want me to draft one instead?" and stop there (do not fabricate an answer under this option).
+Output: rewritten answer only (or the fallback line above), no preamble, no diff/before-after formatting.`,
+      });
+    }
+
+    return suggestions;
   }
 
   if ((phase === 'analysis' || phase === 'blueprint') && activeReportSection) {
     const sectionName = activeReportSection.title;
-    const base = `Current report section: ${sectionName}`;
+    const sectionDataText =
+      activeReportSectionData === undefined || activeReportSectionData === null
+        ? 'No structured section data is available. Use the known launch context.'
+        : typeof activeReportSectionData === 'string'
+          ? activeReportSectionData
+          : JSON.stringify(activeReportSectionData, null, 2);
+    const base = `You are DEHIX AI, a concise Dehix product advisor.
+Business idea: "${idea || ''}"
+Region: ${region || 'India'}
+Current report section: ${sectionName} (${activeReportSection.id})
+Section data:
+${sectionDataText}
+
+Rules:
+- Use the section data above; do not answer from the title alone.
+- Be specific to this business idea and section.
+- No robotic preambles like "Sure" or "Here is".
+- Do not end with vague offers like "if you want".
+- Keep the answer concise and actionable.`;
     const sectionId = activeReportSection.id.toLowerCase();
 
-    if (sectionId.includes('swot')) {
+    if (sectionId.includes('executive') || sectionId.includes('summary')) {
       return [
         {
-          label: 'Summarize SWOT',
-          prompt: `${base}\n\nSummarize this SWOT section in simple founder-friendly language.`,
+          label: 'Explain simply',
+          displayText: 'Explain Executive Summary simply',
+          prompt: `${base}\n\nExplain this Executive Summary in simple language for a non-technical founder.`,
         },
         {
-          label: 'Turn into actions',
-          prompt: `${base}\n\nConvert the SWOT section into prioritized next actions for the founder.`,
+          label: 'Key takeaways',
+          displayText: 'Key takeaways from summary',
+          prompt: `${base}\n\nWhat are the 3 most important takeaways from this Executive Summary?`,
         },
         {
-          label: 'Biggest weakness',
-          prompt: `${base}\n\nWhich weakness or threat is the most urgent, and how should I handle it first?`,
+          label: 'Pitch deck summary',
+          displayText: 'Summarize for pitch deck',
+          prompt: `${base}\n\nHow should I summarize this vision for pitch deck slides?`,
+        },
+        {
+          label: 'Highlight strengths',
+          displayText: 'Highlight core strengths',
+          prompt: `${base}\n\nWhat are the core strengths highlighted in this summary?`,
         },
       ];
     }
 
-    if (sectionId.includes('risk')) {
+    if (sectionId.includes('problem')) {
       return [
         {
-          label: 'Prioritize risks',
-          prompt: `${base}\n\nRank the risks by urgency and explain the first mitigation step for each.`,
+          label: 'Explain simply',
+          displayText: 'Explain problem simply',
+          prompt: `${base}\n\nExplain this problem definition in simple, clear terms.`,
         },
         {
-          label: 'Reduce risk',
-          prompt: `${base}\n\nGive me practical ways to reduce the most important risks before building.`,
+          label: 'Validate problem',
+          displayText: 'How to validate problem',
+          prompt: `${base}\n\nSuggest 3 practical ways to validate this problem with target users.`,
         },
         {
-          label: 'Investor concerns',
-          prompt: `${base}\n\nWhat concerns would an investor or senior operator raise after reading this risk section?`,
+          label: 'Sharpen pain point',
+          displayText: 'Sharpen pain point statement',
+          prompt: `${base}\n\nHow can we refine this problem statement to make it more compelling?`,
+        },
+        {
+          label: 'Root causes',
+          displayText: 'Analyze root causes',
+          prompt: `${base}\n\nWhat are the root causes driving this user problem?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('user_journey') || sectionId.includes('journey')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain user journey simply',
+          prompt: `${base}\n\nExplain this user journey step-by-step in simple language.`,
+        },
+        {
+          label: 'Friction points',
+          displayText: 'Identify friction points',
+          prompt: `${base}\n\nWhere are the potential friction points or drop-offs in this user journey?`,
+        },
+        {
+          label: 'Onboarding flow',
+          displayText: 'Optimize onboarding flow',
+          prompt: `${base}\n\nHow can we optimize the user onboarding flow for maximum activation?`,
+        },
+        {
+          label: 'Retention triggers',
+          displayText: 'Identify retention triggers',
+          prompt: `${base}\n\nWhat specific steps in this journey encourage recurring user retention?`,
+        },
+      ];
+    }
+
+    if (
+      sectionId.includes('user') ||
+      sectionId.includes('target') ||
+      sectionId.includes('persona')
+    ) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain target users simply',
+          prompt: `${base}\n\nExplain these target user personas in simple language.`,
+        },
+        {
+          label: 'Validate personas',
+          displayText: 'Ways to validate personas',
+          prompt: `${base}\n\nSuggest 3 quick ways to validate these user personas in the real market.`,
+        },
+        {
+          label: 'User pain points',
+          displayText: 'Analyze user pain points',
+          prompt: `${base}\n\nWhat critical pain points or objections might these users have?`,
+        },
+        {
+          label: 'Persona marketing',
+          displayText: 'Tailor messaging for personas',
+          prompt: `${base}\n\nHow can we tailor our messaging to appeal to these specific personas?`,
+        },
+      ];
+    }
+
+    if (
+      sectionId.includes('product_strategy') ||
+      sectionId.includes('strategy')
+    ) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain product strategy simply',
+          prompt: `${base}\n\nExplain this product strategy in simple founder-friendly language.`,
+        },
+        {
+          label: 'Competitive moat',
+          displayText: 'Analyze competitive moat',
+          prompt: `${base}\n\nWhat is our unique competitive advantage or moat in this strategy?`,
+        },
+        {
+          label: 'Growth loops',
+          displayText: 'Identify growth loops',
+          prompt: `${base}\n\nWhat growth mechanisms or acquisition loops are built into this product strategy?`,
+        },
+        {
+          label: 'Strategic risks',
+          displayText: 'Identify strategic risks',
+          prompt: `${base}\n\nWhat strategic risks or market shifts could impact this product strategy?`,
         },
       ];
     }
@@ -5974,67 +6359,24 @@ function buildSmartSuggestions({
     if (sectionId.includes('mvp')) {
       return [
         {
+          label: 'Explain simply',
+          displayText: 'Explain MVP scope simply',
+          prompt: `${base}\n\nExplain the MVP scope and feature choices in simple language.`,
+        },
+        {
           label: 'Tighten MVP',
+          displayText: 'Suggest leaner MVP scope',
           prompt: `${base}\n\nSuggest a leaner MVP scope and explain what can be delayed without hurting launch quality.`,
         },
         {
           label: 'Feature priority',
+          displayText: 'Prioritize MVP features',
           prompt: `${base}\n\nPrioritize these MVP features by user value, build effort, and launch dependency.`,
         },
         {
           label: 'Missing feature',
+          displayText: 'Identify missing features',
           prompt: `${base}\n\nIdentify any critical MVP feature that may be missing or underspecified.`,
-        },
-      ];
-    }
-
-    if (sectionId.includes('cost')) {
-      return [
-        {
-          label: 'Explain budget',
-          prompt: `${base}\n\nExplain the budget estimate in plain language and highlight the biggest cost drivers.`,
-        },
-        {
-          label: 'Reduce cost',
-          prompt: `${base}\n\nSuggest ways to reduce MVP cost without damaging the core product outcome.`,
-        },
-        {
-          label: 'Budget risks',
-          prompt: `${base}\n\nWhat budget assumptions are risky or need validation before hiring?`,
-        },
-      ];
-    }
-
-    if (sectionId.includes('team')) {
-      return [
-        {
-          label: 'Hiring plan',
-          prompt: `${base}\n\nTurn this team section into a practical hiring plan with role priority and sequencing.`,
-        },
-        {
-          label: 'Minimum team',
-          prompt: `${base}\n\nExplain the minimum team needed to ship the first usable version.`,
-        },
-        {
-          label: 'Role tradeoffs',
-          prompt: `${base}\n\nWhat role tradeoffs can we make if budget or timeline is tight?`,
-        },
-      ];
-    }
-
-    if (sectionId.includes('user') || sectionId.includes('target')) {
-      return [
-        {
-          label: 'Validate personas',
-          prompt: `${base}\n\nSuggest 3 quick ways to validate these primary and secondary user personas in the real market.`,
-        },
-        {
-          label: 'User pain points',
-          prompt: `${base}\n\nAre there any critical pain points or objections for these personas that we have missed?`,
-        },
-        {
-          label: 'Persona marketing',
-          prompt: `${base}\n\nHow can we tailor our messaging to appeal to these specific user personas?`,
         },
       ];
     }
@@ -6042,16 +6384,128 @@ function buildSmartSuggestions({
     if (sectionId.includes('arch') || sectionId.includes('technical')) {
       return [
         {
+          label: 'Explain simply',
+          displayText: 'Explain architecture simply',
+          prompt: `${base}\n\nExplain this technical architecture and tech stack in simple language for a founder.`,
+        },
+        {
           label: 'Scale stack',
+          displayText: 'Analyze stack scalability',
           prompt: `${base}\n\nHow well does this recommended tech stack scale, and what bottleneck should we monitor?`,
         },
         {
           label: 'Security review',
+          displayText: 'Review architecture security',
           prompt: `${base}\n\nWhat are the key security and privacy practices we should implement for this architecture?`,
         },
         {
           label: 'Simplify build',
+          displayText: 'Simplify build components',
           prompt: `${base}\n\nAre there components or technologies in this stack we can simplify to speed up launch?`,
+        },
+      ];
+    }
+
+    if (
+      sectionId.includes('security') ||
+      sectionId.includes('compliance') ||
+      sectionId.includes('privacy')
+    ) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain security & compliance simply',
+          prompt: `${base}\n\nExplain the security and compliance requirements in plain language.`,
+        },
+        {
+          label: 'Data protection',
+          displayText: 'Data protection requirements',
+          prompt: `${base}\n\nWhat essential data privacy and data protection measures should we enforce?`,
+        },
+        {
+          label: 'Auth setup',
+          displayText: 'Authentication & permissions',
+          prompt: `${base}\n\nWhat best practices should we follow for user authentication and authorization?`,
+        },
+        {
+          label: 'Compliance checklist',
+          displayText: 'Pre-launch compliance checklist',
+          prompt: `${base}\n\nGive me a practical compliance checklist before launching this application.`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('roadmap') || sectionId.includes('development')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain roadmap simply',
+          prompt: `${base}\n\nExplain this development roadmap and timeline in simple language.`,
+        },
+        {
+          label: 'Compress timeline',
+          displayText: 'Suggest faster roadmap timeline',
+          prompt: `${base}\n\nAnalyze the phase breakdown and suggest practical ways to compress the overall roadmap timeline without compromising core MVP quality.`,
+        },
+        {
+          label: 'Explain phases',
+          displayText: 'Explain phase sequencing',
+          prompt: `${base}\n\nExplain the rationale behind this phase breakdown and why each milestone is ordered this way.`,
+        },
+        {
+          label: 'Critical path risks',
+          displayText: 'Identify critical path risks in roadmap',
+          prompt: `${base}\n\nWhat are the biggest delivery risks or dependency bottlenecks in this development roadmap?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('team')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain team plan simply',
+          prompt: `${base}\n\nExplain the required team roles and hiring plan in simple language.`,
+        },
+        {
+          label: 'Hiring plan',
+          displayText: 'Practical hiring plan',
+          prompt: `${base}\n\nTurn this team section into a practical hiring plan with role priority and sequencing.`,
+        },
+        {
+          label: 'Minimum team',
+          displayText: 'Minimum viable team',
+          prompt: `${base}\n\nExplain the minimum team needed to ship the first usable version.`,
+        },
+        {
+          label: 'Role tradeoffs',
+          displayText: 'Role tradeoffs for budget',
+          prompt: `${base}\n\nWhat role tradeoffs can we make if budget or timeline is tight?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('cost') || sectionId.includes('budget')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain budget simply',
+          prompt: `${base}\n\nExplain the budget estimate in plain language and highlight the biggest cost drivers.`,
+        },
+        {
+          label: 'Explain budget',
+          displayText: 'Analyze budget drivers',
+          prompt: `${base}\n\nExplain the budget estimate in plain language and highlight the biggest cost drivers.`,
+        },
+        {
+          label: 'Reduce cost',
+          displayText: 'Ways to reduce cost',
+          prompt: `${base}\n\nSuggest ways to reduce MVP cost without damaging the core product outcome.`,
+        },
+        {
+          label: 'Budget risks',
+          displayText: 'Risky budget assumptions',
+          prompt: `${base}\n\nWhat budget assumptions are risky or need validation before hiring?`,
         },
       ];
     }
@@ -6063,15 +6517,23 @@ function buildSmartSuggestions({
     ) {
       return [
         {
+          label: 'Explain simply',
+          displayText: 'Explain business model simply',
+          prompt: `${base}\n\nExplain this business and revenue model in simple language.`,
+        },
+        {
           label: 'Price strategy',
+          displayText: 'Recommend pricing strategy',
           prompt: `${base}\n\nRecommend a starting pricing structure or tier based on these revenue streams.`,
         },
         {
           label: 'LTV/CAC analysis',
+          displayText: 'Analyze LTV & CAC assumptions',
           prompt: `${base}\n\nWhat are the biggest assumptions regarding user acquisition cost (CAC) and lifetime value (LTV) here?`,
         },
         {
           label: 'Alternative models',
+          displayText: 'Suggest alternative monetization',
           prompt: `${base}\n\nSuggest 2 alternative monetization strategies that could work alongside these.`,
         },
       ];
@@ -6084,21 +6546,124 @@ function buildSmartSuggestions({
     ) {
       return [
         {
+          label: 'Explain simply',
+          displayText: 'Explain go-to-market simply',
+          prompt: `${base}\n\nExplain this go-to-market strategy in simple language.`,
+        },
+        {
           label: 'Growth hack ideas',
+          displayText: 'Suggest low-cost growth hacks',
           prompt: `${base}\n\nSuggest 3 low-cost growth hacks or viral loops for early acquisition.`,
         },
         {
           label: 'First 100 users',
+          displayText: 'First 100 users playbook',
           prompt: `${base}\n\nGive me a step-by-step launch playbook to acquire our first 100 paying customers.`,
         },
         {
           label: 'Challenger channels',
+          displayText: 'Alternative acquisition channels',
           prompt: `${base}\n\nWhich acquisition channels are secondary or experimental but worth testing?`,
         },
       ];
     }
 
+    if (sectionId.includes('swot') || sectionId.includes('risk')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain risks simply',
+          prompt: `${base}\n\nExplain these risks and mitigations in simple, clear language.`,
+        },
+        {
+          label: 'Prioritize risks',
+          displayText: 'Rank risks by urgency',
+          prompt: `${base}\n\nRank the risks by urgency and explain the first mitigation step for each.`,
+        },
+        {
+          label: 'Reduce risk',
+          displayText: 'Practical ways to reduce risk',
+          prompt: `${base}\n\nGive me practical ways to reduce the most important risks before building.`,
+        },
+        {
+          label: 'Investor concerns',
+          displayText: 'Investor concern analysis',
+          prompt: `${base}\n\nWhat concerns would an investor or senior operator raise after reading this risk section?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('founder') || sectionId.includes('recommendation')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain founder recommendations simply',
+          prompt: `${base}\n\nExplain founder recommendations in simple language.`,
+        },
+        {
+          label: 'Top 3 priorities',
+          displayText: 'Founder top 3 priorities',
+          prompt: `${base}\n\nWhat top 3 decisions or actions should the founder prioritize first?`,
+        },
+        {
+          label: 'Common pitfalls',
+          displayText: 'Avoid execution pitfalls',
+          prompt: `${base}\n\nWhat common execution pitfalls should the founder avoid at this stage?`,
+        },
+        {
+          label: 'Resource allocation',
+          displayText: 'Time & resource allocation',
+          prompt: `${base}\n\nHow should time and resources be allocated between build and growth right now?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('verdict') || sectionId.includes('final')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain final verdict simply',
+          prompt: `${base}\n\nExplain the final verdict in simple, actionable terms.`,
+        },
+        {
+          label: 'Go / No-Go factors',
+          displayText: 'Go / No-Go decision factors',
+          prompt: `${base}\n\nWhat are the key Go / No-Go factors to evaluate before starting build?`,
+        },
+        {
+          label: 'Success metrics',
+          displayText: 'Define success metrics',
+          prompt: `${base}\n\nWhat key performance metrics indicate we are ready for scaling?`,
+        },
+      ];
+    }
+
+    if (sectionId.includes('next') || sectionId.includes('option')) {
+      return [
+        {
+          label: 'Explain simply',
+          displayText: 'Explain next options simply',
+          prompt: `${base}\n\nExplain next steps and options simply.`,
+        },
+        {
+          label: 'Immediate tasks',
+          displayText: 'Tasks for this week',
+          prompt: `${base}\n\nWhat exact tasks should be done this week to prepare for developer onboarding?`,
+        },
+        {
+          label: 'Team briefing',
+          displayText: 'How to brief developers',
+          prompt: `${base}\n\nHow should we brief the hired developers using this blueprint?`,
+        },
+      ];
+    }
+
     return [
+      {
+        label: 'Explain simply',
+        displayText: `Explain ${sectionName} simply`,
+        prompt: `${base}\n\nExplain this section in simpler language and call out anything that needs validation.`,
+      },
       {
         label: `Summarize ${sectionName}`,
         prompt: `${base}\n\nSummarize this section into the key points I should remember.`,
@@ -6106,30 +6671,6 @@ function buildSmartSuggestions({
       {
         label: 'Next decisions',
         prompt: `${base}\n\nWhat decisions should I make based on this section before moving forward?`,
-      },
-      {
-        label: 'Explain simply',
-        prompt: `${base}\n\nExplain this section in simpler language and call out anything that needs validation.`,
-      },
-    ];
-  }
-
-  if (phase === 'idea') {
-    return [
-      {
-        label: 'Improve idea',
-        prompt:
-          'Help me make this business idea clearer and stronger before analysis.',
-      },
-      {
-        label: 'What details matter?',
-        prompt:
-          'What details should I include so Phase 1 can produce a better business analysis?',
-      },
-      {
-        label: 'Check clarity',
-        prompt:
-          'Review my current idea input and tell me what is missing or vague.',
       },
     ];
   }
@@ -6152,6 +6693,132 @@ function buildSmartSuggestions({
     },
   ];
 }
+
+function calculateSmartRoleCount(
+  title: string,
+  purpose: string,
+  itemCount: any,
+  blueprint: BlueprintResult | null,
+  _analysis?: AnalysisResult | null,
+): number {
+  if (typeof itemCount === 'number' && itemCount > 0) {
+    return itemCount;
+  }
+  if (typeof itemCount === 'string') {
+    const parsed = parseInt(itemCount, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+
+  const titleLower = title.toLowerCase();
+  const purposeLower = purpose.toLowerCase();
+  const roadmapStr = JSON.stringify(
+    blueprint?.development_roadmap ?? '',
+  ).toLowerCase();
+  const mvpStr = JSON.stringify(blueprint?.mvp_definition ?? '').toLowerCase();
+  const archStr = JSON.stringify(
+    blueprint?.technical_architecture ?? '',
+  ).toLowerCase();
+  const scopeText = `${titleLower} ${purposeLower} ${roadmapStr} ${mvpStr} ${archStr}`;
+
+  const isHeavyScope =
+    scopeText.includes('complex') ||
+    scopeText.includes('marketplace') ||
+    scopeText.includes('realtime') ||
+    scopeText.includes('video') ||
+    scopeText.includes('streaming') ||
+    scopeText.includes('enterprise') ||
+    scopeText.includes('multi-tenant') ||
+    scopeText.includes('mobile and web');
+
+  if (
+    titleLower.includes('front') ||
+    titleLower.includes('ui/ux dev') ||
+    titleLower.includes('web dev') ||
+    titleLower.includes('react') ||
+    titleLower.includes('client') ||
+    titleLower.includes('frontend')
+  ) {
+    return isHeavyScope ? 3 : 2;
+  }
+
+  if (
+    titleLower.includes('back') ||
+    titleLower.includes('api') ||
+    titleLower.includes('server') ||
+    titleLower.includes('node') ||
+    titleLower.includes('database') ||
+    titleLower.includes('backend')
+  ) {
+    return isHeavyScope ? 2 : 1;
+  }
+
+  if (titleLower.includes('full') || titleLower.includes('stack')) {
+    return isHeavyScope ? 3 : 2;
+  }
+
+  if (
+    titleLower.includes('mobile') ||
+    titleLower.includes('ios') ||
+    titleLower.includes('android') ||
+    titleLower.includes('react native') ||
+    titleLower.includes('flutter') ||
+    titleLower.includes('app dev')
+  ) {
+    return 2;
+  }
+
+  if (
+    titleLower.includes('qa') ||
+    titleLower.includes('test') ||
+    titleLower.includes('quality') ||
+    titleLower.includes('automation')
+  ) {
+    return isHeavyScope ? 2 : 1;
+  }
+
+  if (
+    titleLower.includes('design') ||
+    titleLower.includes('ux') ||
+    titleLower.includes('ui designer') ||
+    titleLower.includes('product designer') ||
+    titleLower.includes('figma')
+  ) {
+    return 1;
+  }
+
+  if (
+    titleLower.includes('devops') ||
+    titleLower.includes('cloud') ||
+    titleLower.includes('infra') ||
+    titleLower.includes('sre') ||
+    titleLower.includes('sysadmin')
+  ) {
+    return 1;
+  }
+
+  if (
+    titleLower.includes('ai') ||
+    titleLower.includes('ml') ||
+    titleLower.includes('data') ||
+    titleLower.includes('machine learning') ||
+    titleLower.includes('nlp')
+  ) {
+    return isHeavyScope ? 2 : 1;
+  }
+
+  if (
+    titleLower.includes('lead') ||
+    titleLower.includes('architect') ||
+    titleLower.includes('pm') ||
+    titleLower.includes('manager') ||
+    titleLower.includes('scrum')
+  ) {
+    return 1;
+  }
+
+  return isHeavyScope ? 2 : 1;
+}
+
 function estimateTalentRequirements(
   blueprint: BlueprintResult | null,
   analysis?: AnalysisResult | null,
@@ -6188,12 +6855,15 @@ function estimateTalentRequirements(
               ? 'recommended'
               : 'required';
 
-        let count = 1;
         const countVal =
           item.count ?? item.quantity ?? item.size ?? item.aiSuggestedCount;
-        if (typeof countVal === 'number' && countVal >= 0) count = countVal;
-        else if (typeof countVal === 'string' && !isNaN(Number(countVal)))
-          count = Number(countVal);
+        const count = calculateSmartRoleCount(
+          title,
+          purpose,
+          countVal,
+          blueprint,
+          analysis,
+        );
 
         let skillDomain = 'Full-Stack / Product Development';
         const titleLower = title.toLowerCase();
@@ -6367,6 +7037,9 @@ export default function CreateRoom() {
   const [usedAiSuggest, setUsedAiSuggest] = useState<Record<string, boolean>>(
     {},
   );
+  const [improveAnswerCounts, setImproveAnswerCounts] = useState<
+    Record<string, number>
+  >({});
   const [refineInputs, setRefineInputs] = useState<Record<string, string>>({});
   const [isChatOpen, setChatOpen] = useState(true);
   const [expandedRefineFields, setExpandedRefineFields] = useState<
@@ -6379,7 +7052,8 @@ export default function CreateRoom() {
   >(null);
   const [creationError, setCreationError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const canUseChat = phase !== 'idea' && phase !== 'analysis';
+  const canUseChat =
+    Boolean(sessionData?._id) && phase !== 'idea' && phase !== 'analysis';
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const blueprintReportRef = useRef<HTMLDivElement | null>(null);
@@ -6406,9 +7080,45 @@ export default function CreateRoom() {
     if (suggestingId) return;
     setSuggestingId(questionId);
     try {
-      const prompt = `Recommend a strong, practical answer for this business idea.
-Question: "${questionText}"
-Please return ONLY the recommended answer itself, without any introductory or conversational text (no "Here is...", no markdown code blocks), so it can be inserted directly into the text input.`;
+      const allQuestions = [...mandatoryQuestions, ...optionalQuestions];
+      const qIndex = allQuestions.findIndex((q) => q._id === questionId);
+      const isMandatory = mandatoryQuestions.some((q) => q._id === questionId);
+      const index = qIndex >= 0 ? qIndex + 1 : 1;
+      const total = allQuestions.length || 5;
+      const kind = isMandatory ? 'Mandatory' : 'Optional';
+      const currentAnswer = answers[questionId]?.trim() || '';
+
+      const region = phase1Review.region || analysis?.region_used || 'India';
+      const targetAudience =
+        phase1Review.targetAudience ||
+        analysis?.research_analysis?.target_audience ||
+        String((analysis as any)?.target_audience || 'Target startup users');
+      const coreFeatures = String(
+        (analysis as any)?.core_features ||
+          (analysis as any)?.coreFeatures ||
+          'Core MVP features',
+      );
+
+      const prompt = `You are DEHIX AI, a senior CTO and startup product architect helping a founder build their startup.
+
+Context:
+- Business Idea: "${description || sessionData?.rawIdea || ''}"
+- Target Region: "${region}"
+- Target Audience: "${targetAudience}"
+- Core Features: "${coreFeatures}"
+
+Question ${index} of ${total} [${kind}]: "${questionText}"
+Current answer draft: "${currentAnswer}"
+
+Rules:
+- Directly answer the question as if written by the founder themselves.
+- Ground every detail in the business idea, target audience, and core features above.
+- Tone: Conversational, precise, and practical. Avoid robotic preambles like "Here's a suggestion:".
+- Never end with vague teaser offers like "Let me know if you want me to write X" or "I can also help with Y". Answer fully now.
+- Keep it concise (max 110 words) and free of jargon a non-technical founder wouldn't use.
+- If this is an Optional question that does not apply to this startup, state clearly in 1 sentence why it can be skipped.
+
+Output: the final answer text only.`;
 
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -6419,7 +7129,7 @@ Please return ONLY the recommended answer itself, without any introductory or co
         body: JSON.stringify({
           message: prompt,
           launchSessionId: sessionData?._id,
-          clientContext: `Business idea: ${sessionData?.rawIdea || ''}`,
+          clientContext: `Business idea: ${description || sessionData?.rawIdea || ''} | Region: ${region} | Features: ${coreFeatures}`,
         }),
       });
 
@@ -6460,12 +7170,51 @@ Please return ONLY the recommended answer itself, without any introductory or co
         return;
       }
 
+      const region = phase1Review.region || analysis?.region_used || 'India';
+      const targetAudience =
+        phase1Review.targetAudience ||
+        analysis?.research_analysis?.target_audience ||
+        String((analysis as any)?.target_audience || 'Target startup users');
+      const coreFeatures = String(
+        (analysis as any)?.core_features ||
+          (analysis as any)?.coreFeatures ||
+          'Core MVP features',
+      );
+
       await Promise.all(
         unanswered.map(async (question) => {
           try {
-            const prompt = `Recommend a strong, practical answer for this business idea.
-Question: "${question.question}"
-Please return ONLY the recommended answer itself, without any introductory or conversational text (no "Here is...", no markdown code blocks), so it can be inserted directly into the text input.`;
+            const qIndex = allQuestions.findIndex(
+              (q) => q._id === question._id,
+            );
+            const isMandatory = mandatoryQuestions.some(
+              (q) => q._id === question._id,
+            );
+            const index = qIndex >= 0 ? qIndex + 1 : 1;
+            const total = allQuestions.length || 5;
+            const kind = isMandatory ? 'Mandatory' : 'Optional';
+            const currentAnswer = answers[question._id]?.trim() || '';
+
+            const prompt = `You are DEHIX AI, a senior CTO and startup product architect helping a founder build their startup.
+
+Context:
+- Business Idea: "${description || sessionData?.rawIdea || ''}"
+- Target Region: "${region}"
+- Target Audience: "${targetAudience}"
+- Core Features: "${coreFeatures}"
+
+Question ${index} of ${total} [${kind}]: "${question.question}"
+Current answer draft: "${currentAnswer}"
+
+Rules:
+- Directly answer the question as if written by the founder themselves.
+- Ground every detail in the business idea, target audience, and core features above.
+- Tone: Conversational, precise, and practical. Avoid robotic preambles like "Here's a suggestion:".
+- Never end with vague teaser offers like "Let me know if you want me to write X" or "I can also help with Y". Answer fully now.
+- Keep it concise (max 110 words) and free of jargon a non-technical founder wouldn't use.
+- If this is an Optional question that does not apply to this startup, state clearly in 1 sentence why it can be skipped.
+
+Output: the final answer text only.`;
 
             const res = await fetch('/api/ai/chat', {
               method: 'POST',
@@ -6476,7 +7225,7 @@ Please return ONLY the recommended answer itself, without any introductory or co
               body: JSON.stringify({
                 message: prompt,
                 launchSessionId: sessionData?._id,
-                clientContext: `Business idea: ${sessionData?.rawIdea || ''}`,
+                clientContext: `Business idea: ${description || sessionData?.rawIdea || ''} | Region: ${region} | Features: ${coreFeatures}`,
               }),
             });
 
@@ -6872,14 +7621,32 @@ Please return ONLY the modified answer itself, without any introductory or conve
   useEffect(() => {
     if (phase !== 'technical') {
       setActiveQuestion(null);
+    } else {
+      setChatOpen(true);
+      if (!activeQuestion && mandatoryQuestions.length > 0) {
+        setActiveQuestion({
+          questionId: mandatoryQuestions[0]._id,
+          question: mandatoryQuestions[0].question,
+          kind: 'mandatory',
+          index: 0,
+        });
+      }
     }
     if (phase !== 'analysis' && phase !== 'blueprint') {
       setActiveReportSection(null);
+    } else if (phase === 'blueprint' && !activeReportSection) {
+      setActiveReportSection({
+        id: activeTab,
+        title: humanizeKey(activeTab),
+      });
     }
-    if (phase === 'analysis') {
-      setChatOpen(false);
-    }
-  }, [phase]);
+  }, [
+    phase,
+    mandatoryQuestions,
+    activeQuestion,
+    activeReportSection,
+    activeTab,
+  ]);
 
   useEffect(() => {
     if (!launchJob?.sessionId) return;
@@ -6953,7 +7720,10 @@ Please return ONLY the modified answer itself, without any introductory or conve
     };
   }, [launchJob?.sessionId, launchJob?.phase]);
 
-  const askLaunchAi = async (suggestedMessage?: string) => {
+  const askLaunchAi = async (
+    suggestedMessage?: string,
+    userDisplayText?: string,
+  ) => {
     const message = (suggestedMessage ?? chatInput).trim();
     if (!message || aiLoading) return;
     if (!sessionData?._id) {
@@ -6963,13 +7733,15 @@ Please return ONLY the modified answer itself, without any introductory or conve
       return;
     }
 
+    const displayMsg = (userDisplayText ?? chatInput).trim() || message;
+
     setChatInput('');
     setAiLoading(true);
     const userMessage: ChatMessage = {
       id: `local-${Date.now()}`,
       userId: user?._id,
       userName: user?.name ?? 'You',
-      message,
+      message: displayMsg,
       isAi: false,
       createdAt: new Date(),
     };
@@ -6977,11 +7749,23 @@ Please return ONLY the modified answer itself, without any introductory or conve
     scrollChatToBottom();
 
     try {
+      const region = phase1Review.region || analysis?.region_used || 'India';
+      const targetAudience =
+        phase1Review.targetAudience ||
+        analysis?.research_analysis?.target_audience ||
+        String((analysis as any)?.target_audience || 'Target startup users');
+      const coreFeatures = String(
+        (analysis as any)?.core_features ||
+          (analysis as any)?.coreFeatures ||
+          'Core MVP features',
+      );
+
       const clientContext = [
-        `Current frontend phase: ${phase}`,
+        `SYSTEM PERSONA: You are DEHIX AI, a senior CTO and startup product architect assisting a non-technical founder.`,
+        `BEHAVIOR & TONE RULES:\n- Warm, conversational, precise, and practical. Avoid robotic preambles like "Sure!", "As DEHIX AI...", "Certainly!".\n- ADAPTIVE LENGTH: Answer direct queries in 2-3 concise sentences or 3 short bullet points (max 90 words). Provide longer breakdowns only when explicitly requested.\n- DIRECT RESPONSE: Answer the question completely in this turn. NEVER end responses with vague teaser offers like "Let me know if you want me to write X" or "I can also provide Y".`,
+        `CONTEXT GROUNDING:\n- Business Idea: "${description || sessionData?.rawIdea || ''}"\n- Target Region: "${region}"\n- Target Audience: "${targetAudience}"\n- Core MVP Features: "${coreFeatures}"\n- Current frontend phase: ${phase}`,
         `Active report section:\n${activeReportSection ? `${activeReportSection.title} (${activeReportSection.id})` : 'No report section selected.'}`,
         `Focused Phase 2 question:\n${activeQuestion ? `${activeQuestion.kind} question ${activeQuestion.index + 1}: ${activeQuestion.question}\nCurrent answer: ${answers[activeQuestion.questionId]?.trim() || 'Not answered yet'}` : 'No Phase 2 question focused.'}`,
-        `Current idea input:\n${description || 'Not available'}`,
         `Mandatory Phase 2 questions and currently typed answers:\n${
           mandatoryQuestions
             .map((question, index) => {
@@ -7013,15 +7797,64 @@ Please return ONLY the modified answer itself, without any introductory or conve
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? 'AI request failed');
+      const textReply = (data.reply || data.message?.message || '').trim();
       const aiMessage: ChatMessage = data.message ?? {
         id: `ai-${Date.now()}`,
         userName: 'DEHIX AI',
-        message: data.reply ?? "I couldn't process that.",
+        message: textReply || "I couldn't process that.",
         isAi: true,
         createdAt: new Date(),
       };
       setChatMessages((prev) => [...prev, aiMessage]);
       scrollChatToBottom();
+
+      if (
+        phase === 'technical' &&
+        activeQuestion?.questionId &&
+        textReply &&
+        !textReply.toLowerCase().includes("there's no answer yet to improve") &&
+        !textReply.toLowerCase().includes('i am dehix ai')
+      ) {
+        const lowerMsg = (message + ' ' + displayMsg).toLowerCase();
+        const isExplanation =
+          lowerMsg.includes('explain') ||
+          lowerMsg.includes('what does') ||
+          lowerMsg.includes('what is') ||
+          lowerMsg.includes('meaning') ||
+          lowerMsg.includes('why');
+
+        const isAnswerUpdate =
+          !isExplanation &&
+          (lowerMsg.includes('improve') ||
+            lowerMsg.includes('suggest') ||
+            lowerMsg.includes('recommend') ||
+            lowerMsg.includes('rewrite') ||
+            lowerMsg.includes('current answer is non-empty') ||
+            lowerMsg.includes('write answer') ||
+            lowerMsg.includes('fill answer') ||
+            lowerMsg.includes('give answer') ||
+            lowerMsg.includes('better answer') ||
+            lowerMsg.includes('task: recommend'));
+
+        if (isAnswerUpdate) {
+          const cleanAnswer = textReply
+            .replace(/```[a-zA-Z]*\n?/g, '')
+            .replace(/\n?```/g, '')
+            .replace(/^["']|["']$/g, '')
+            .trim();
+          setAnswers((prev) => ({
+            ...prev,
+            [activeQuestion.questionId]: cleanAnswer,
+          }));
+          setUsedAiSuggest((prev) => ({
+            ...prev,
+            [activeQuestion.questionId]: true,
+          }));
+          toast.success(
+            `Answer updated for Question ${activeQuestion.index + 1}!`,
+          );
+        }
+      }
     } catch (err: any) {
       const aiMessage: ChatMessage = {
         id: `error-${Date.now()}`,
@@ -7911,21 +8744,45 @@ Please return ONLY the modified text itself, without any introductory or convers
         usedAiSuggest[q._id] ||
         (answers[q._id] && String(answers[q._id]).trim().length > 0),
     );
+
+  const isLoaderActive =
+    validating ||
+    generatingBlueprint ||
+    Boolean(launchJob) ||
+    creatingRoom ||
+    loadingQuestions ||
+    loadingRecommendations ||
+    savingPhase1Review ||
+    aiLoading ||
+    isRedirecting ||
+    finalizingBlueprint ||
+    downloadingBlueprintPdf ||
+    isRefiningBlueprintSection;
+
   const activeReportSectionForSuggestions =
-    phase === 'blueprint' && activeTab
+    activeReportSection ||
+    ((phase === 'blueprint' || phase === 'analysis') && activeTab
       ? {
           id: activeTab,
           title: activeTab
             .replace(/_/g, ' ')
             .replace(/\b\w/g, (c) => c.toUpperCase()),
         }
-      : activeReportSection;
+      : null);
 
-  const smartSuggestions = buildSmartSuggestions({
-    phase,
-    activeReportSection: activeReportSectionForSuggestions,
-    activeQuestion,
-  });
+  const smartSuggestions = isLoaderActive
+    ? []
+    : buildSmartSuggestions({
+        phase,
+        activeReportSection: activeReportSectionForSuggestions,
+        activeQuestion,
+        idea: description || sessionData?.rawIdea || '',
+        region: phase1Review.region || analysis?.region_used || 'India',
+        totalQuestions:
+          (mandatoryQuestions.length || 5) + (optionalQuestions.length || 0),
+        answers,
+        usedAiSuggest,
+      });
 
   if (checkingSub) {
     return (
@@ -8066,24 +8923,50 @@ Please return ONLY the modified text itself, without any introductory or convers
                       <textarea
                         value={description}
                         onChange={(event) => setDescription(event.target.value)}
+                        onKeyDown={(e) => {
+                          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            if (
+                              !validating &&
+                              description.trim().length >= 20
+                            ) {
+                              validateIdea();
+                            }
+                          }
+                        }}
                         placeholder="Example: I want to build a platform for local restaurants to predict demand and reduce ingredient waste..."
                         className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/40 resize-none p-6 outline-none text-base leading-relaxed min-h-[190px]"
                         rows={7}
                       />
                       <div className="border-t border-border/40 px-6 py-3 flex items-center justify-between gap-3">
-                        <span
-                          className={`text-xs ${description.length < 20 ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}
-                        >
-                          {description.length} chars{' '}
-                          {description.length < 20 && description.length > 0
-                            ? '- add more detail'
-                            : ''}
-                        </span>
+                        <div className="flex items-center gap-2.5 text-xs">
+                          <span
+                            className={
+                              description.length < 20
+                                ? 'text-muted-foreground/40'
+                                : 'text-muted-foreground font-medium'
+                            }
+                          >
+                            {description.length} chars{' '}
+                            {description.length < 20 && description.length > 0
+                              ? '- add more detail'
+                              : ''}
+                          </span>
+                          <span className="text-muted-foreground/30">·</span>
+                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/75 font-medium">
+                            Press{' '}
+                            <kbd className="px-1.5 py-0.5 rounded-md bg-muted/60 border border-border/70 font-mono text-[10px] text-foreground font-semibold shadow-2xs">
+                              Ctrl + Enter
+                            </kbd>{' '}
+                            to analyze
+                          </span>
+                        </div>
                         <Button
                           onClick={validateIdea}
                           disabled={
                             validating || description.trim().length < 20
                           }
+                          className="font-semibold shadow-sm px-5"
                         >
                           Analyze business
                         </Button>
@@ -8452,13 +9335,28 @@ Please return ONLY the modified text itself, without any introductory or convers
                         const hasSuggested =
                           usedAiSuggest[question._id] || false;
 
+                        const isSelected =
+                          activeQuestion?.questionId === question._id;
+
                         return (
                           <div
                             key={question._id}
-                            className="space-y-3 rounded-xl border border-border/30 bg-background/20 p-4 transition-all hover:border-border/50"
+                            onClick={() =>
+                              setActiveQuestion({
+                                questionId: question._id,
+                                question: question.question,
+                                kind: 'mandatory',
+                                index,
+                              })
+                            }
+                            className={`space-y-3 rounded-xl border p-4 transition-all ${
+                              isSelected
+                                ? 'border-primary/60 bg-primary/5 ring-1 ring-primary/20'
+                                : 'border-border/30 bg-background/20 hover:border-border/50'
+                            }`}
                           >
                             <div className="flex items-start justify-between gap-4 w-full">
-                              <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
+                              <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed cursor-pointer">
                                 {index + 1}. {question.question}{' '}
                                 <span className="text-primary">*</span>
                               </label>
@@ -8520,6 +9418,14 @@ Please return ONLY the modified text itself, without any introductory or convers
                             </div>
                             <textarea
                               value={value}
+                              onFocus={() =>
+                                setActiveQuestion({
+                                  questionId: question._id,
+                                  question: question.question,
+                                  kind: 'mandatory',
+                                  index,
+                                })
+                              }
                               onChange={(event) => {
                                 setAnswers({
                                   ...answers,
@@ -8626,13 +9532,28 @@ Please return ONLY the modified text itself, without any introductory or convers
                             const hasSuggested =
                               usedAiSuggest[question._id] || false;
 
+                            const isSelected =
+                              activeQuestion?.questionId === question._id;
+
                             return (
                               <div
                                 key={question._id}
-                                className="space-y-3 rounded-xl border border-border/30 bg-background/20 p-4 transition-all hover:border-border/50"
+                                onClick={() =>
+                                  setActiveQuestion({
+                                    questionId: question._id,
+                                    question: question.question,
+                                    kind: 'optional',
+                                    index,
+                                  })
+                                }
+                                className={`space-y-3 rounded-xl border p-4 transition-all ${
+                                  isSelected
+                                    ? 'border-primary/60 bg-primary/5 ring-1 ring-primary/20'
+                                    : 'border-border/30 bg-background/20 hover:border-border/50'
+                                }`}
                               >
                                 <div className="flex items-start justify-between gap-4 w-full">
-                                  <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
+                                  <label className="text-sm font-semibold text-foreground flex-1 leading-relaxed cursor-pointer">
                                     {index + 1}. {question.question}
                                   </label>
                                   <div className="flex items-center gap-2 shrink-0">
@@ -8695,6 +9616,14 @@ Please return ONLY the modified text itself, without any introductory or convers
                                 </div>
                                 <textarea
                                   value={value}
+                                  onFocus={() =>
+                                    setActiveQuestion({
+                                      questionId: question._id,
+                                      question: question.question,
+                                      kind: 'optional',
+                                      index,
+                                    })
+                                  }
                                   onChange={(event) => {
                                     setAnswers({
                                       ...answers,
@@ -8891,6 +9820,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                       sessionData={sessionData}
                       activeTab={activeTab}
                       setActiveTab={setActiveTab}
+                      onSectionChange={setActiveReportSection}
                     />
                   </div>
                 ) : (
@@ -9694,35 +10624,36 @@ Please return ONLY the modified text itself, without any introductory or convers
 
         {canUseChat && isChatOpen && (
           <aside className="lg:sticky lg:top-20 h-[min(720px,calc(100vh-6rem))] rounded-2xl border border-border/60 bg-gradient-to-b from-card/95 to-background/95 flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-right duration-300 relative">
-            {/* Subtle decoration orb */}
-            <div className="absolute -top-12 -right-12 w-24 h-24 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="shrink-0 border-b border-border/40 px-4 py-4 relative z-10">
+            <div className="shrink-0 border-b border-border/40 bg-background px-4 py-3.5 relative z-10">
               <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500" />
-                    <h2 className="text-xs font-bold text-foreground tracking-tight flex items-center gap-1.5 uppercase">
-                      <MessageSquare className="h-3.5 w-3.5 text-primary shrink-0" />
-                      DEHIX AI
-                    </h2>
-                    <span className="shrink-0 text-[8px] rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-primary font-bold tracking-wider uppercase">
-                      Live context
-                    </span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-foreground text-background font-bold text-xs shrink-0">
+                    AI
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">
-                    {sessionData?._id
-                      ? 'Personalized AI Launch Assistant'
-                      : 'Available after Phase 1 analysis.'}
-                  </p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-bold text-foreground tracking-tight">
+                        DEHIX AI
+                      </h2>
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Live Context
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {sessionData?._id
+                        ? 'Personalized AI Launch Assistant'
+                        : 'Available after Phase 1 analysis'}
+                    </p>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                  className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
                   onClick={() => setChatOpen(false)}
+                  title="Close"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -9816,7 +10747,12 @@ Please return ONLY the modified text itself, without any introductory or convers
                       <button
                         key={suggestion.label}
                         type="button"
-                        onClick={() => askLaunchAi(suggestion.prompt)}
+                        onClick={() =>
+                          askLaunchAi(
+                            suggestion.prompt,
+                            suggestion.displayText || suggestion.label,
+                          )
+                        }
                         disabled={aiLoading}
                         className="rounded-lg border border-border/50 bg-background/55 px-2.5 py-1.5 text-left text-[10px] font-semibold text-foreground/80 transition-all hover:border-primary/45 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 hover:scale-[1.01]"
                       >
