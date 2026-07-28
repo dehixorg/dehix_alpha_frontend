@@ -41,10 +41,9 @@ export const loginUser = async (email: string, password: string) => {
     );
     return userCredential;
   } catch (error: any) {
-    // Handle the error here
-    const errorMessage = error.message;
-
-    throw new Error(errorMessage);
+    const loginError = new Error(error.message) as Error & { code?: string };
+    loginError.code = error.code;
+    throw loginError;
   }
 };
 

@@ -122,6 +122,11 @@ export default function Login() {
       const response = await axiosInstance.get(
         `/public/user_email?user=${email}`,
       );
+      if (response.data?.error === 'User not found') {
+        setFormError('User does not exist. Please sign up first.');
+        notifyError('User does not exist. Please sign up first.');
+        return;
+      }
       setPhone(response.data.phone);
       const hasPhoneVerify = Object.prototype.hasOwnProperty.call(
         response.data,
@@ -157,14 +162,30 @@ export default function Login() {
             );
           }, 0);
         } catch (error: any) {
-          notifyError('Invalid Email or Password. Please try again.');
+          const authCode = error?.code;
+          const authMessage =
+            authCode === 'auth/user-not-found'
+              ? 'User does not exist. Please sign up first.'
+              : authCode === 'auth/wrong-password' ||
+                  authCode === 'auth/invalid-credential'
+                ? 'Wrong password. Please try again.'
+                : 'Invalid Email or Password. Please try again.';
+
+          setFormError(authMessage);
+          notifyError(authMessage);
           console.error(error.message);
         }
       }
     } catch (error: any) {
-      setFormError('Invalid Email or Password. Please try again.');
-      notifyError('Invalid Email or Password. Please try again.');
-      console.error(error.message);
+      const status = error?.response?.status;
+      const apiMessage =
+        status === 404
+          ? 'User does not exist. Please sign up first.'
+          : 'Invalid Email or Password. Please try again.';
+
+      setFormError(apiMessage);
+      notifyError(apiMessage);
+      console.error(error?.message);
     } finally {
       setIsEmailLoginLoading(false); // Ensures isLoading resets after API call completion
     }
