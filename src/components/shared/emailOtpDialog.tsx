@@ -98,8 +98,12 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
         try {
           await axiosInstance.post('/public/send-email-otp', { email });
           setResendCountdown(60);
-          setSuccess('OTP sent successfully to your email');
-          notifySuccess('OTP sent successfully to your email');
+          setSuccess(
+            'OTP sent successfully to your email. Please check your inbox and spam folder.',
+          );
+          notifySuccess(
+            'OTP sent successfully to your email. Please check your inbox and spam folder.',
+          );
           break;
         } catch (err: any) {
           setResendCountdown(0);
@@ -184,6 +188,9 @@ const EmailOtpDialog: React.FC<EmailOtpDialogProps> = ({
         <DialogHeader>
           <p className="text-sm text-center text-gray-500">
             OTP sent to <strong>{maskEmail(email)}</strong>
+          </p>
+          <p className="text-sm text-center text-gray-500">
+            Please check your inbox and spam/junk folder if you do not see it.
           </p>
           <DialogTitle>Verify Your Email</DialogTitle>
           <DialogDescription>
