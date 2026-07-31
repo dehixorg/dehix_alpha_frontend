@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Info, FileText } from 'lucide-react';
+import { Plus, Info, FileText, Edit2, Trash2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { Badge } from '../ui/badge';
@@ -34,7 +40,12 @@ interface StoryAccordionItemProps {
   isFreelancer: boolean;
   freelancerId?: string;
   fetchMilestones: () => void;
+  /** Optional local-mode task edit/delete callbacks */
+  onEditTask?: (taskIndex: number, title: string, summary: string) => void;
+  onDeleteTask?: (taskIndex: number) => void;
 }
+
+const MAX_TASKS_PER_STORY = 5;
 
 const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   milestoneId,
@@ -45,7 +56,33 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   isFreelancer = false,
   freelancerId,
   fetchMilestones,
+  onEditTask,
+  onDeleteTask,
 }) => {
+  // Edit-task modal state
+  const [editingTaskIndex, setEditingTaskIndex] = useState<number | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskSummary, setEditTaskSummary] = useState('');
+
+  const openEditTask = (originalIdx: number, task: any) => {
+    setEditingTaskIndex(originalIdx);
+    setEditTaskTitle(task.title ?? '');
+    setEditTaskSummary(task.summary ?? task.description ?? '');
+  };
+
+  const handleEditTaskSave = () => {
+    if (editingTaskIndex === null) return;
+    onEditTask?.(editingTaskIndex, editTaskTitle, editTaskSummary);
+    setEditingTaskIndex(null);
+  };
+
+  const handleDeleteTaskClick = (originalIdx: number) => {
+    if (!window.confirm('Delete this task?')) return;
+    onDeleteTask?.(originalIdx);
+  };
+
+  const taskCount = story?.tasks?.length ?? 0;
+  const localTaskMode = Boolean(onEditTask || onDeleteTask);
   const HorizontalScrollArea: React.FC<{
     className?: string;
     children: React.ReactNode;
@@ -60,7 +97,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   );
 
   const { text: projectStatus } = getStatusBadge(story.storyStatus);
-  const taskCount = story?.tasks?.length ?? 0;
   const normalizedTaskStatuses: string[] = (story?.tasks ?? [])
     .map((task: any) => (task?.taskStatus ?? '').toString().toUpperCase())
     .filter((status: string) => Boolean(status));
@@ -422,29 +458,68 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                           tasksInColumn.map((task: any) => {
                             const { className: taskBadgeStyle } =
                               getStatusBadge(task.taskStatus);
+                            // Find original index for edit/delete callbacks
+                            const originalIdx = (story.tasks ?? []).findIndex(
+                              (t: any) =>
+                                t === task ||
+                                (task._id && t._id === task._id) ||
+                                (t.title === task.title &&
+                                  t.summary === task.summary),
+                            );
 
                             return (
-                              <TaskCard
-                                key={task._id}
-                                task={task}
-                                isFreelancer={isFreelancer}
-                                onTaskClick={(t) => setSelectedTask(t)}
-                                onAcceptTask={handleAcceptTask}
-                                onRejectTask={handleRejectTask}
-                                onApproveUpdatePermission={
-                                  handleApproveUpdatePermission
-                                }
-                                onRejectUpdatePermission={
-                                  handleRejectUpdatePermission
-                                }
-                                shouldShowAcceptRejectButtons={
-                                  shouldShowAcceptRejectButtons
-                                }
-                                fetchMilestones={fetchMilestones}
-                                milestoneId={milestoneId}
-                                storyId={story._id}
-                                taskBadgeStyle={taskBadgeStyle}
-                              />
+                              <div
+                                key={task._id ?? originalIdx}
+                                className="relative group/task"
+                              >
+                                <TaskCard
+                                  task={task}
+                                  isFreelancer={isFreelancer}
+                                  onTaskClick={(t) => setSelectedTask(t)}
+                                  onAcceptTask={handleAcceptTask}
+                                  onRejectTask={handleRejectTask}
+                                  onApproveUpdatePermission={
+                                    handleApproveUpdatePermission
+                                  }
+                                  onRejectUpdatePermission={
+                                    handleRejectUpdatePermission
+                                  }
+                                  shouldShowAcceptRejectButtons={
+                                    shouldShowAcceptRejectButtons
+                                  }
+                                  fetchMilestones={fetchMilestones}
+                                  milestoneId={milestoneId}
+                                  storyId={story._id}
+                                  taskBadgeStyle={taskBadgeStyle}
+                                />
+                                {/* Edit / Delete task — local mode */}
+                                {localTaskMode && !isFreelancer && originalIdx >= 0 && (
+                                  <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover/task:opacity-100 transition-opacity z-10">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditTask(originalIdx, task);
+                                      }}
+                                      className="p-1 rounded bg-background/80 backdrop-blur-sm border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+                                      title="Edit task"
+                                    >
+                                      <Edit2 className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteTaskClick(originalIdx);
+                                      }}
+                                      className="p-1 rounded bg-background/80 backdrop-blur-sm border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+                                      title="Delete task"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             );
                           })
                         ) : (
@@ -453,7 +528,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                           </div>
                         )}
 
-                        {!isFreelancer && (
+                        {!isFreelancer && taskCount < MAX_TASKS_PER_STORY && (
                           <div className="px-2 pt-1">
                             <Button
                               type="button"
@@ -467,6 +542,13 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                             >
                               <Plus className="mr-1 h-4 w-4" /> Add
                             </Button>
+                          </div>
+                        )}
+                        {!isFreelancer && taskCount >= MAX_TASKS_PER_STORY && (
+                          <div className="px-2 pt-1">
+                            <p className="text-center text-[10px] text-muted-foreground py-1">
+                              Max {MAX_TASKS_PER_STORY} tasks reached
+                            </p>
                           </div>
                         )}
                       </div>
@@ -500,7 +582,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 </p>
               </>
             )}
-            {!isFreelancer && (
+            {!isFreelancer && taskCount < MAX_TASKS_PER_STORY && (
               <div className="mt-4">
                 <Button
                   variant="secondary"
@@ -527,6 +609,58 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           handleRejectUpdatePermission(taskId)
         }
       />
+
+      {/* Edit Task Dialog */}
+      {editingTaskIndex !== null && (
+        <Dialog open onOpenChange={() => setEditingTaskIndex(null)}>
+          <DialogContent className="max-w-md bg-card border-border rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">Edit Task</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Title
+                </label>
+                <input
+                  value={editTaskTitle}
+                  onChange={(e) => setEditTaskTitle(e.target.value)}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  placeholder="Task title"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Summary
+                </label>
+                <textarea
+                  value={editTaskSummary}
+                  onChange={(e) => setEditTaskSummary(e.target.value)}
+                  rows={3}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                  placeholder="Brief description of what needs to be done"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingTaskIndex(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleEditTaskSave}
+                disabled={!editTaskTitle.trim()}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </AccordionItem>
   );
 };

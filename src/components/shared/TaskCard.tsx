@@ -430,10 +430,10 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
   };
 
   const isUpdateDisabled = isFreelancer
-    ? task?.freelancers[0]?.rejectionFreelancer ||
-      !task?.freelancers[0]?.acceptanceFreelancer ||
-      (task?.freelancers[0]?.updatePermissionFreelancer &&
-        !task?.freelancers[0]?.updatePermissionBusiness)
+    ? task?.freelancers?.[0]?.rejectionFreelancer ||
+      !task?.freelancers?.[0]?.acceptanceFreelancer ||
+      (task?.freelancers?.[0]?.updatePermissionFreelancer &&
+        !task?.freelancers?.[0]?.updatePermissionBusiness)
     : false;
 
   return (
@@ -445,7 +445,7 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
         className="rounded-md text-muted-foreground hover:text-foreground justify-center"
         disabled={
           isFreelancer
-            ? task?.freelancers[0]?.freelancerId !== user?.uid ||
+            ? task?.freelancers?.[0]?.freelancerId !== user?.uid ||
               isUpdateDisabled
             : false
         }

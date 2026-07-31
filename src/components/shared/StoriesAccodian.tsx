@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { ClipboardPlus, Plus } from 'lucide-react';
+import { ClipboardPlus, Edit2, Plus, Trash2 } from 'lucide-react';
 
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 
 import StoryAccordionItem from './StoryAccordionItem';
 import AddTaskDialog from './AddTaskDialog';
@@ -18,24 +24,46 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+const MAX_TASKS = 5;
+
 const StoriesAccordion = ({
   milestone,
   fetchMilestones,
   handleStorySubmit,
   isFreelancer = false,
   freelancerId,
+  onEditStory,
+  onDeleteStory,
+  onEditTask,
+  onDeleteTask,
 }: {
   milestone: Milestone;
   fetchMilestones: any;
   handleStorySubmit: any;
   isFreelancer: boolean;
   freelancerId?: string;
+  /** Optional local-mode callbacks */
+  onEditStory?: (storyId: string, title: string, summary: string) => void;
+  onDeleteStory?: (storyId: string) => void;
+  onEditTask?: (
+    storyId: string,
+    taskIndex: number,
+    title: string,
+    summary: string,
+  ) => void;
+  onDeleteTask?: (storyId: string, taskIndex: number) => void;
 }) => {
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
   );
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isStoryDialogOpen, setIsStoryDialogOpen] = useState(false);
+
+  // Edit-story dialog state
+  const [editingStory, setEditingStory] = useState<Story | null>(null);
+  const [editStoryTitle, setEditStoryTitle] = useState('');
+  const [editStorySummary, setEditStorySummary] = useState('');
+
   const [formData, setFormData] = useState({
     summary: '',
     title: '',
@@ -99,6 +127,11 @@ const StoriesAccordion = ({
         (story: Story) => story._id === openAccordion,
       );
       if (story) {
+        // Max 5 tasks guard
+        if ((story.tasks ?? []).length >= MAX_TASKS) {
+          setIsTaskDialogOpen(false);
+          return;
+        }
         handleStorySubmit(e, story, milestone, true, updatedFormData);
       }
     }
@@ -111,6 +144,27 @@ const StoriesAccordion = ({
     });
     setIsTaskDialogOpen(false);
   };
+
+  // ── Edit story handlers ──
+
+  const openEditStory = (story: Story) => {
+    setEditingStory(story);
+    setEditStoryTitle(story.title ?? '');
+    setEditStorySummary(story.summary ?? '');
+  };
+
+  const handleEditStorySave = () => {
+    if (!editingStory) return;
+    onEditStory?.(editingStory._id!, editStoryTitle, editStorySummary);
+    setEditingStory(null);
+  };
+
+  const handleDeleteStoryClick = (storyId: string) => {
+    if (!window.confirm('Delete this story and all its tasks? This cannot be undone.')) return;
+    onDeleteStory?.(storyId);
+  };
+
+  const localMode = Boolean(onEditStory || onDeleteStory);
 
   return (
     <div className="w-full px-0 md:px-0 lg:px-0 rounded-lg">
@@ -143,6 +197,7 @@ const StoriesAccordion = ({
             )}
           </div>
         )}
+
         <Accordion
           type="single"
           collapsible
@@ -151,17 +206,58 @@ const StoriesAccordion = ({
         >
           {(milestone.stories ?? []).length > 0 ? (
             (milestone.stories ?? []).map((story: Story, idx: number) => (
-              <StoryAccordionItem
-                fetchMilestones={fetchMilestones}
-                isFreelancer={isFreelancer}
-                freelancerId={freelancerId}
-                milestoneId={milestone._id}
-                key={idx}
-                story={story}
-                idx={idx}
-                milestoneStoriesLength={(milestone.stories ?? []).length}
-                setIsTaskDialogOpen={setIsTaskDialogOpen}
-              />
+              <div key={story._id ?? idx} className="relative group/story">
+                {/* Edit / Delete story buttons — shown in local-mode */}
+                {localMode && !isFreelancer && (
+                  <div className="absolute top-3 right-12 z-10 flex items-center gap-1 opacity-0 group-hover/story:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditStory(story);
+                      }}
+                      className="p-1.5 rounded-lg bg-background border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors shadow-sm"
+                      title="Edit story"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteStoryClick(story._id!);
+                      }}
+                      className="p-1.5 rounded-lg bg-background border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-sm"
+                      title="Delete story"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <StoryAccordionItem
+                  fetchMilestones={fetchMilestones}
+                  isFreelancer={isFreelancer}
+                  freelancerId={freelancerId}
+                  milestoneId={milestone._id}
+                  story={story}
+                  idx={idx}
+                  milestoneStoriesLength={(milestone.stories ?? []).length}
+                  setIsTaskDialogOpen={setIsTaskDialogOpen}
+                  // Pass per-story task callbacks
+                  onEditTask={
+                    onEditTask
+                      ? (taskIndex, title, summary) =>
+                          onEditTask(story._id!, taskIndex, title, summary)
+                      : undefined
+                  }
+                  onDeleteTask={
+                    onDeleteTask
+                      ? (taskIndex) => onDeleteTask(story._id!, taskIndex)
+                      : undefined
+                  }
+                />
+              </div>
             ))
           ) : (
             <div className="p-6 sm:p-8">
@@ -240,6 +336,56 @@ const StoriesAccordion = ({
           milestones={milestone}
           handleStorySubmit={handleStorySubmit}
         />
+      )}
+
+      {/* Edit Story Dialog */}
+      {editingStory && (
+        <Dialog open onOpenChange={() => setEditingStory(null)}>
+          <DialogContent className="max-w-md bg-card border-border rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">Edit Story</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Title
+                </label>
+                <input
+                  value={editStoryTitle}
+                  onChange={(e) => setEditStoryTitle(e.target.value)}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Summary
+                </label>
+                <textarea
+                  value={editStorySummary}
+                  onChange={(e) => setEditStorySummary(e.target.value)}
+                  rows={3}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingStory(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleEditStorySave}
+                disabled={!editStoryTitle.trim()}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

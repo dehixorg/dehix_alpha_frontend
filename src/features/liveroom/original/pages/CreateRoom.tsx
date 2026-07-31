@@ -6853,15 +6853,28 @@ function estimateTalentRequirements(
               ? 'recommended'
               : 'required';
 
-        const countVal =
+        // Read blueprint count directly — AI sets this per role in recommended_team
+        const rawBlueprintCount =
           item.count ?? item.quantity ?? item.size ?? item.aiSuggestedCount;
-        const count = calculateSmartRoleCount(
-          title,
-          purpose,
-          countVal,
-          blueprint,
-          analysis,
-        );
+
+        // Parse it to a reliable number (handles both number and string types)
+        let blueprintCount: number | null = null;
+        if (typeof rawBlueprintCount === 'number' && rawBlueprintCount > 0) {
+          blueprintCount = rawBlueprintCount;
+        } else if (typeof rawBlueprintCount === 'string') {
+          const parsed = parseInt(rawBlueprintCount, 10);
+          if (!isNaN(parsed) && parsed > 0) blueprintCount = parsed;
+        }
+
+        // aiSuggestedCount: trust the blueprint value directly.
+        // Only fall back to heuristics if blueprint didn't provide a count.
+        const aiSuggestedCount =
+          blueprintCount !== null
+            ? blueprintCount
+            : calculateSmartRoleCount(title, purpose, null, blueprint, analysis);
+
+        // businessSelectedCount starts equal to AI suggestion
+        const businessSelectedCount = aiSuggestedCount;
 
         let skillDomain = 'Full-Stack / Product Development';
         const titleLower = title.toLowerCase();
@@ -6882,10 +6895,10 @@ function estimateTalentRequirements(
             ? String(item.skillDomain)
             : skillDomain,
           reason: purpose || `AI recommended role for ${title}`,
-          aiSuggestedCount: count,
-          businessSelectedCount: count,
+          aiSuggestedCount,
+          businessSelectedCount,
           minCount: priority === 'required' ? 1 : 0,
-          maxCount: Math.max(count + 2, 5),
+          maxCount: Math.max(aiSuggestedCount + 2, 5),
           priority,
         });
       });
@@ -9878,6 +9891,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                   onBack={() => setPhase('talent_requirements')}
                   isFindingTalent={loadingRecommendations}
                   openDateDialogOnMount={showMilestoneDateDialogOnEnter}
+                  sessionId={sessionData?._id}
                 />
               )}
 

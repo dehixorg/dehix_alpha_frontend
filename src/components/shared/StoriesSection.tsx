@@ -12,6 +12,16 @@ interface StoriesSectionProps {
   handleStorySubmit: any;
   isFreelancer?: boolean;
   freelancerId?: string;
+  /** Optional local-mode edit/delete callbacks (used in pre-launch planner) */
+  onEditStory?: (storyId: string, title: string, summary: string) => void;
+  onDeleteStory?: (storyId: string) => void;
+  onEditTask?: (
+    storyId: string,
+    taskIndex: number,
+    title: string,
+    summary: string,
+  ) => void;
+  onDeleteTask?: (storyId: string, taskIndex: number) => void;
 }
 
 const StoriesSection: React.FC<StoriesSectionProps> = ({
@@ -20,6 +30,10 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
   handleStorySubmit,
   isFreelancer = false,
   freelancerId,
+  onEditStory,
+  onDeleteStory,
+  onEditTask,
+  onDeleteTask,
 }) => {
   if (!milestone) {
     return (
@@ -38,6 +52,10 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
         handleStorySubmit={handleStorySubmit}
         isFreelancer={isFreelancer}
         freelancerId={freelancerId}
+        onEditStory={onEditStory}
+        onDeleteStory={onDeleteStory}
+        onEditTask={onEditTask}
+        onDeleteTask={onDeleteTask}
       />
     </div>
   );

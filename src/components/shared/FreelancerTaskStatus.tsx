@@ -47,7 +47,8 @@ const FreelancerTaskStatus: React.FC<FreelancerTaskStatusProps> = ({
     );
   }
 
-  const freelancer = task.freelancers[0];
+  const freelancer = task.freelancers?.[0];
+  if (!freelancer) return null;
   const { acceptanceFreelancer, rejectionFreelancer } = freelancer;
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
