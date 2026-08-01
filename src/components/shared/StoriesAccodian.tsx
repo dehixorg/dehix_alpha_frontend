@@ -170,10 +170,10 @@ const StoriesAccordion = ({
     <div className="w-full px-0 md:px-0 lg:px-0 rounded-lg">
       <div className="card border rounded-lg">
         {(milestone.stories ?? []).length > 0 && (
-          <div className="flex p-4 justify-between items-center border-b bg-gradient">
+          <div className="flex p-4 justify-between items-center border-b bg-card">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg md:text-xl font-semibold">Stories</h3>
-              <Badge variant="secondary" className="rounded-full">
+              <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">Stories</h3>
+              <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
                 {(milestone.stories ?? []).length} total
               </Badge>
             </div>
@@ -185,8 +185,9 @@ const StoriesAccordion = ({
                       size="sm"
                       onClick={() => setIsStoryDialogOpen(true)}
                       aria-label="Add a new story"
+                      className="h-9 px-3.5 text-xs font-semibold gap-1.5 rounded-lg bg-background text-foreground border border-border/80 hover:bg-accent hover:border-primary/40 shadow-xs transition-all"
                     >
-                      <Plus size={13} /> Add Story
+                      <Plus size={14} className="text-primary" /> Add Story
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
@@ -206,58 +207,38 @@ const StoriesAccordion = ({
         >
           {(milestone.stories ?? []).length > 0 ? (
             (milestone.stories ?? []).map((story: Story, idx: number) => (
-              <div key={story._id ?? idx} className="relative group/story">
-                {/* Edit / Delete story buttons — shown in local-mode */}
-                {localMode && !isFreelancer && (
-                  <div className="absolute top-3 right-12 z-10 flex items-center gap-1 opacity-0 group-hover/story:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditStory(story);
-                      }}
-                      className="p-1.5 rounded-lg bg-background border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors shadow-sm"
-                      title="Edit story"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteStoryClick(story._id!);
-                      }}
-                      className="p-1.5 rounded-lg bg-background border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-sm"
-                      title="Delete story"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-
-                <StoryAccordionItem
-                  fetchMilestones={fetchMilestones}
-                  isFreelancer={isFreelancer}
-                  freelancerId={freelancerId}
-                  milestoneId={milestone._id}
-                  story={story}
-                  idx={idx}
-                  milestoneStoriesLength={(milestone.stories ?? []).length}
-                  setIsTaskDialogOpen={setIsTaskDialogOpen}
-                  // Pass per-story task callbacks
-                  onEditTask={
-                    onEditTask
-                      ? (taskIndex, title, summary) =>
-                          onEditTask(story._id!, taskIndex, title, summary)
-                      : undefined
-                  }
-                  onDeleteTask={
-                    onDeleteTask
-                      ? (taskIndex) => onDeleteTask(story._id!, taskIndex)
-                      : undefined
-                  }
-                />
-              </div>
+              <StoryAccordionItem
+                key={story._id ?? idx}
+                fetchMilestones={fetchMilestones}
+                isFreelancer={isFreelancer}
+                freelancerId={freelancerId}
+                milestoneId={milestone._id}
+                story={story}
+                idx={idx}
+                milestoneStoriesLength={(milestone.stories ?? []).length}
+                setIsTaskDialogOpen={setIsTaskDialogOpen}
+                // Pass story edit/delete callbacks for inline header display
+                onEditStory={
+                  onEditStory ? () => openEditStory(story) : undefined
+                }
+                onDeleteStory={
+                  onDeleteStory && story._id
+                    ? () => handleDeleteStoryClick(story._id!)
+                    : undefined
+                }
+                // Pass per-story task callbacks
+                onEditTask={
+                  onEditTask
+                    ? (taskIndex, title, summary) =>
+                        onEditTask(story._id!, taskIndex, title, summary)
+                    : undefined
+                }
+                onDeleteTask={
+                  onDeleteTask
+                    ? (taskIndex) => onDeleteTask(story._id!, taskIndex)
+                    : undefined
+                }
+              />
             ))
           ) : (
             <div className="p-6 sm:p-8">

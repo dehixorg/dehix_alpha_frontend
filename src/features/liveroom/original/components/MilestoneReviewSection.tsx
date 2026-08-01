@@ -414,7 +414,10 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                 typeof d === 'string' ? '' : d.description || d.purpose || '',
               storyStatus: 'NOT_STARTED',
               importantUrls: [],
-              tasks: localTasks,
+              tasks: localTasks.map((t, tIdx) => ({
+                _id: `task-${idx}-${dIdx}-${tIdx}`,
+                ...t,
+              })),
             };
           })
         : [];

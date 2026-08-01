@@ -41,20 +41,15 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
   isMobile,
   isSelected,
 }) => {
-  const truncateDescription = (text: string, maxLength: number = 50) => {
-    if (text.length > maxLength) {
-      return text.slice(0, maxLength) + '...';
-    }
-    return text;
-  };
-
   const formattedDate = formatDateDisplay(date);
 
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center',
-        isMobile ? 'w-64' : 'w-48',
+        'relative flex flex-col items-center transition-all',
+        isMobile
+          ? 'w-full max-w-[280px]'
+          : 'min-w-[200px] max-w-[320px] w-auto h-auto',
         position === 'top' ? 'mt-32' : position === 'bottom' ? '-mt-28' : '',
       )}
       style={{
@@ -63,23 +58,23 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
     >
       <Card
         className={cn(
-          'group relative w-full rounded-xl border bg-card/80 p-3 backdrop-blur-sm transition-all',
-          'hover:-translate-y-[1px] hover:shadow-md',
+          'group relative w-full h-auto rounded-xl border bg-card/90 p-4 backdrop-blur-md transition-all cursor-pointer shadow-sm',
+          'hover:-translate-y-[2px] hover:shadow-lg',
           isSelected
-            ? 'border-primary/40 ring-2 ring-primary/30 shadow-md'
-            : 'border-border/60',
+            ? 'border-primary ring-2 ring-primary/40 shadow-md bg-card'
+            : 'border-border/60 hover:border-primary/40',
         )}
       >
-        <div className="flex flex-col gap-2">
-          <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-2.5 w-full">
+          <div className="flex items-start justify-between gap-2.5 w-full">
             <h3
               className={cn(
-                'min-w-0 font-semibold leading-snug truncate',
-                isMobile ? 'text-base md:text-lg' : 'text-sm',
+                'font-bold leading-snug text-foreground whitespace-normal break-words',
+                isMobile ? 'text-base' : 'text-xs md:text-sm',
               )}
               title={title}
             >
-              {truncateDescription(title, 10)}
+              {title}
             </h3>
             {summary && (
               <Popover>
@@ -87,17 +82,17 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-8 w-8 rounded-full"
+                    className="h-6 w-6 rounded-full shrink-0 text-muted-foreground hover:text-foreground mt-0.5"
                     onClick={(e) => e.stopPropagation()}
                     aria-label="View description"
                   >
-                    <Info className="w-4 h-4" />
+                    <Info className="w-3.5 h-3.5" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-72 text-sm whitespace-pre-wrap leading-relaxed">
-                  <div className="space-y-1">
-                    <h2 className="font-semibold">{title}</h2>
-                    <p>{summary}</p>
+                <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed p-4 bg-card border border-border shadow-xl rounded-xl">
+                  <div className="space-y-1.5">
+                    <h4 className="font-bold text-foreground">{title}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{summary}</p>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -105,7 +100,7 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
           </div>
 
           {formattedDate ? (
-            <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-[10px] md:text-xs text-muted-foreground font-medium">
+            <span className="inline-flex w-fit items-center rounded-full bg-muted/80 px-2.5 py-0.5 text-[10px] md:text-xs text-muted-foreground font-medium border border-border/40 shrink-0">
               {formattedDate}
             </span>
           ) : null}
