@@ -6840,7 +6840,24 @@ function estimateTalentRequirements(
     );
 
     if (recTeam.length > 0) {
-      recTeam.forEach((item, idx) => {
+      let activeTeam = recTeam;
+      if (activeTeam.length > 4) {
+        const filtered = activeTeam.filter((item) => {
+          const t = String(
+            item.role ?? item.role_title ?? item.title ?? '',
+          ).toLowerCase();
+          return (
+            !t.includes('qa') &&
+            !t.includes('test') &&
+            !t.includes('devops') &&
+            !t.includes('scrum') &&
+            !t.includes('database')
+          );
+        });
+        activeTeam = (filtered.length >= 2 ? filtered : recTeam).slice(0, 4);
+      }
+
+      activeTeam.forEach((item, idx) => {
         const title = String(
           item.role ??
             item.role_title ??
