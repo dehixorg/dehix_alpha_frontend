@@ -92,7 +92,9 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
                 <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed p-4 bg-card border border-border shadow-xl rounded-xl">
                   <div className="space-y-1.5">
                     <h4 className="font-bold text-foreground">{title}</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{summary}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {summary}
+                    </p>
                   </div>
                 </PopoverContent>
               </Popover>

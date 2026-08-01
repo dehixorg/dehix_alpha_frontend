@@ -249,7 +249,8 @@ const Page = () => {
     title: string,
     summary: string,
   ) => {
-    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex]) return;
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
     const currentMilestone = milestones[selectedMilestoneIndex];
     const updatedStories = (currentMilestone.stories ?? []).map((s) =>
       s._id === storyId ? { ...s, title, summary } : s,
@@ -268,7 +269,8 @@ const Page = () => {
   };
 
   const handleDeleteStory = async (storyId: string) => {
-    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex]) return;
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
     const currentMilestone = milestones[selectedMilestoneIndex];
     const updatedStories = (currentMilestone.stories ?? []).filter(
       (s) => s._id !== storyId,
@@ -292,7 +294,8 @@ const Page = () => {
     title: string,
     summary: string,
   ) => {
-    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex]) return;
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
     const currentMilestone = milestones[selectedMilestoneIndex];
     const updatedStories = (currentMilestone.stories ?? []).map((s) => {
       if (s._id !== storyId) return s;
@@ -314,7 +317,8 @@ const Page = () => {
   };
 
   const handleDeleteTask = async (storyId: string, taskIndex: number) => {
-    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex]) return;
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
     const currentMilestone = milestones[selectedMilestoneIndex];
     const updatedStories = (currentMilestone.stories ?? []).map((s) => {
       if (s._id !== storyId) return s;

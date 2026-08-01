@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Info, FileText, Edit2, Trash2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { Badge } from '../ui/badge';
@@ -14,6 +8,12 @@ import { Button } from '../ui/button';
 import TaskDetailsDialog from './TaskDetailsDialog';
 import TaskCard from './TaskCard';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   AccordionItem,
@@ -363,7 +363,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed p-4 bg-card border border-border shadow-xl rounded-xl">
                 <div className="space-y-1">
                   <h4 className="font-bold text-foreground">{story.title}</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{story.summary || 'No summary provided.'}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {story.summary || 'No summary provided.'}
+                  </p>
                 </div>
               </PopoverContent>
             </Popover>
@@ -448,8 +450,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                     <div className="px-1 pb-2">
                       {tasksInColumn.length > 0 ? (
                         tasksInColumn.map((task: any) => {
-                          const { className: taskBadgeStyle } =
-                            getStatusBadge(task.taskStatus);
+                          const { className: taskBadgeStyle } = getStatusBadge(
+                            task.taskStatus,
+                          );
                           // Find original index for edit/delete callbacks
                           const originalIdx = (story.tasks ?? []).findIndex(
                             (t: any) =>
@@ -485,32 +488,34 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                 taskBadgeStyle={taskBadgeStyle}
                               />
                               {/* Edit / Delete task — local mode */}
-                              {localTaskMode && !isFreelancer && originalIdx >= 0 && (
-                                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-90 group-hover/task:opacity-100 transition-opacity z-10">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openEditTask(originalIdx, task);
-                                    }}
-                                    className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors shadow-xs"
-                                    title="Edit task"
-                                  >
-                                    <Edit2 className="h-3 w-3" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteTaskClick(originalIdx);
-                                    }}
-                                    className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-xs"
-                                    title="Delete task"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              )}
+                              {localTaskMode &&
+                                !isFreelancer &&
+                                originalIdx >= 0 && (
+                                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-90 group-hover/task:opacity-100 transition-opacity z-10">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditTask(originalIdx, task);
+                                      }}
+                                      className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors shadow-xs"
+                                      title="Edit task"
+                                    >
+                                      <Edit2 className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteTaskClick(originalIdx);
+                                      }}
+                                      className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-xs"
+                                      title="Delete task"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
                             </div>
                           );
                         })

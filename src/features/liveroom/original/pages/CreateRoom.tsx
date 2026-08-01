@@ -605,7 +605,9 @@ function buildPhase1ReviewForm(
 ): Phase1ReviewForm {
   const research = analysis?.research_analysis ?? {};
   return {
-    projectTitle: String((analysis?.business_confirmed_inputs as any)?.projectTitle || '').trim(),
+    projectTitle: String(
+      (analysis?.business_confirmed_inputs as any)?.projectTitle || '',
+    ).trim(),
     region: analysis?.region_used?.trim() || 'India',
     ideaSummary: analysis?.idea_summary?.trim() || '',
     targetAudience: research.target_audience?.trim() || '',
@@ -6876,7 +6878,13 @@ function estimateTalentRequirements(
         const aiSuggestedCount =
           blueprintCount !== null
             ? blueprintCount
-            : calculateSmartRoleCount(title, purpose, null, blueprint, analysis);
+            : calculateSmartRoleCount(
+                title,
+                purpose,
+                null,
+                blueprint,
+                analysis,
+              );
 
         // businessSelectedCount starts equal to AI suggestion
         const businessSelectedCount = aiSuggestedCount;
@@ -8800,21 +8808,19 @@ Please return ONLY the modified text itself, without any introductory or convers
       : null);
 
   const smartSuggestions =
-    isLoaderActive ||
-    phase === 'talent_requirements' ||
-    phase === 'milestones'
+    isLoaderActive || phase === 'talent_requirements' || phase === 'milestones'
       ? []
       : buildSmartSuggestions({
-        phase,
-        activeReportSection: activeReportSectionForSuggestions,
-        activeQuestion,
-        idea: description || sessionData?.rawIdea || '',
-        region: phase1Review.region || analysis?.region_used || 'India',
-        totalQuestions:
-          (mandatoryQuestions.length || 5) + (optionalQuestions.length || 0),
-        answers,
-        usedAiSuggest,
-      });
+          phase,
+          activeReportSection: activeReportSectionForSuggestions,
+          activeQuestion,
+          idea: description || sessionData?.rawIdea || '',
+          region: phase1Review.region || analysis?.region_used || 'India',
+          totalQuestions:
+            (mandatoryQuestions.length || 5) + (optionalQuestions.length || 0),
+          answers,
+          usedAiSuggest,
+        });
 
   return (
     <div className="min-h-screen bg-background text-foreground">

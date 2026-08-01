@@ -3,12 +3,7 @@ import { ClipboardPlus, Edit2, Plus, Trash2 } from 'lucide-react';
 
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 
 import StoryAccordionItem from './StoryAccordionItem';
 import AddTaskDialog from './AddTaskDialog';
@@ -160,7 +155,12 @@ const StoriesAccordion = ({
   };
 
   const handleDeleteStoryClick = (storyId: string) => {
-    if (!window.confirm('Delete this story and all its tasks? This cannot be undone.')) return;
+    if (
+      !window.confirm(
+        'Delete this story and all its tasks? This cannot be undone.',
+      )
+    )
+      return;
     onDeleteStory?.(storyId);
   };
 
@@ -172,8 +172,13 @@ const StoriesAccordion = ({
         {(milestone.stories ?? []).length > 0 && (
           <div className="flex p-4 justify-between items-center border-b bg-card">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">Stories</h3>
-              <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
+              <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
+                Stories
+              </h3>
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+              >
                 {(milestone.stories ?? []).length} total
               </Badge>
             </div>
@@ -324,7 +329,9 @@ const StoriesAccordion = ({
         <Dialog open onOpenChange={() => setEditingStory(null)}>
           <DialogContent className="max-w-md bg-card border-border rounded-2xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-bold">Edit Story</DialogTitle>
+              <DialogTitle className="text-lg font-bold">
+                Edit Story
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-3 py-2">
               <div>
