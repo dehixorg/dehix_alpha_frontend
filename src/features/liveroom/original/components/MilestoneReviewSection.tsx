@@ -10,6 +10,7 @@ import {
   Edit3,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'react-hot-toast';
 
 import {
   Dialog,
@@ -49,15 +50,85 @@ const formatDateString = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
-// ─── AI-contextual local task generator (used as immediate fallback) ─────────
+// ─── AI-contextual local story summary & task generator ──────────────────────
+
+function generateLocalSummaryForStory(
+  storyTitle: string,
+  blueprint: Record<string, any>,
+): string {
+  const t = storyTitle.toLowerCase();
+  const projName =
+    blueprint?.project_title || blueprint?.title || 'the project';
+  const stack =
+    (blueprint?.technical_architecture?.recommended_stack || {}) as Record<
+      string,
+      string
+    >;
+  const fe = stack.frontend || 'React';
+  const be = stack.backend || 'Node.js';
+
+  if (
+    t.includes('auth') ||
+    t.includes('login') ||
+    t.includes('register') ||
+    t.includes('sign in')
+  ) {
+    return `Implement user authentication, registration flows, session management, and security access controls using ${be} for ${projName}.`;
+  }
+  if (
+    t.includes('design') ||
+    t.includes('wireframe') ||
+    t.includes('mockup') ||
+    t.includes('ux') ||
+    t.includes('figma')
+  ) {
+    return `Design responsive UI wireframes, user flow interactive prototypes, and design system components for ${projName} using ${fe}.`;
+  }
+  if (
+    t.includes('api') ||
+    t.includes('backend') ||
+    t.includes('endpoint') ||
+    t.includes('crud')
+  ) {
+    return `Develop RESTful API modules, controller routes, business logic layer, and database interactions on ${be}.`;
+  }
+  if (
+    t.includes('dashboard') ||
+    t.includes('ui') ||
+    t.includes('frontend') ||
+    t.includes('portal')
+  ) {
+    return `Build interactive web dashboard screens, data visualizations, responsive navigation layout, and state management in ${fe}.`;
+  }
+  if (
+    t.includes('test') ||
+    t.includes('qa') ||
+    t.includes('quality') ||
+    t.includes('audit')
+  ) {
+    return `Execute end-to-end user journey tests, security audits, code quality checks, and performance benchmark tests for ${projName}.`;
+  }
+  if (
+    t.includes('deploy') ||
+    t.includes('launch') ||
+    t.includes('ci/cd') ||
+    t.includes('cloud')
+  ) {
+    return `Configure production cloud deployment, CI/CD automated pipeline, environment configuration, and uptime monitoring for ${projName}.`;
+  }
+  return `Comprehensive feature implementation, technical setup, and acceptance verification for ${storyTitle} within ${projName}.`;
+}
 
 function generateLocalTasksForStory(
   storyTitle: string,
   blueprint: Record<string, any>,
 ): { title: string; summary: string; taskStatus: string }[] {
   const t = storyTitle.toLowerCase();
-  const stack = (blueprint?.technical_architecture?.recommended_stack ||
-    {}) as Record<string, string>;
+  const stack =
+    (blueprint?.technical_architecture?.recommended_stack || {}) as Record<
+      string,
+      string
+    >;
   const fe = stack.frontend || 'React';
   const be = stack.backend || 'Node.js';
   const db = stack.database || 'the database';
@@ -73,28 +144,10 @@ function generateLocalTasksForStory(
     t.includes('figma')
   ) {
     tasks = [
-      {
-        title: 'Create user flow diagrams',
-        summary:
-          'Map out all key user journeys and interaction paths for this feature',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Design low-fidelity wireframes',
-        summary:
-          'Sketch wireframes for all screens in scope before high-fi design',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Build high-fidelity UI mockups',
-        summary: `Design pixel-perfect mockups using ${fe} component patterns and design tokens`,
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Stakeholder review and iterations',
-        summary: 'Present designs, collect feedback, and refine before handoff',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: 'Create user flow diagrams', summary: 'Map out all key user journeys and interaction paths for this feature', taskStatus: 'NOT_STARTED' },
+      { title: 'Design low-fidelity wireframes', summary: 'Sketch wireframes for all screens in scope before high-fi design', taskStatus: 'NOT_STARTED' },
+      { title: 'Build high-fidelity UI mockups', summary: `Design pixel-perfect mockups using ${fe} component patterns and design tokens`, taskStatus: 'NOT_STARTED' },
+      { title: 'Stakeholder review and iterations', summary: 'Present designs, collect feedback, and refine before handoff', taskStatus: 'NOT_STARTED' },
     ];
   } else if (
     t.includes('auth') ||
@@ -104,35 +157,11 @@ function generateLocalTasksForStory(
     t.includes('password')
   ) {
     tasks = [
-      {
-        title: 'Implement user registration endpoint',
-        summary: `Create POST /auth/register with input validation and secure hashing on ${be}`,
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Implement login and JWT issuance',
-        summary:
-          'Create login flow with access/refresh token generation and secure cookie handling',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Build auth middleware for protected routes',
-        summary:
-          'Verify JWT on every protected API route and return 401 on invalid tokens',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: `Build ${fe} login and registration screens`,
-        summary:
-          'Create forms with client-side validation, error messages, and loading states',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Write auth unit and integration tests',
-        summary:
-          'Cover registration, login, token refresh, and unauthorised access scenarios',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: 'Implement user registration endpoint', summary: `Create POST /auth/register with input validation and secure hashing on ${be}`, taskStatus: 'NOT_STARTED' },
+      { title: 'Implement login and JWT issuance', summary: 'Create login flow with access/refresh token generation and secure cookie handling', taskStatus: 'NOT_STARTED' },
+      { title: 'Build auth middleware for protected routes', summary: 'Verify JWT on every protected API route and return 401 on invalid tokens', taskStatus: 'NOT_STARTED' },
+      { title: `Build ${fe} login and registration screens`, summary: 'Create forms with client-side validation, error messages, and loading states', taskStatus: 'NOT_STARTED' },
+      { title: 'Write auth unit and integration tests', summary: 'Cover registration, login, token refresh, and unauthorised access scenarios', taskStatus: 'NOT_STARTED' },
     ];
   } else if (
     t.includes('setup') ||
@@ -142,30 +171,10 @@ function generateLocalTasksForStory(
     t.includes('scaffold')
   ) {
     tasks = [
-      {
-        title: `Initialize ${fe} project structure`,
-        summary:
-          'Bootstrap project with TypeScript, ESLint, Prettier, and folder conventions',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: `Configure ${be} server and API skeleton`,
-        summary:
-          'Set up server framework with middleware, health check endpoint, and routing structure',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: `Configure ${db} connection and base schemas`,
-        summary:
-          'Connect to database, define base models/entities, and run initial migrations',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Set up CI/CD pipeline and environments',
-        summary:
-          'Configure automated testing and deployment workflows for dev/staging/prod',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: `Initialize ${fe} project structure`, summary: 'Bootstrap project with TypeScript, ESLint, Prettier, and folder conventions', taskStatus: 'NOT_STARTED' },
+      { title: `Configure ${be} server and API skeleton`, summary: 'Set up server framework with middleware, health check endpoint, and routing structure', taskStatus: 'NOT_STARTED' },
+      { title: `Configure ${db} connection and base schemas`, summary: 'Connect to database, define base models/entities, and run initial migrations', taskStatus: 'NOT_STARTED' },
+      { title: 'Set up CI/CD pipeline and environments', summary: 'Configure automated testing and deployment workflows for dev/staging/prod', taskStatus: 'NOT_STARTED' },
     ];
   } else if (
     t.includes('dashboard') ||
@@ -174,30 +183,10 @@ function generateLocalTasksForStory(
     t.includes('interface')
   ) {
     tasks = [
-      {
-        title: 'Build main layout and navigation component',
-        summary:
-          'Create primary page shell with sidebar/topbar navigation and route guards',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Implement key data tables and charts',
-        summary:
-          'Build data visualization components with sorting, filtering, and pagination',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Connect dashboard widgets to API endpoints',
-        summary:
-          'Wire up all display components to live backend data with react-query/SWR',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Add loading states, empty states, and error boundaries',
-        summary:
-          'Implement skeleton loaders and user-friendly error handling throughout',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: 'Build main layout and navigation component', summary: 'Create primary page shell with sidebar/topbar navigation and route guards', taskStatus: 'NOT_STARTED' },
+      { title: 'Implement key data tables and charts', summary: 'Build data visualization components with sorting, filtering, and pagination', taskStatus: 'NOT_STARTED' },
+      { title: 'Connect dashboard widgets to API endpoints', summary: 'Wire up all display components to live backend data with react-query/SWR', taskStatus: 'NOT_STARTED' },
+      { title: 'Add loading states, empty states, and error boundaries', summary: 'Implement skeleton loaders and user-friendly error handling throughout', taskStatus: 'NOT_STARTED' },
     ];
   } else if (
     t.includes('api') ||
@@ -207,30 +196,10 @@ function generateLocalTasksForStory(
     t.includes('rest')
   ) {
     tasks = [
-      {
-        title: 'Define API contracts and schemas',
-        summary:
-          'Document all endpoints with request/response types and validation rules',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Implement CRUD business logic',
-        summary:
-          'Build Create, Read, Update, Delete operations with proper validation and error handling',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Add request validation middleware',
-        summary:
-          'Validate all inputs server-side and return standardised error responses',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Write API integration tests',
-        summary:
-          'Test all endpoints with valid inputs, boundary cases, and invalid inputs',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: 'Define API contracts and schemas', summary: 'Document all endpoints with request/response types and validation rules', taskStatus: 'NOT_STARTED' },
+      { title: 'Implement CRUD business logic', summary: 'Build Create, Read, Update, Delete operations with proper validation and error handling', taskStatus: 'NOT_STARTED' },
+      { title: 'Add request validation middleware', summary: 'Validate all inputs server-side and return standardised error responses', taskStatus: 'NOT_STARTED' },
+      { title: 'Write API integration tests', summary: 'Test all endpoints with valid inputs, boundary cases, and invalid inputs', taskStatus: 'NOT_STARTED' },
     ];
   } else if (
     t.includes('test') ||
@@ -239,30 +208,10 @@ function generateLocalTasksForStory(
     t.includes('coverage')
   ) {
     tasks = [
-      {
-        title: 'Write unit tests for core business logic',
-        summary:
-          'Target ≥ 80% code coverage for critical modules and utility functions',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Implement end-to-end test scenarios',
-        summary:
-          'Cover critical user journeys with Playwright or Cypress E2E tests',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Cross-browser and device compatibility testing',
-        summary:
-          'Verify on Chrome, Firefox, Safari, and key mobile viewport sizes',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Performance and regression testing',
-        summary:
-          'Run load tests and ensure no performance regressions vs baseline',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: 'Write unit tests for core business logic', summary: 'Target ≥ 80% code coverage for critical modules and utility functions', taskStatus: 'NOT_STARTED' },
+      { title: 'Implement end-to-end test scenarios', summary: 'Cover critical user journeys with Playwright or Cypress E2E tests', taskStatus: 'NOT_STARTED' },
+      { title: 'Cross-browser and device compatibility testing', summary: 'Verify on Chrome, Firefox, Safari, and key mobile viewport sizes', taskStatus: 'NOT_STARTED' },
+      { title: 'Performance and regression testing', summary: 'Run load tests and ensure no performance regressions vs baseline', taskStatus: 'NOT_STARTED' },
     ];
   } else if (
     t.includes('deploy') ||
@@ -271,57 +220,19 @@ function generateLocalTasksForStory(
     t.includes('release')
   ) {
     tasks = [
-      {
-        title: 'Configure production server and SSL',
-        summary:
-          'Set up production environment with domain, SSL certificates, and environment vars',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Set up monitoring and error tracking',
-        summary:
-          'Configure uptime monitoring, error logging (Sentry/similar), and performance alerts',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Run pre-launch security and QA checklist',
-        summary:
-          'Verify HTTPS, CORS, auth guards, and critical user paths in production',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Document deployment and rollback runbook',
-        summary:
-          'Write step-by-step deployment, rollback, and incident response procedures',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: 'Configure production server and SSL', summary: 'Set up production environment with domain, SSL certificates, and environment vars', taskStatus: 'NOT_STARTED' },
+      { title: 'Set up monitoring and error tracking', summary: 'Configure uptime monitoring, error logging (Sentry/similar), and performance alerts', taskStatus: 'NOT_STARTED' },
+      { title: 'Run pre-launch security and QA checklist', summary: 'Verify HTTPS, CORS, auth guards, and critical user paths in production', taskStatus: 'NOT_STARTED' },
+      { title: 'Document deployment and rollback runbook', summary: 'Write step-by-step deployment, rollback, and incident response procedures', taskStatus: 'NOT_STARTED' },
     ];
   } else {
     const short =
       storyTitle.length > 50 ? storyTitle.slice(0, 50) + '…' : storyTitle;
     tasks = [
-      {
-        title: `Analyse and document requirements`,
-        summary: `Review requirements for "${short}", clarify edge cases, and define acceptance criteria`,
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Implement core feature logic',
-        summary:
-          'Build the main functionality as described in the story with clean, testable code',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Add input validation and error handling',
-        summary:
-          'Ensure all inputs are validated and errors surface clearly to the user',
-        taskStatus: 'NOT_STARTED',
-      },
-      {
-        title: 'Write unit and integration tests',
-        summary: 'Verify correct behaviour and protect against regressions',
-        taskStatus: 'NOT_STARTED',
-      },
+      { title: `Analyse and document requirements`, summary: `Review requirements for "${short}", clarify edge cases, and define acceptance criteria`, taskStatus: 'NOT_STARTED' },
+      { title: 'Implement core feature logic', summary: 'Build the main functionality as described in the story with clean, testable code', taskStatus: 'NOT_STARTED' },
+      { title: 'Add input validation and error handling', summary: 'Ensure all inputs are validated and errors surface clearly to the user', taskStatus: 'NOT_STARTED' },
+      { title: 'Write unit and integration tests', summary: 'Verify correct behaviour and protect against regressions', taskStatus: 'NOT_STARTED' },
     ];
   }
 
@@ -435,20 +346,25 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   const [generating, setGenerating] = useState(false);
   const [hasConfirmedDates, setHasConfirmedDates] = useState(false);
 
+  // AI Refine state
+  const [isRefining, setIsRefining] = useState(false);
+  const [refinePrompt, setRefinePrompt] = useState('');
+  const [refineLoading, setRefineLoading] = useState(false);
+
   const isDateValid = Boolean(
     startDate &&
-    endDate &&
-    !isNaN(new Date(startDate).getTime()) &&
-    !isNaN(new Date(endDate).getTime()) &&
-    new Date(startDate) < new Date(endDate),
+      endDate &&
+      !isNaN(new Date(startDate).getTime()) &&
+      !isNaN(new Date(endDate).getTime()) &&
+      new Date(startDate) < new Date(endDate),
   );
 
   const isInvalidRange = Boolean(
     startDate &&
-    endDate &&
-    !isNaN(new Date(startDate).getTime()) &&
-    !isNaN(new Date(endDate).getTime()) &&
-    new Date(startDate) >= new Date(endDate),
+      endDate &&
+      !isNaN(new Date(startDate).getTime()) &&
+      !isNaN(new Date(endDate).getTime()) &&
+      new Date(startDate) >= new Date(endDate),
   );
 
   useEffect(() => {
@@ -603,13 +519,23 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               typeof d === 'string'
                 ? d
                 : d.title || d.name || d.task || `Task ${dIdx + 1}`;
+
+            const summary =
+              typeof d === 'string'
+                ? generateLocalSummaryForStory(d, blueprint)
+                : d.description ||
+                  d.purpose ||
+                  generateLocalSummaryForStory(
+                    d.title || d.name || '',
+                    blueprint,
+                  );
+
             // Generate contextual template tasks immediately
             const localTasks = generateLocalTasksForStory(title, blueprint);
             return {
               _id: `story-${idx}-${dIdx}`,
               title,
-              summary:
-                typeof d === 'string' ? '' : d.description || d.purpose || '',
+              summary,
               storyStatus: 'NOT_STARTED',
               importantUrls: [],
               tasks: localTasks.map((t, tIdx) => ({
@@ -635,10 +561,11 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
     return generated;
   };
 
-  // ── Upgrade template tasks with AI-generated tasks from backend ──
+  // ── Upgrade template tasks & summaries with AI-generated data from backend ──
 
   const enhanceWithAiTasks = async (
     mstones: Milestone[],
+    instruction?: string,
   ): Promise<Milestone[]> => {
     if (!sessionId) return mstones;
     const allStories = mstones.flatMap((m) =>
@@ -657,7 +584,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ stories: allStories }),
+        body: JSON.stringify({ stories: allStories, instruction }),
       });
       if (!res.ok) return mstones;
       const enhanced: any[] = await res.json();
@@ -668,18 +595,22 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
         ...m,
         stories: (m.stories ?? []).map((s) => {
           const aiStory = enhanced[idx++];
-          if (
-            aiStory &&
-            Array.isArray(aiStory.tasks) &&
-            aiStory.tasks.length > 0
-          ) {
+          if (aiStory) {
             return {
               ...s,
-              tasks: aiStory.tasks.slice(0, 5).map((t: any) => ({
-                title: String(t.title || ''),
-                summary: String(t.summary || t.description || ''),
-                taskStatus: 'NOT_STARTED',
-              })),
+              summary:
+                aiStory.summary && typeof aiStory.summary === 'string'
+                  ? aiStory.summary
+                  : s.summary,
+              tasks:
+                Array.isArray(aiStory.tasks) && aiStory.tasks.length > 0
+                  ? aiStory.tasks.slice(0, 5).map((t: any, tIdx: number) => ({
+                      _id: `task-${s._id}-${tIdx}`,
+                      title: String(t.title || ''),
+                      summary: String(t.summary || t.description || ''),
+                      taskStatus: 'NOT_STARTED',
+                    }))
+                  : s.tasks,
             };
           }
           return s;
@@ -687,6 +618,24 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
       }));
     } catch {
       return mstones;
+    }
+  };
+
+  // ── Refine with AI submission ──
+
+  const handleRefineSubmit = async () => {
+    if (!refinePrompt.trim() || refineLoading) return;
+    setRefineLoading(true);
+    try {
+      const updated = await enhanceWithAiTasks(milestones, refinePrompt);
+      setMilestones(updated);
+      setRefinePrompt('');
+      setIsRefining(false);
+      toast.success('Stories and tasks refined with AI!');
+    } catch (err: any) {
+      toast.error('Failed to refine milestones with AI.');
+    } finally {
+      setRefineLoading(false);
     }
   };
 
@@ -731,7 +680,6 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
           startDate,
           endDate,
         );
-        // Try to upgrade local template tasks with AI (async, non-blocking feel)
         generatedMilestones = await enhanceWithAiTasks(generatedMilestones);
       }
 
@@ -779,7 +727,6 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
         if (isTask && newTask) {
           updatedStories = updatedStories.map((story) => {
             if (story._id !== newTask.storyId) return story;
-            // Enforce max 5 tasks
             if ((story.tasks ?? []).length >= 5) return story;
             return {
               ...story,
@@ -790,78 +737,6 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
           updatedStories = [...updatedStories, storyData];
         }
         return { ...m, stories: updatedStories };
-      }),
-    );
-  };
-
-  // ── Edit / Delete handlers for local state ──
-
-  const handleEditStory = (storyId: string, title: string, summary: string) => {
-    if (selectedMilestoneIndex === null) return;
-    setMilestones((prev) =>
-      prev.map((m, idx) => {
-        if (idx !== selectedMilestoneIndex) return m;
-        return {
-          ...m,
-          stories: (m.stories ?? []).map((s) =>
-            s._id === storyId ? { ...s, title, summary } : s,
-          ),
-        };
-      }),
-    );
-  };
-
-  const handleDeleteStory = (storyId: string) => {
-    if (selectedMilestoneIndex === null) return;
-    setMilestones((prev) =>
-      prev.map((m, idx) => {
-        if (idx !== selectedMilestoneIndex) return m;
-        return {
-          ...m,
-          stories: (m.stories ?? []).filter((s) => s._id !== storyId),
-        };
-      }),
-    );
-  };
-
-  const handleEditTask = (
-    storyId: string,
-    taskIndex: number,
-    title: string,
-    summary: string,
-  ) => {
-    if (selectedMilestoneIndex === null) return;
-    setMilestones((prev) =>
-      prev.map((m, idx) => {
-        if (idx !== selectedMilestoneIndex) return m;
-        return {
-          ...m,
-          stories: (m.stories ?? []).map((s) => {
-            if (s._id !== storyId) return s;
-            const tasks = [...(s.tasks ?? [])];
-            tasks[taskIndex] = { ...tasks[taskIndex], title, summary };
-            return { ...s, tasks };
-          }),
-        };
-      }),
-    );
-  };
-
-  const handleDeleteTask = (storyId: string, taskIndex: number) => {
-    if (selectedMilestoneIndex === null) return;
-    setMilestones((prev) =>
-      prev.map((m, idx) => {
-        if (idx !== selectedMilestoneIndex) return m;
-        return {
-          ...m,
-          stories: (m.stories ?? []).map((s) => {
-            if (s._id !== storyId) return s;
-            return {
-              ...s,
-              tasks: (s.tasks ?? []).filter((_, i) => i !== taskIndex),
-            };
-          }),
-        };
       }),
     );
   };
@@ -894,7 +769,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             </div>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
               Set the tentative start and completion dates. AI will generate
-              milestones, stories, and up to&nbsp;
+              milestones, stories with detailed descriptions, and up to&nbsp;
               <strong>5 tasks per story</strong> based on your blueprint.
             </DialogDescription>
           </DialogHeader>
@@ -928,8 +803,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground/80 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative
-                  Start
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative Start
                 </label>
                 <TimelineDatePicker
                   value={startDate}
@@ -939,8 +813,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground/80 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative
-                  End
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative End
                 </label>
                 <TimelineDatePicker
                   value={endDate}
@@ -1024,8 +897,8 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               Milestones &amp; Timeline Review
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Review AI-generated milestones, stories, and tasks. Edit or delete
-              anything before finding talent.
+              Review AI-generated milestones, story descriptions, and tasks. Refine
+              with AI assistant before finding talent.
             </p>
           </div>
 
@@ -1033,7 +906,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <Button
               variant="outline"
               onClick={onBack}
-              disabled={isFindingTalent}
+              disabled={isFindingTalent || refineLoading}
               className="whitespace-nowrap"
             >
               Back to Talent Requirements
@@ -1041,17 +914,25 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <Button
               variant="outline"
               onClick={() => setShowDateDialog(true)}
-              disabled={isFindingTalent || generating}
+              disabled={isFindingTalent || generating || refineLoading}
               className="whitespace-nowrap flex items-center gap-1.5"
             >
               <Edit3 className="h-3.5 w-3.5" />
-              {startDate && endDate
-                ? 'Edit Tentative Dates'
-                : 'Set Tentative Dates'}
+              {startDate && endDate ? 'Edit Tentative Dates' : 'Set Tentative Dates'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs font-bold h-9 gap-1.5 bg-primary/15 border-primary/20 text-primary hover:bg-primary/25 whitespace-nowrap"
+              onClick={() => setIsRefining(!isRefining)}
+              disabled={refineLoading || milestones.length === 0}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Refine with AI
             </Button>
             <Button
               onClick={handleApproveClick}
-              disabled={isFindingTalent || milestones.length === 0}
+              disabled={isFindingTalent || milestones.length === 0 || refineLoading}
               className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold whitespace-nowrap"
             >
               {isFindingTalent ? (
@@ -1068,6 +949,66 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             </Button>
           </div>
         </div>
+
+        {/* Refine with AI Assistant Box */}
+        {isRefining && (
+          <div className="space-y-4 animate-in fade-in duration-200 bg-primary/5 border border-primary/15 rounded-2xl p-6 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Refine Milestones &amp; Stories with AI
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRefining(false)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Close
+              </button>
+            </div>
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              Describe how you want AI to refine these milestones, user stories, or
+              tasks (e.g., &ldquo;Focus phase 1 on core authentication and API setup&rdquo;
+              or &ldquo;Add mobile UI tasks for trader dashboard&rdquo;).
+            </div>
+            <textarea
+              value={refinePrompt}
+              onChange={(e) => setRefinePrompt(e.target.value)}
+              placeholder="Enter instructions to refine stories, descriptions, and tasks..."
+              className="w-full min-h-[90px] bg-background/60 text-foreground placeholder:text-muted-foreground/50 p-3 rounded-xl border border-border/40 outline-none text-sm focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRefining(false)}
+                disabled={refineLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!refinePrompt.trim() || refineLoading}
+                onClick={handleRefineSubmit}
+                className="bg-primary text-primary-foreground font-bold flex items-center gap-1.5"
+              >
+                {refineLoading ? (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 animate-spin" />
+                    Refining with AI…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Refine Milestones
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Timeline & Stories */}
         <div className="bg-card/40 border border-border/40 rounded-xl overflow-hidden shadow-sm backdrop-blur-sm relative">
@@ -1097,17 +1038,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                       fetchMilestones={fetchMilestones}
                       handleStorySubmit={handleStorySubmit}
                       isFreelancer={false}
-                      // ── Local edit/delete callbacks ──
-                      onEditStory={(storyId, title, summary) =>
-                        handleEditStory(storyId, title, summary)
-                      }
-                      onDeleteStory={(storyId) => handleDeleteStory(storyId)}
-                      onEditTask={(storyId, taskIndex, title, summary) =>
-                        handleEditTask(storyId, taskIndex, title, summary)
-                      }
-                      onDeleteTask={(storyId, taskIndex) =>
-                        handleDeleteTask(storyId, taskIndex)
-                      }
+                      isLiveRoomPreview={true}
                     />
                   </div>
                 )}
@@ -1130,8 +1061,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                     onClick={() => setShowDateDialog(true)}
                     className="bg-primary text-primary-foreground font-bold"
                   >
-                    <Calendar className="mr-2 h-4 w-4" /> Set Project Tentative
-                    Dates
+                    <Calendar className="mr-2 h-4 w-4" /> Set Project Tentative Dates
                   </Button>
                 </div>
               </div>

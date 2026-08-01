@@ -12,6 +12,7 @@ interface StoriesSectionProps {
   handleStorySubmit: any;
   isFreelancer?: boolean;
   freelancerId?: string;
+  isLiveRoomPreview?: boolean;
   /** Optional local-mode edit/delete callbacks (used in pre-launch planner) */
   onEditStory?: (storyId: string, title: string, summary: string) => void;
   onDeleteStory?: (storyId: string) => void;
@@ -30,6 +31,7 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
   handleStorySubmit,
   isFreelancer = false,
   freelancerId,
+  isLiveRoomPreview = false,
   onEditStory,
   onDeleteStory,
   onEditTask,
@@ -52,6 +54,7 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
         handleStorySubmit={handleStorySubmit}
         isFreelancer={isFreelancer}
         freelancerId={freelancerId}
+        isLiveRoomPreview={isLiveRoomPreview}
         onEditStory={onEditStory}
         onDeleteStory={onDeleteStory}
         onEditTask={onEditTask}

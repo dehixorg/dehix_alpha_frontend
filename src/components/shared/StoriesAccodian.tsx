@@ -27,6 +27,7 @@ const StoriesAccordion = ({
   handleStorySubmit,
   isFreelancer = false,
   freelancerId,
+  isLiveRoomPreview = false,
   onEditStory,
   onDeleteStory,
   onEditTask,
@@ -37,6 +38,7 @@ const StoriesAccordion = ({
   handleStorySubmit: any;
   isFreelancer: boolean;
   freelancerId?: string;
+  isLiveRoomPreview?: boolean;
   /** Optional local-mode callbacks */
   onEditStory?: (storyId: string, title: string, summary: string) => void;
   onDeleteStory?: (storyId: string) => void;
@@ -222,24 +224,27 @@ const StoriesAccordion = ({
                 idx={idx}
                 milestoneStoriesLength={(milestone.stories ?? []).length}
                 setIsTaskDialogOpen={setIsTaskDialogOpen}
+                isLiveRoomPreview={isLiveRoomPreview}
                 // Pass story edit/delete callbacks for inline header display
                 onEditStory={
-                  onEditStory ? () => openEditStory(story) : undefined
+                  !isLiveRoomPreview && onEditStory
+                    ? () => openEditStory(story)
+                    : undefined
                 }
                 onDeleteStory={
-                  onDeleteStory && story._id
+                  !isLiveRoomPreview && onDeleteStory && story._id
                     ? () => handleDeleteStoryClick(story._id!)
                     : undefined
                 }
                 // Pass per-story task callbacks
                 onEditTask={
-                  onEditTask
+                  !isLiveRoomPreview && onEditTask
                     ? (taskIndex, title, summary) =>
                         onEditTask(story._id!, taskIndex, title, summary)
                     : undefined
                 }
                 onDeleteTask={
-                  onDeleteTask
+                  !isLiveRoomPreview && onDeleteTask
                     ? (taskIndex) => onDeleteTask(story._id!, taskIndex)
                     : undefined
                 }

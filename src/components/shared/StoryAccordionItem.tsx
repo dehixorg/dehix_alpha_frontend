@@ -40,6 +40,7 @@ interface StoryAccordionItemProps {
   isFreelancer: boolean;
   freelancerId?: string;
   fetchMilestones: () => void;
+  isLiveRoomPreview?: boolean;
   /** Optional local-mode story edit/delete callbacks */
   onEditStory?: () => void;
   onDeleteStory?: () => void;
@@ -59,6 +60,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   isFreelancer = false,
   freelancerId,
   fetchMilestones,
+  isLiveRoomPreview = false,
   onEditStory,
   onDeleteStory,
   onEditTask,
@@ -87,7 +89,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   };
 
   const taskCount = story?.tasks?.length ?? 0;
-  const localTaskMode = Boolean(onEditTask || onDeleteTask);
+  const localTaskMode = !isLiveRoomPreview && Boolean(onEditTask || onDeleteTask);
 
   const { text: projectStatus } = getStatusBadge(story.storyStatus);
   const normalizedTaskStatuses: string[] = (story?.tasks ?? [])
@@ -486,6 +488,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                 milestoneId={milestoneId}
                                 storyId={story._id}
                                 taskBadgeStyle={taskBadgeStyle}
+                                isLiveRoomPreview={isLiveRoomPreview}
                               />
                               {/* Edit / Delete task — local mode */}
                               {localTaskMode &&

@@ -438,27 +438,29 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
 
   return (
     <>
-      <Button
-        type="button"
-        variant="link"
-        size="icon"
-        className="rounded-md text-muted-foreground hover:text-foreground justify-center"
-        disabled={
-          isFreelancer
-            ? task?.freelancers?.[0]?.freelancerId !== user?.uid ||
-              isUpdateDisabled
-            : false
-        }
-        onClick={() => {
-          if (isFreelancer) {
-            handleRequestPermission();
-            return;
+      {!isLiveRoomPreview && (
+        <Button
+          type="button"
+          variant="link"
+          size="icon"
+          className="rounded-md text-muted-foreground hover:text-foreground justify-center"
+          disabled={
+            isFreelancer
+              ? task?.freelancers?.[0]?.freelancerId !== user?.uid ||
+                isUpdateDisabled
+              : false
           }
-          setShowPermissionDialog(true);
-        }}
-      >
-        <Pencil />
-      </Button>
+          onClick={() => {
+            if (isFreelancer) {
+              handleRequestPermission();
+              return;
+            }
+            setShowPermissionDialog(true);
+          }}
+        >
+          <Pencil />
+        </Button>
+      )}
 
       <TaskUpdateDeatilDialog
         fetchMilestones={fetchMilestones}
