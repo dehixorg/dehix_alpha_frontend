@@ -40,18 +40,21 @@ interface TaskCardProps {
   taskBadgeStyle: string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({
-  task,
-  isFreelancer,
-  onAcceptTask,
-  onRejectTask,
-  onApproveUpdatePermission,
-  onRejectUpdatePermission,
-  shouldShowAcceptRejectButtons,
-  fetchMilestones,
-  milestoneId,
-  storyId,
-}) => {
+const TaskCard: React.FC<TaskCardProps> = (props) => {
+  const {
+    task,
+    isFreelancer,
+    onAcceptTask,
+    onRejectTask,
+    onApproveUpdatePermission,
+    onRejectUpdatePermission,
+    shouldShowAcceptRejectButtons,
+    fetchMilestones,
+    milestoneId,
+    storyId,
+    taskBadgeStyle,
+  } = props;
+
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -436,9 +439,14 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
         !task?.freelancers?.[0]?.updatePermissionBusiness)
     : false;
 
+  // Show pencil edit button ONLY on dashboard for real DB milestones (not pre-launch LiveRoom preview)
+  const showDashboardEditButton = Boolean(
+    milestoneId && !milestoneId.startsWith('milestone-'),
+  );
+
   return (
     <>
-      {!isLiveRoomPreview && (
+      {showDashboardEditButton && (
         <Button
           type="button"
           variant="link"

@@ -10,7 +10,7 @@ import {
   Edit3,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { toast } from 'react-hot-toast';
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
 import {
   Dialog,
@@ -631,9 +631,9 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
       setMilestones(updated);
       setRefinePrompt('');
       setIsRefining(false);
-      toast.success('Stories and tasks refined with AI!');
+      notifySuccess('Stories and tasks refined with AI!');
     } catch (err: any) {
-      toast.error('Failed to refine milestones with AI.');
+      notifyError('Failed to refine milestones with AI.');
     } finally {
       setRefineLoading(false);
     }
@@ -697,8 +697,6 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
     }
   };
 
-  // ── Approve handler ──
-
   const handleApproveClick = () => {
     if (
       !hasConfirmedDates &&
@@ -742,6 +740,145 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   };
 
   const durationInfo = getDurationInfo();
+
+  const handleEditStory = (
+    storyId: string,
+    title: string,
+    summary: string,
+  ) => {
+    setMilestones((prev) =>
+      prev.map((m) => {
+        const stories = (m.stories ?? []).map((s) =>
+          s._id === storyId ? { ...s, title, summary } : s,
+        );
+        return { ...m, stories };
+      }),
+    );
+    notifySuccess('Story updated successfully!');
+  };
+
+  const handleDeleteStory = (storyId: string) => {
+    setMilestones((prev) =>
+      prev.map((m) => {
+        const stories = (m.stories ?? []).filter((s) => s._id !== storyId);
+        return { ...m, stories };
+      }),
+    );
+    notifySuccess('Story deleted successfully!');
+  };
+
+  const handleEditTask = (
+    storyId: string,
+    taskIndex: number,
+    title: string,
+    summary: string,
+  ) => {
+    setMilestones((prev) =>
+      prev.map((m) => {
+        const stories = (m.stories ?? []).map((s) => {
+          if (s._id !== storyId) return s;
+          const tasks = [...(s.tasks ?? [])];
+          if (taskIndex >= 0 && taskIndex < tasks.length) {
+            tasks[taskIndex] = { ...tasks[taskIndex], title, summary };
+          }
+          return { ...s, tasks };
+        });
+        return { ...m, stories };
+      }),
+    );
+    notifySuccess('Task updated successfully!');
+  };
+
+  const handleDeleteTask = (storyId: string, taskIndex: number) => {
+    setMilestones((prev) =>
+      prev.map((m) => {
+        const stories = (m.stories ?? []).map((s) => {
+          if (s._id !== storyId) return s;
+          const tasks = (s.tasks ?? []).filter((_, i) => i !== taskIndex);
+          return { ...s, tasks };
+        });
+        return { ...m, stories };
+      }),
+    );
+    notifySuccess('Task deleted successfully!');
+  };
+
+  const handleRefineTask = async (
+    storyId: string,
+    taskIndex: number,
+    instruction: string,
+  ) => {
+    let targetTaskTitle = '';
+    let targetTaskSummary = '';
+
+    milestones.forEach((m) => {
+      (m.stories ?? []).forEach((s) => {
+        if (s._id === storyId && s.tasks?.[taskIndex]) {
+          targetTaskTitle = s.tasks[taskIndex].title;
+          targetTaskSummary = s.tasks[taskIndex].summary;
+        }
+      });
+    });
+
+    let newTitle = targetTaskTitle;
+    let newSummary = targetTaskSummary;
+
+    // Use AI backend if session available
+    if (sessionId) {
+      try {
+        const token = localStorage.getItem('dehix_token');
+        const res = await fetch(`/api/launch/${sessionId}/tasks/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            stories: [
+              {
+                title: targetTaskTitle || 'Task',
+                summary: targetTaskSummary,
+              },
+            ],
+            instruction,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data[0]?.tasks?.[0]) {
+            newTitle = data[0].tasks[0].title || targetTaskTitle;
+            newSummary = data[0].tasks[0].summary || targetTaskSummary;
+          }
+        }
+      } catch {
+        // Fallback to local refinement
+      }
+    }
+
+    if (newSummary === targetTaskSummary) {
+      newSummary = `${targetTaskSummary ? targetTaskSummary + ' ' : ''}[Refinement: ${instruction}]`;
+    }
+
+    setMilestones((prev) =>
+      prev.map((m) => {
+        const stories = (m.stories ?? []).map((s) => {
+          if (s._id !== storyId) return s;
+          const tasks = [...(s.tasks ?? [])];
+          if (taskIndex >= 0 && taskIndex < tasks.length) {
+            tasks[taskIndex] = {
+              ...tasks[taskIndex],
+              title: newTitle,
+              summary: newSummary,
+            };
+          }
+          return { ...s, tasks };
+        });
+        return { ...m, stories };
+      }),
+    );
+    notifySuccess('Task refined with AI!');
+  };
 
   // ── Render ──
 
@@ -897,8 +1034,8 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               Milestones &amp; Timeline Review
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Review AI-generated milestones, story descriptions, and tasks. Refine
-              with AI assistant before finding talent.
+              Review AI-generated milestones, stories, and tasks. Edit stories or
+              refine tasks with AI before finding talent.
             </p>
           </div>
 
@@ -906,7 +1043,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <Button
               variant="outline"
               onClick={onBack}
-              disabled={isFindingTalent || refineLoading}
+              disabled={isFindingTalent}
               className="whitespace-nowrap"
             >
               Back to Talent Requirements
@@ -914,25 +1051,15 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <Button
               variant="outline"
               onClick={() => setShowDateDialog(true)}
-              disabled={isFindingTalent || generating || refineLoading}
+              disabled={isFindingTalent || generating}
               className="whitespace-nowrap flex items-center gap-1.5"
             >
               <Edit3 className="h-3.5 w-3.5" />
               {startDate && endDate ? 'Edit Tentative Dates' : 'Set Tentative Dates'}
             </Button>
             <Button
-              size="sm"
-              variant="outline"
-              className="text-xs font-bold h-9 gap-1.5 bg-primary/15 border-primary/20 text-primary hover:bg-primary/25 whitespace-nowrap"
-              onClick={() => setIsRefining(!isRefining)}
-              disabled={refineLoading || milestones.length === 0}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              Refine with AI
-            </Button>
-            <Button
               onClick={handleApproveClick}
-              disabled={isFindingTalent || milestones.length === 0 || refineLoading}
+              disabled={isFindingTalent || milestones.length === 0}
               className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold whitespace-nowrap"
             >
               {isFindingTalent ? (
@@ -949,66 +1076,6 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             </Button>
           </div>
         </div>
-
-        {/* Refine with AI Assistant Box */}
-        {isRefining && (
-          <div className="space-y-4 animate-in fade-in duration-200 bg-primary/5 border border-primary/15 rounded-2xl p-6 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-primary">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Refine Milestones &amp; Stories with AI
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsRefining(false)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Close
-              </button>
-            </div>
-            <div className="text-xs text-muted-foreground leading-relaxed">
-              Describe how you want AI to refine these milestones, user stories, or
-              tasks (e.g., &ldquo;Focus phase 1 on core authentication and API setup&rdquo;
-              or &ldquo;Add mobile UI tasks for trader dashboard&rdquo;).
-            </div>
-            <textarea
-              value={refinePrompt}
-              onChange={(e) => setRefinePrompt(e.target.value)}
-              placeholder="Enter instructions to refine stories, descriptions, and tasks..."
-              className="w-full min-h-[90px] bg-background/60 text-foreground placeholder:text-muted-foreground/50 p-3 rounded-xl border border-border/40 outline-none text-sm focus:border-primary/45 focus:ring-1 focus:ring-primary/25 transition-all resize-none"
-            />
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRefining(false)}
-                disabled={refineLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                disabled={!refinePrompt.trim() || refineLoading}
-                onClick={handleRefineSubmit}
-                className="bg-primary text-primary-foreground font-bold flex items-center gap-1.5"
-              >
-                {refineLoading ? (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5 animate-spin" />
-                    Refining with AI…
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Refine Milestones
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Timeline & Stories */}
         <div className="bg-card/40 border border-border/40 rounded-xl overflow-hidden shadow-sm backdrop-blur-sm relative">
@@ -1038,7 +1105,11 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                       fetchMilestones={fetchMilestones}
                       handleStorySubmit={handleStorySubmit}
                       isFreelancer={false}
-                      isLiveRoomPreview={true}
+                      onEditStory={handleEditStory}
+                      onDeleteStory={handleDeleteStory}
+                      onEditTask={handleEditTask}
+                      onDeleteTask={handleDeleteTask}
+                      onRefineTask={handleRefineTask}
                     />
                   </div>
                 )}

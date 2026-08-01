@@ -21,18 +21,7 @@ import {
 
 const MAX_TASKS = 5;
 
-const StoriesAccordion = ({
-  milestone,
-  fetchMilestones,
-  handleStorySubmit,
-  isFreelancer = false,
-  freelancerId,
-  isLiveRoomPreview = false,
-  onEditStory,
-  onDeleteStory,
-  onEditTask,
-  onDeleteTask,
-}: {
+interface StoriesAccordionProps {
   milestone: Milestone;
   fetchMilestones: any;
   handleStorySubmit: any;
@@ -49,7 +38,27 @@ const StoriesAccordion = ({
     summary: string,
   ) => void;
   onDeleteTask?: (storyId: string, taskIndex: number) => void;
-}) => {
+  onRefineTask?: (
+    storyId: string,
+    taskIndex: number,
+    instruction: string,
+  ) => void;
+}
+
+const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
+  const {
+    milestone,
+    fetchMilestones,
+    handleStorySubmit,
+    isFreelancer = false,
+    freelancerId,
+    isLiveRoomPreview = false,
+    onEditStory,
+    onDeleteStory,
+    onEditTask,
+    onDeleteTask,
+    onRefineTask,
+  } = props;
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
   );
@@ -227,25 +236,29 @@ const StoriesAccordion = ({
                 isLiveRoomPreview={isLiveRoomPreview}
                 // Pass story edit/delete callbacks for inline header display
                 onEditStory={
-                  !isLiveRoomPreview && onEditStory
-                    ? () => openEditStory(story)
-                    : undefined
+                  onEditStory ? () => openEditStory(story) : undefined
                 }
                 onDeleteStory={
-                  !isLiveRoomPreview && onDeleteStory && story._id
+                  onDeleteStory && story._id
                     ? () => handleDeleteStoryClick(story._id!)
                     : undefined
                 }
                 // Pass per-story task callbacks
                 onEditTask={
-                  !isLiveRoomPreview && onEditTask
+                  onEditTask
                     ? (taskIndex, title, summary) =>
                         onEditTask(story._id!, taskIndex, title, summary)
                     : undefined
                 }
                 onDeleteTask={
-                  !isLiveRoomPreview && onDeleteTask
+                  onDeleteTask
                     ? (taskIndex) => onDeleteTask(story._id!, taskIndex)
+                    : undefined
+                }
+                onRefineTask={
+                  onRefineTask
+                    ? (taskIndex, instruction) =>
+                        onRefineTask(story._id!, taskIndex, instruction)
                     : undefined
                 }
               />

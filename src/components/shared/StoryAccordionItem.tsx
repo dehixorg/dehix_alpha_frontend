@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Info, FileText, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Info, FileText, Edit2, Trash2, Sparkles } from 'lucide-react';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { Badge } from '../ui/badge';
@@ -44,32 +44,40 @@ interface StoryAccordionItemProps {
   /** Optional local-mode story edit/delete callbacks */
   onEditStory?: () => void;
   onDeleteStory?: () => void;
-  /** Optional local-mode task edit/delete callbacks */
+  /** Optional local-mode task edit/delete/refine callbacks */
   onEditTask?: (taskIndex: number, title: string, summary: string) => void;
   onDeleteTask?: (taskIndex: number) => void;
+  onRefineTask?: (taskIndex: number, instruction: string) => void;
 }
 
 const MAX_TASKS_PER_STORY = 5;
 
-const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
-  milestoneId,
-  story,
-  idx,
-  milestoneStoriesLength,
-  setIsTaskDialogOpen,
-  isFreelancer = false,
-  freelancerId,
-  fetchMilestones,
-  isLiveRoomPreview = false,
-  onEditStory,
-  onDeleteStory,
-  onEditTask,
-  onDeleteTask,
-}) => {
+const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
+  const {
+    milestoneId,
+    story,
+    idx,
+    milestoneStoriesLength,
+    setIsTaskDialogOpen,
+    isFreelancer = false,
+    freelancerId,
+    fetchMilestones,
+    isLiveRoomPreview = false,
+    onEditStory,
+    onDeleteStory,
+    onEditTask,
+    onDeleteTask,
+    onRefineTask,
+  } = props;
   // Edit-task modal state
   const [editingTaskIndex, setEditingTaskIndex] = useState<number | null>(null);
   const [editTaskTitle, setEditTaskTitle] = useState('');
   const [editTaskSummary, setEditTaskSummary] = useState('');
+
+  // Refine-task modal state
+  const [refiningTaskIndex, setRefiningTaskIndex] = useState<number | null>(null);
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [refineLoading, setRefineLoading] = useState(false);
 
   const openEditTask = (originalIdx: number, task: any) => {
     setEditingTaskIndex(originalIdx);
@@ -488,35 +496,39 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                 milestoneId={milestoneId}
                                 storyId={story._id}
                                 taskBadgeStyle={taskBadgeStyle}
-                                isLiveRoomPreview={isLiveRoomPreview}
                               />
-                              {/* Edit / Delete task — local mode */}
-                              {localTaskMode &&
-                                !isFreelancer &&
-                                originalIdx >= 0 && (
+                              {/* Refine / Delete task overlay */}
+                              {!isFreelancer &&
+                                originalIdx >= 0 &&
+                                (onRefineTask || onDeleteTask) && (
                                   <div className="absolute top-2 right-2 flex items-center gap-1 opacity-90 group-hover/task:opacity-100 transition-opacity z-10">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        openEditTask(originalIdx, task);
-                                      }}
-                                      className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors shadow-xs"
-                                      title="Edit task"
-                                    >
-                                      <Edit2 className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteTaskClick(originalIdx);
-                                      }}
-                                      className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-xs"
-                                      title="Delete task"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
+                                    {onRefineTask && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setRefiningTaskIndex(originalIdx);
+                                          setRefineInstruction('');
+                                        }}
+                                        className="p-1 rounded-md bg-background/90 border border-primary/40 text-primary hover:bg-primary/10 transition-colors shadow-xs"
+                                        title="Refine task with AI"
+                                      >
+                                        <Sparkles className="h-3 w-3" />
+                                      </button>
+                                    )}
+                                    {onDeleteTask && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteTaskClick(originalIdx);
+                                        }}
+                                        className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-xs"
+                                        title="Delete task"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    )}
                                   </div>
                                 )}
                             </div>
@@ -660,6 +672,82 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Refine task with AI modal */}
+      <Dialog
+        open={refiningTaskIndex !== null}
+        onOpenChange={(open) => {
+          if (!open) setRefiningTaskIndex(null);
+        }}
+      >
+        <DialogContent className="max-w-md bg-card border-border shadow-xl rounded-xl p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary text-base font-bold">
+              <Sparkles className="h-4 w-4 text-primary" /> Refine Task with AI
+            </DialogTitle>
+          </DialogHeader>
+
+          {refiningTaskIndex !== null && (story.tasks ?? [])[refiningTaskIndex] && (
+            <div className="space-y-4 mt-2">
+              <div className="p-3 rounded-lg bg-muted/40 border border-border/50 text-xs space-y-1">
+                <div className="font-semibold text-foreground">
+                  Task: {(story.tasks ?? [])[refiningTaskIndex].title}
+                </div>
+                <div className="text-muted-foreground">
+                  {(story.tasks ?? [])[refiningTaskIndex].summary || 'No summary'}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground/90">
+                  AI Refinement Instructions
+                </label>
+                <textarea
+                  value={refineInstruction}
+                  onChange={(e) => setRefineInstruction(e.target.value)}
+                  placeholder="Describe how to refine this task (e.g. 'Use OAuth2 and Google login', 'Add backend validation details')..."
+                  className="w-full min-h-[90px] bg-background text-foreground text-xs p-3 rounded-lg border border-border outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRefiningTaskIndex(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!refineInstruction.trim() || refineLoading}
+                  onClick={async () => {
+                    if (refiningTaskIndex === null) return;
+                    setRefineLoading(true);
+                    try {
+                      await onRefineTask?.(refiningTaskIndex, refineInstruction);
+                      setRefiningTaskIndex(null);
+                    } finally {
+                      setRefineLoading(false);
+                    }
+                  }}
+                  className="bg-primary text-primary-foreground font-bold flex items-center gap-1.5"
+                >
+                  {refineLoading ? (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5 animate-spin" /> Refining…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5" /> Refine Task
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AccordionItem>
   );
 };

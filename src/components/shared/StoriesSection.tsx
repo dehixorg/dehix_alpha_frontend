@@ -23,20 +23,27 @@ interface StoriesSectionProps {
     summary: string,
   ) => void;
   onDeleteTask?: (storyId: string, taskIndex: number) => void;
+  onRefineTask?: (
+    storyId: string,
+    taskIndex: number,
+    instruction: string,
+  ) => void;
 }
 
-const StoriesSection: React.FC<StoriesSectionProps> = ({
-  milestone,
-  fetchMilestones,
-  handleStorySubmit,
-  isFreelancer = false,
-  freelancerId,
-  isLiveRoomPreview = false,
-  onEditStory,
-  onDeleteStory,
-  onEditTask,
-  onDeleteTask,
-}) => {
+const StoriesSection: React.FC<StoriesSectionProps> = (props) => {
+  const {
+    milestone,
+    fetchMilestones,
+    handleStorySubmit,
+    isFreelancer = false,
+    freelancerId,
+    isLiveRoomPreview = false,
+    onEditStory,
+    onDeleteStory,
+    onEditTask,
+    onDeleteTask,
+    onRefineTask,
+  } = props;
   if (!milestone) {
     return (
       <div className="flex justify-center items-center h-[50vh] overflow-hidden">
@@ -59,6 +66,7 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
         onDeleteStory={onDeleteStory}
         onEditTask={onEditTask}
         onDeleteTask={onDeleteTask}
+        onRefineTask={onRefineTask}
       />
     </div>
   );
