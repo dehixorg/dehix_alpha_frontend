@@ -381,21 +381,20 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
             </Popover>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-2 shrink-0 ml-auto mr-3 sm:mr-4">
             {onEditStory && !isFreelancer && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 px-2.5 text-xs font-medium gap-1.5 rounded-lg border border-border/60 bg-muted/30 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all shadow-xs"
+                className="h-7 w-7 p-0 rounded-lg border border-border/60 bg-muted/30 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all shadow-xs shrink-0 flex items-center justify-center"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEditStory();
                 }}
                 title="Edit Story"
               >
-                <Edit2 className="w-3 h-3" />
-                <span>Edit</span>
+                <Edit2 className="w-3.5 h-3.5" />
               </Button>
             )}
             {onDeleteStory && !isFreelancer && (
@@ -403,19 +402,18 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 px-2.5 text-xs font-medium gap-1.5 rounded-lg border border-border/60 bg-muted/30 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive transition-all shadow-xs"
+                className="h-7 w-7 p-0 rounded-lg border border-border/60 bg-muted/30 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive transition-all shadow-xs shrink-0 flex items-center justify-center"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteStory();
                 }}
                 title="Delete Story"
               >
-                <Trash2 className="w-3 h-3" />
-                <span>Delete</span>
+                <Trash2 className="w-3.5 h-3.5" />
               </Button>
             )}
             <Badge
-              className={`${profileTypeOutlineClasses(projectStatus)} hidden sm:flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider shrink-0`}
+              className={`${profileTypeOutlineClasses(projectStatus)} flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider shrink-0 mr-1`}
             >
               {projectStatus}
             </Badge>
@@ -496,41 +494,20 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
                                 milestoneId={milestoneId}
                                 storyId={story._id}
                                 taskBadgeStyle={taskBadgeStyle}
+                                onRefineTask={
+                                  onRefineTask && originalIdx >= 0
+                                    ? () => {
+                                        setRefiningTaskIndex(originalIdx);
+                                        setRefineInstruction('');
+                                      }
+                                    : undefined
+                                }
+                                onDeleteTask={
+                                  onDeleteTask && originalIdx >= 0
+                                    ? () => handleDeleteTaskClick(originalIdx)
+                                    : undefined
+                                }
                               />
-                              {/* Refine / Delete task overlay */}
-                              {!isFreelancer &&
-                                originalIdx >= 0 &&
-                                (onRefineTask || onDeleteTask) && (
-                                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-90 group-hover/task:opacity-100 transition-opacity z-10">
-                                    {onRefineTask && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setRefiningTaskIndex(originalIdx);
-                                          setRefineInstruction('');
-                                        }}
-                                        className="p-1 rounded-md bg-background/90 border border-primary/40 text-primary hover:bg-primary/10 transition-colors shadow-xs"
-                                        title="Refine task with AI"
-                                      >
-                                        <Sparkles className="h-3 w-3" />
-                                      </button>
-                                    )}
-                                    {onDeleteTask && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteTaskClick(originalIdx);
-                                        }}
-                                        className="p-1 rounded-md bg-background/90 border border-border/60 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors shadow-xs"
-                                        title="Delete task"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
                             </div>
                           );
                         })

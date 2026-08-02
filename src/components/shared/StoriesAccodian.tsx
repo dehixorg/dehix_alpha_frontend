@@ -181,14 +181,17 @@ const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
     <div className="w-full px-0 md:px-0 lg:px-0 rounded-lg">
       <div className="card border rounded-lg">
         {(milestone.stories ?? []).length > 0 && (
-          <div className="flex p-4 justify-between items-center border-b bg-card">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
-                Stories
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border-b bg-card">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <h3
+                className="text-base md:text-lg font-bold tracking-tight text-foreground truncate min-w-0"
+                title={`Stories for ${milestone.title}`}
+              >
+                Stories for <span className="text-primary font-semibold">{milestone.title}</span>
               </h3>
               <Badge
                 variant="secondary"
-                className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground shrink-0"
               >
                 {(milestone.stories ?? []).length} total
               </Badge>
@@ -201,7 +204,7 @@ const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
                       size="sm"
                       onClick={() => setIsStoryDialogOpen(true)}
                       aria-label="Add a new story"
-                      className="h-9 px-3.5 text-xs font-semibold gap-1.5 rounded-lg bg-background text-foreground border border-border/80 hover:bg-accent hover:border-primary/40 shadow-xs transition-all"
+                      className="h-8 px-3 text-xs font-semibold gap-1.5 rounded-lg bg-background text-foreground border border-border/80 hover:bg-accent hover:border-primary/40 shadow-xs transition-all shrink-0"
                     >
                       <Plus size={14} className="text-primary" /> Add Story
                     </Button>

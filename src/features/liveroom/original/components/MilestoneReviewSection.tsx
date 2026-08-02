@@ -1025,26 +1025,26 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 
       {/* Main Layout */}
       <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/10 pb-4">
-          <div className="max-w-xl">
-            <div className="text-xs text-primary font-medium uppercase tracking-wider mb-1">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/40 pb-5">
+          <div className="max-w-3xl">
+            <div className="text-xs text-primary font-medium uppercase tracking-wider mb-2">
               Phase 3 output
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight mb-3">
               Milestones &amp; Timeline Review
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            </h1>
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-3xl">
               Review AI-generated milestones, stories, and tasks. Edit stories or
               refine tasks with AI before finding talent.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 self-start md:self-center">
             <Button
               variant="outline"
               onClick={onBack}
               disabled={isFindingTalent}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap h-10 px-4 text-xs font-semibold"
             >
               Back to Talent Requirements
             </Button>
@@ -1052,7 +1052,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               variant="outline"
               onClick={() => setShowDateDialog(true)}
               disabled={isFindingTalent || generating}
-              className="whitespace-nowrap flex items-center gap-1.5"
+              className="whitespace-nowrap flex items-center gap-1.5 h-10 px-4 text-xs font-semibold"
             >
               <Edit3 className="h-3.5 w-3.5" />
               {startDate && endDate ? 'Edit Tentative Dates' : 'Set Tentative Dates'}
@@ -1060,16 +1060,16 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             <Button
               onClick={handleApproveClick}
               disabled={isFindingTalent || milestones.length === 0}
-              className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/25 font-bold whitespace-nowrap"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold whitespace-nowrap h-10 px-4 text-xs shadow-md flex items-center gap-2"
             >
               {isFindingTalent ? (
                 <>
-                  <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                  <Sparkles className="h-4 w-4 animate-spin" />
                   Finding Talent…
                 </>
               ) : (
                 <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <CheckCircle className="h-4 w-4" />
                   Approve &amp; Find Talent
                 </>
               )}
