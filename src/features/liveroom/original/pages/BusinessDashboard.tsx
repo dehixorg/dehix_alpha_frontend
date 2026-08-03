@@ -1,5 +1,5 @@
 /* eslint-disable import/order, jsx-a11y/label-has-associated-control, @typescript-eslint/no-unused-vars */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from '../adapters/wouter';
 import { useGetMyRooms, getGetMyRoomsQueryKey } from '../api/client';
 import { liveRoomApiFetch as fetch } from '../api/runtime';
@@ -7,7 +7,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
+import { axiosInstance } from '@/lib/axiosinstance';
+import LiveRoomPremiumPaywall from '@/components/liveroom/LiveRoomPremiumPaywall';
+import SubscriptionStatusBadge from '@/components/liveroom/SubscriptionStatusBadge';
 import {
+  Loader2,
   Search,
   Layers,
   Users,
@@ -102,6 +106,35 @@ export default function BusinessDashboard() {
     null,
   );
 
+  const [checkingSub, setCheckingSub] = useState(true);
+  const [subStatus, setSubStatus] = useState<{
+    isSubscribed: boolean;
+    expiresAt?: string;
+    status?: string;
+  } | null>(null);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      setCheckingSub(true);
+      const res = await axiosInstance.get('/liveroom/subscription/status');
+      if (res?.data) {
+        setSubStatus(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Live Room subscription status:', err);
+    } finally {
+      setCheckingSub(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSubscriptionStatus();
+    } else {
+      setCheckingSub(false);
+    }
+  }, [isAuthenticated]);
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -109,6 +142,26 @@ export default function BusinessDashboard() {
           <p className="text-muted-foreground mb-4">Please sign in</p>
         </div>
       </div>
+    );
+  }
+
+  if (checkingSub) {
+    return (
+      <div className="min-h-[60vh] bg-background flex flex-col items-center justify-center p-6 text-center">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-3" />
+        <p className="text-sm text-muted-foreground font-medium">
+          Checking Live Room subscription...
+        </p>
+      </div>
+    );
+  }
+
+  if (!subStatus?.isSubscribed) {
+    return (
+      <LiveRoomPremiumPaywall
+        userId={user?._id}
+        onSuccess={() => fetchSubscriptionStatus()}
+      />
     );
   }
 
@@ -314,6 +367,8 @@ export default function BusinessDashboard() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10">
+        <SubscriptionStatusBadge expiresAt={subStatus?.expiresAt} />
+
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight">
             Business Dashboard

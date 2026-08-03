@@ -914,9 +914,9 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
           <div className="flex flex-col gap-4 mt-2">
             {/* Quick Presets */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Clock className="h-3 w-3" /> Quick Select Duration
-              </label>
+              </span>
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { label: '2 Weeks', days: 14 },
@@ -939,9 +939,10 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
             {/* Date Inputs */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative Start
-                </label>
+                <span className="text-xs font-medium text-foreground/80 flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative
+                  Start
+                </span>
                 <TimelineDatePicker
                   value={startDate}
                   onChange={setStartDate}
@@ -949,9 +950,10 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80 flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative End
-                </label>
+                <span className="text-xs font-medium text-foreground/80 flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-primary" /> Tentative
+                  End
+                </span>
                 <TimelineDatePicker
                   value={endDate}
                   onChange={setEndDate}

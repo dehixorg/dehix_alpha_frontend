@@ -42,6 +42,7 @@ import {
   GripVertical,
   Filter,
   ArrowUpDown,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,6 +61,8 @@ import {
   TooltipProvider,
 } from '../../../../components/ui/tooltip';
 
+import LiveRoomPremiumPaywall from '@/components/liveroom/LiveRoomPremiumPaywall';
+import { axiosInstance } from '@/lib/axiosinstance';
 import ConnectsDialog from '@/components/shared/ConnectsDialog';
 import { updateConnectsBalance } from '@/lib/updateConnects';
 
@@ -1015,8 +1018,8 @@ function ReportReader({
                 </div>
                 <div className="text-xs text-muted-foreground leading-relaxed">
                   Describe what details you want to add, subtract, or rewrite in
-                  this section (e.g., "Add user email verification to MVP, and
-                  specify Node.js / PostgreSQL in stack").
+                  this section (e.g., &quot;Add user email verification to MVP,
+                  and specify Node.js / PostgreSQL in stack&quot;).
                 </div>
                 <textarea
                   value={refinePrompt}
@@ -3215,7 +3218,7 @@ function BlueprintReviewSection({
     return (
       <div className="space-y-5">
         <div className={cardCls}>
-          <label className={labelCls}>Idea Name</label>
+          <span className={labelCls}>Idea Name</span>
           <input
             value={String(summary.idea_name ?? '')}
             onChange={(e) =>
@@ -3317,7 +3320,7 @@ function BlueprintReviewSection({
                     </div>
                     <div className="space-y-3 pr-8">
                       <div>
-                        <label className={labelCls}>Persona Name</label>
+                        <span className={labelCls}>Persona Name</span>
                         <input
                           value={persona}
                           onChange={(e) =>
@@ -3329,7 +3332,7 @@ function BlueprintReviewSection({
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className={labelCls}>Description</label>
+                          <span className={labelCls}>Description</span>
                           {desc.trim() &&
                             renderRefineBtn(
                               'target_users',
@@ -3360,7 +3363,7 @@ function BlueprintReviewSection({
                         <div className="grid gap-3 grid-cols-1">
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className={labelCls}>Pain Points</label>
+                              <span className={labelCls}>Pain Points</span>
                               {painPoints.trim() &&
                                 renderRefineBtn(
                                   'target_users',
@@ -3389,9 +3392,9 @@ function BlueprintReviewSection({
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className={labelCls}>
+                              <span className={labelCls}>
                                 Goals / Motivations
-                              </label>
+                              </span>
                               {goals.trim() &&
                                 renderRefineBtn(
                                   'target_users',
@@ -3606,9 +3609,9 @@ function BlueprintReviewSection({
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className={`${labelCls} text-[11px]`}>
+                            <span className={`${labelCls} text-[11px]`}>
                               Description
-                            </label>
+                            </span>
                             {purposeVal.trim() &&
                               renderRefineBtn(
                                 'mvp_definition',
@@ -3899,9 +3902,9 @@ function BlueprintReviewSection({
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <label className={labelCls}>
+                            <span className={labelCls}>
                               Purpose / Description
-                            </label>
+                            </span>
                             {compPurpose.trim() &&
                               renderRefineBtn(
                                 'technical_architecture',
@@ -4003,9 +4006,9 @@ function BlueprintReviewSection({
                           />
                         </div>
                         <div>
-                          <label className={`${labelCls} mb-1 block`}>
+                          <span className={`${labelCls} mb-1 block`}>
                             Purpose
-                          </label>
+                          </span>
                           <textarea
                             value={modPurpose}
                             onChange={(e) =>
@@ -4122,9 +4125,9 @@ function BlueprintReviewSection({
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div>
-                            <label className={labelCls}>
+                            <span className={labelCls}>
                               Fields (comma-separated)
-                            </label>
+                            </span>
                             <input
                               value={
                                 Array.isArray(item.fields)
@@ -4145,9 +4148,9 @@ function BlueprintReviewSection({
                             />
                           </div>
                           <div>
-                            <label className={`${labelCls} mb-1 block`}>
+                            <span className={`${labelCls} mb-1 block`}>
                               Description
-                            </label>
+                            </span>
                             <textarea
                               value={modelDesc}
                               onChange={(e) =>
@@ -4266,7 +4269,7 @@ function BlueprintReviewSection({
       return (
         <div className={cardCls}>
           <div className="flex items-center justify-between mb-2">
-            <label className={labelCls}>Development Roadmap</label>
+            <span className={labelCls}>Development Roadmap</span>
             {renderRefineBtn(
               'development_roadmap',
               'development_roadmap',
@@ -4291,7 +4294,7 @@ function BlueprintReviewSection({
 
     const parseDuration = (val: string) => {
       const trimmed = val.trim();
-      const numMatch = trimmed.match(/^([\d\.\-]+)\s*([a-zA-Z]*)/);
+      const numMatch = trimmed.match(/^([\d.-]+)\s*([a-zA-Z]*)/);
       if (numMatch) {
         const num = numMatch[1];
         let unit = numMatch[2].toLowerCase();
@@ -4305,7 +4308,7 @@ function BlueprintReviewSection({
     };
 
     const cleanPhaseName = (rawName: string, index: number) => {
-      return rawName.replace(/^Phase\s*\d+\s*[\-\:]?\s*/i, '');
+      return rawName.replace(/^Phase\s*\d+\s*[-:]?\s*/i, '');
     };
 
     const phases = getRoadmapPhases();
@@ -4392,11 +4395,11 @@ function BlueprintReviewSection({
                       <div className="flex items-center gap-3 mb-4">
                         <div className="flex-1 min-w-0 flex flex-col gap-3">
                           <div>
-                            <label
+                            <span
                               className={`${labelCls} text-[11px] mb-1 block`}
                             >
                               Phase Name
-                            </label>
+                            </span>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-muted-foreground/80 whitespace-nowrap bg-muted/40 px-2 py-1.5 rounded-lg select-none">
                                 Phase {idx + 1}:
@@ -4421,11 +4424,11 @@ function BlueprintReviewSection({
                             </div>
                           </div>
                           <div>
-                            <label
+                            <span
                               className={`${labelCls} text-[11px] mb-1 block`}
                             >
                               Duration
-                            </label>
+                            </span>
                             <div className="flex items-center gap-1.5">
                               <input
                                 value={parsed.number}
@@ -4454,9 +4457,9 @@ function BlueprintReviewSection({
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className={`${labelCls} text-[11px]`}>
+                          <span className={`${labelCls} text-[11px]`}>
                             Key Tasks & Deliverables
-                          </label>
+                          </span>
                           <button
                             type="button"
                             onClick={() =>
@@ -4859,9 +4862,9 @@ function BlueprintReviewSection({
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <label className={`${labelCls} text-[11px]`}>
+                            <span className={`${labelCls} text-[11px]`}>
                               Responsibilities
-                            </label>
+                            </span>
                             {rolePurpose.trim() &&
                               renderRefineBtn(
                                 'team_requirements',
@@ -4904,7 +4907,7 @@ function BlueprintReviewSection({
       return (
         <div className={cardCls}>
           <div className="flex items-center justify-between mb-2">
-            <label className={labelCls}>Cost Estimation</label>
+            <span className={labelCls}>Cost Estimation</span>
             {renderRefineBtn(
               'cost_estimation',
               'cost_estimation',
@@ -5655,7 +5658,7 @@ function BlueprintReviewSection({
       return (
         <div className={cardCls}>
           <div className="flex items-center justify-between mb-2">
-            <label className={labelCls}>Section Content</label>
+            <span className={labelCls}>Section Content</span>
             {val.length > 40 &&
               renderRefineBtn(
                 activeTab,
@@ -5693,7 +5696,7 @@ function BlueprintReviewSection({
 
     return (
       <div className={cardCls}>
-        <label className={`${labelCls} mb-2 block`}>Section Content</label>
+        <span className={`${labelCls} mb-2 block`}>Section Content</span>
         <input
           value={String(val ?? '')}
           onChange={(e) => onUpdateField(activeTab, activeTab, e.target.value)}
@@ -5758,7 +5761,6 @@ function BlueprintReviewSection({
           {/* @ts-ignore */}
           {tabInfo?.description && (
             <p className="text-sm text-muted-foreground mt-2.5 leading-relaxed ml-11 relative z-10">
-              {/* @ts-ignore */}
               {tabInfo.description}
             </p>
           )}
@@ -6989,6 +6991,35 @@ function estimateTalentRequirements(
 export default function CreateRoom() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
+
+  const [checkingSub, setCheckingSub] = useState(true);
+  const [subStatus, setSubStatus] = useState<{
+    isSubscribed: boolean;
+    expiresAt?: string;
+    status?: string;
+  } | null>(null);
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      setCheckingSub(true);
+      const res = await axiosInstance.get('/liveroom/subscription/status');
+      if (res?.data) {
+        setSubStatus(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Live Room subscription status:', err);
+    } finally {
+      setCheckingSub(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSubscriptionStatus();
+    } else {
+      setCheckingSub(false);
+    }
+  }, [isAuthenticated]);
 
   const [phase, setPhase] = useState<WizardPhase>('idea');
   const [description, setDescription] = useState('');
@@ -8839,6 +8870,26 @@ Please return ONLY the modified text itself, without any introductory or convers
           usedAiSuggest,
         });
 
+  if (checkingSub) {
+    return (
+      <div className="min-h-[60vh] bg-background flex flex-col items-center justify-center p-6 text-center">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-3" />
+        <p className="text-sm text-muted-foreground font-medium">
+          Checking Live Room subscription...
+        </p>
+      </div>
+    );
+  }
+
+  if (!subStatus?.isSubscribed) {
+    return (
+      <LiveRoomPremiumPaywall
+        userId={user?._id}
+        onSuccess={() => fetchSubscriptionStatus()}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="sticky top-0 z-10 border-b border-border/40 bg-background/90 backdrop-blur-sm">
@@ -10189,9 +10240,9 @@ Please return ONLY the modified text itself, without any introductory or convers
 
                               {/* Role Dropdown */}
                               <div className="flex items-center gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">
+                                <span className="text-xs font-semibold text-muted-foreground">
                                   Role:
-                                </label>
+                                </span>
                                 <select
                                   value={talentRoleFilter}
                                   onChange={(e) =>
@@ -10215,9 +10266,9 @@ Please return ONLY the modified text itself, without any introductory or convers
 
                               {/* Availability Dropdown */}
                               <div className="flex items-center gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground">
+                                <span className="text-xs font-semibold text-muted-foreground">
                                   Availability:
-                                </label>
+                                </span>
                                 <select
                                   value={talentAvailabilityFilter}
                                   onChange={(e) =>
