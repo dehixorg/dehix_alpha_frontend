@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info } from 'lucide-react';
+import { Info, Calendar } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -41,21 +41,15 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
   isMobile,
   isSelected,
 }) => {
-  const truncateDescription = (text: string, maxLength: number = 50) => {
-    if (text.length > maxLength) {
-      return text.slice(0, maxLength) + '...';
-    }
-    return text;
-  };
-
   const formattedDate = formatDateDisplay(date);
 
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center',
-        isMobile ? 'w-64' : 'w-48',
-        position === 'top' ? 'mt-32' : position === 'bottom' ? '-mt-28' : '',
+        'relative flex flex-col items-center transition-all w-full',
+        isMobile
+          ? 'max-w-[280px]'
+          : 'min-w-[220px] max-w-[300px] h-[130px]',
       )}
       style={{
         visibility: title === 'dummy' ? 'hidden' : 'visible',
@@ -63,53 +57,56 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
     >
       <Card
         className={cn(
-          'group relative w-full rounded-xl border bg-card/80 p-3 backdrop-blur-sm transition-all',
+          'group relative w-full h-full rounded-xl border bg-card/95 p-3.5 backdrop-blur-md transition-all cursor-pointer shadow-sm flex flex-col justify-between',
           'hover:-translate-y-[1px] hover:shadow-md',
           isSelected
-            ? 'border-primary/40 ring-2 ring-primary/30 shadow-md'
-            : 'border-border/60',
+            ? 'border-primary ring-2 ring-primary/40 shadow-md bg-card'
+            : 'border-border/60 hover:border-primary/40',
         )}
       >
-        <div className="flex flex-col gap-2">
-          <div className="flex items-start justify-between gap-2">
-            <h3
-              className={cn(
-                'min-w-0 font-semibold leading-snug truncate',
-                isMobile ? 'text-base md:text-lg' : 'text-sm',
-              )}
-              title={title}
-            >
-              {truncateDescription(title, 10)}
-            </h3>
-            {summary && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 rounded-full"
-                    onClick={(e) => e.stopPropagation()}
-                    aria-label="View description"
-                  >
-                    <Info className="w-4 h-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 text-sm whitespace-pre-wrap leading-relaxed">
-                  <div className="space-y-1">
-                    <h2 className="font-semibold">{title}</h2>
-                    <p>{summary}</p>
-                  </div>
-                </PopoverContent>
-              </Popover>
+        <div className="flex items-start justify-between gap-2 w-full">
+          <h3
+            className={cn(
+              'font-bold leading-snug text-foreground whitespace-normal break-words line-clamp-2',
+              isMobile ? 'text-base' : 'text-xs md:text-sm',
             )}
-          </div>
-
-          {formattedDate ? (
-            <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-[10px] md:text-xs text-muted-foreground font-medium">
-              {formattedDate}
-            </span>
-          ) : null}
+            title={title}
+          >
+            {title}
+          </h3>
+          {summary && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 rounded-full shrink-0 text-muted-foreground hover:text-foreground mt-0.5"
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="View description"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed p-4 bg-card border border-border shadow-xl rounded-xl">
+                <div className="space-y-1.5">
+                  <h4 className="font-bold text-foreground">{title}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {summary}
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
+
+        {formattedDate ? (
+          <div className="pt-1 mt-auto">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 text-[10px] md:text-[11px] font-semibold tracking-tight shrink-0 shadow-2xs">
+              <Calendar className="w-3 h-3 text-primary shrink-0" />
+              <span>{formattedDate}</span>
+            </span>
+          </div>
+        ) : null}
       </Card>
     </div>
   );

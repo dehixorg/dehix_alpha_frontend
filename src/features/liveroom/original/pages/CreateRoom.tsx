@@ -146,6 +146,7 @@ type AnalysisResult = {
 };
 
 type Phase1ReviewForm = {
+  projectTitle?: string;
   region: string;
   ideaSummary: string;
   targetAudience: string;
@@ -607,6 +608,9 @@ function buildPhase1ReviewForm(
 ): Phase1ReviewForm {
   const research = analysis?.research_analysis ?? {};
   return {
+    projectTitle: String(
+      (analysis?.business_confirmed_inputs as any)?.projectTitle || '',
+    ).trim(),
     region: analysis?.region_used?.trim() || 'India',
     ideaSummary: analysis?.idea_summary?.trim() || '',
     targetAudience: research.target_audience?.trim() || '',
@@ -6121,6 +6125,9 @@ function buildSmartSuggestions({
   improveAnswerCounts?: Record<string, number>;
   activeReportSectionData?: unknown;
 }): SmartSuggestion[] {
+  if (phase === 'talent_requirements' || phase === 'milestones') {
+    return [];
+  }
   if (phase === 'technical' && activeQuestion) {
     const questionText = activeQuestion.question;
     const index = activeQuestion.index + 1;
@@ -6835,7 +6842,24 @@ function estimateTalentRequirements(
     );
 
     if (recTeam.length > 0) {
-      recTeam.forEach((item, idx) => {
+      let activeTeam = recTeam;
+      if (activeTeam.length > 4) {
+        const filtered = activeTeam.filter((item) => {
+          const t = String(
+            item.role ?? item.role_title ?? item.title ?? '',
+          ).toLowerCase();
+          return (
+            !t.includes('qa') &&
+            !t.includes('test') &&
+            !t.includes('devops') &&
+            !t.includes('scrum') &&
+            !t.includes('database')
+          );
+        });
+        activeTeam = (filtered.length >= 2 ? filtered : recTeam).slice(0, 4);
+      }
+
+      activeTeam.forEach((item, idx) => {
         const title = String(
           item.role ??
             item.role_title ??
@@ -6855,15 +6879,34 @@ function estimateTalentRequirements(
               ? 'recommended'
               : 'required';
 
-        const countVal =
+        // Read blueprint count directly — AI sets this per role in recommended_team
+        const rawBlueprintCount =
           item.count ?? item.quantity ?? item.size ?? item.aiSuggestedCount;
-        const count = calculateSmartRoleCount(
-          title,
-          purpose,
-          countVal,
-          blueprint,
-          analysis,
-        );
+
+        // Parse it to a reliable number (handles both number and string types)
+        let blueprintCount: number | null = null;
+        if (typeof rawBlueprintCount === 'number' && rawBlueprintCount > 0) {
+          blueprintCount = rawBlueprintCount;
+        } else if (typeof rawBlueprintCount === 'string') {
+          const parsed = parseInt(rawBlueprintCount, 10);
+          if (!isNaN(parsed) && parsed > 0) blueprintCount = parsed;
+        }
+
+        // aiSuggestedCount: trust the blueprint value directly.
+        // Only fall back to heuristics if blueprint didn't provide a count.
+        const aiSuggestedCount =
+          blueprintCount !== null
+            ? blueprintCount
+            : calculateSmartRoleCount(
+                title,
+                purpose,
+                null,
+                blueprint,
+                analysis,
+              );
+
+        // businessSelectedCount starts equal to AI suggestion
+        const businessSelectedCount = aiSuggestedCount;
 
         let skillDomain = 'Full-Stack / Product Development';
         const titleLower = title.toLowerCase();
@@ -6884,10 +6927,10 @@ function estimateTalentRequirements(
             ? String(item.skillDomain)
             : skillDomain,
           reason: purpose || `AI recommended role for ${title}`,
-          aiSuggestedCount: count,
-          businessSelectedCount: count,
+          aiSuggestedCount,
+          businessSelectedCount,
           minCount: priority === 'required' ? 1 : 0,
-          maxCount: Math.max(count + 2, 5),
+          maxCount: Math.max(aiSuggestedCount + 2, 5),
           priority,
         });
       });
@@ -7064,10 +7107,11 @@ export default function CreateRoom() {
       const el = textareaRefs.current[key];
       if (el) {
         el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
+        const minH = key === 'idea_description' ? 190 : 0;
+        el.style.height = `${Math.max(minH, el.scrollHeight)}px`;
       }
     });
-  }, [answers, phase1Review, refineInputs, expandedRefineFields]);
+  }, [answers, phase1Review, refineInputs, expandedRefineFields, description]);
 
   const scrollChatToBottom = () => {
     setTimeout(
@@ -8150,6 +8194,24 @@ Please return ONLY the modified text itself, without any introductory or convers
       }
       const data = await res.json();
       if (data.session) setSessionData(data.session);
+      if (phase1Review.projectTitle) {
+        setSessionData((prev: any) =>
+          prev ? { ...prev, projectTitle: phase1Review.projectTitle } : prev,
+        );
+        if (blueprint?.executive_summary) {
+          setBlueprint((prev: any) =>
+            prev && prev.executive_summary
+              ? {
+                  ...prev,
+                  executive_summary: {
+                    ...prev.executive_summary,
+                    idea_name: phase1Review.projectTitle,
+                  },
+                }
+              : prev,
+          );
+        }
+      }
       if (data.analysis) {
         setAnalysis(data.analysis);
         setPhase1Review(buildPhase1ReviewForm(data.analysis));
@@ -8186,10 +8248,33 @@ Please return ONLY the modified text itself, without any introductory or convers
         );
       }
       const blob = await res.blob();
+      const contentDisposition = res.headers.get('content-disposition');
+      let fileName = '';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^";]+)"?/);
+        if (match && match[1]) {
+          fileName = match[1];
+        }
+      }
+      if (!fileName) {
+        const rawTitle =
+          (blueprint as any)?.executive_summary?.idea_name ||
+          (blueprint as any)?.executive_summary?.project_title ||
+          sessionData?.projectTitle ||
+          phase1Review?.projectTitle;
+        const slug = rawTitle
+          ? String(rawTitle)
+              .trim()
+              .replace(/[^\w\s-]/g, '')
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-')
+          : 'Dehix-Project';
+        fileName = `${slug || 'Dehix-Project'}-Business-Blueprint.pdf`;
+      }
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
-      a.download = `business-blueprint-${sessionData._id}.pdf`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -8770,19 +8855,20 @@ Please return ONLY the modified text itself, without any introductory or convers
         }
       : null);
 
-  const smartSuggestions = isLoaderActive
-    ? []
-    : buildSmartSuggestions({
-        phase,
-        activeReportSection: activeReportSectionForSuggestions,
-        activeQuestion,
-        idea: description || sessionData?.rawIdea || '',
-        region: phase1Review.region || analysis?.region_used || 'India',
-        totalQuestions:
-          (mandatoryQuestions.length || 5) + (optionalQuestions.length || 0),
-        answers,
-        usedAiSuggest,
-      });
+  const smartSuggestions =
+    isLoaderActive || phase === 'talent_requirements' || phase === 'milestones'
+      ? []
+      : buildSmartSuggestions({
+          phase,
+          activeReportSection: activeReportSectionForSuggestions,
+          activeQuestion,
+          idea: description || sessionData?.rawIdea || '',
+          region: phase1Review.region || analysis?.region_used || 'India',
+          totalQuestions:
+            (mandatoryQuestions.length || 5) + (optionalQuestions.length || 0),
+          answers,
+          usedAiSuggest,
+        });
 
   if (checkingSub) {
     return (
@@ -8921,8 +9007,17 @@ Please return ONLY the modified text itself, without any introductory or convers
 
                     <div className="rounded-xl border border-border/50 bg-card overflow-hidden focus-within:border-primary/40 transition-colors">
                       <textarea
+                        ref={(el) => {
+                          textareaRefs.current['idea_description'] = el;
+                        }}
                         value={description}
-                        onChange={(event) => setDescription(event.target.value)}
+                        onChange={(event) => {
+                          setDescription(event.target.value);
+                          if (event.target) {
+                            event.target.style.height = 'auto';
+                            event.target.style.height = `${Math.max(190, event.target.scrollHeight)}px`;
+                          }
+                        }}
                         onKeyDown={(e) => {
                           if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                             e.preventDefault();
@@ -8935,7 +9030,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                           }
                         }}
                         placeholder="Example: I want to build a platform for local restaurants to predict demand and reduce ingredient waste..."
-                        className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/40 resize-none p-6 outline-none text-base leading-relaxed min-h-[190px]"
+                        className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/40 resize-none p-6 outline-none text-base leading-relaxed min-h-[190px] overflow-hidden transition-all duration-100"
                         rows={7}
                       />
                       <div className="border-t border-border/40 px-6 py-3 flex items-center justify-between gap-3">
@@ -9929,6 +10024,7 @@ Please return ONLY the modified text itself, without any introductory or convers
                   onBack={() => setPhase('talent_requirements')}
                   isFindingTalent={loadingRecommendations}
                   openDateDialogOnMount={showMilestoneDateDialogOnEnter}
+                  sessionId={sessionData?._id}
                 />
               )}
 

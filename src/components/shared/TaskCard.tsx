@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   XCircle,
   Pencil,
+  Sparkles,
+  Trash2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -38,20 +40,28 @@ interface TaskCardProps {
   milestoneId?: string;
   storyId: string;
   taskBadgeStyle: string;
+  /** Optional local mode task edit/delete/refine callbacks */
+  onRefineTask?: () => void;
+  onDeleteTask?: () => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({
-  task,
-  isFreelancer,
-  onAcceptTask,
-  onRejectTask,
-  onApproveUpdatePermission,
-  onRejectUpdatePermission,
-  shouldShowAcceptRejectButtons,
-  fetchMilestones,
-  milestoneId,
-  storyId,
-}) => {
+const TaskCard: React.FC<TaskCardProps> = (props) => {
+  const {
+    task,
+    isFreelancer,
+    onAcceptTask,
+    onRejectTask,
+    onApproveUpdatePermission,
+    onRejectUpdatePermission,
+    shouldShowAcceptRejectButtons,
+    fetchMilestones,
+    milestoneId,
+    storyId,
+    taskBadgeStyle,
+    onRefineTask,
+    onDeleteTask,
+  } = props;
+
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -60,17 +70,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const isAssigned = !!freelancer?.freelancerName;
 
   return (
-    <div className="p-1 md:p-2">
+    <div className="p-1 md:p-1.5">
       <Card
         className={cn(
-          'bg-foreground group w-full cursor-pointer overflow-hidden border border-border/90 backdrop-blur-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/30 hover:shadow-sm z-10',
+          'bg-card group w-full cursor-pointer overflow-hidden border border-border/70 backdrop-blur-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-primary/40 hover:shadow-md z-10',
         )}
       >
-        <CardHeader className="p-4 pb-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-2">
+        <CardHeader className="p-3.5 pb-2">
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="min-w-0 space-y-1.5 flex-1 pr-1">
               <h4
-                className="text-sm font-semibold leading-snug text-foreground line-clamp-2"
+                className="text-xs md:text-sm font-semibold leading-snug text-foreground line-clamp-2"
                 title={task.title}
               >
                 {task.title}
@@ -87,13 +97,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       router.push(`/freelancer-profile/${freelancerId}`);
                     }}
                   >
-                    <Avatar className="h-5 w-5">
+                    <Avatar className="h-4.5 w-4.5">
                       <AvatarImage src={freelancer?.profilePic} />
-                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                      <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-bold">
                         {freelancer.freelancerName?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="truncate">
+                    <span className="truncate text-xs font-medium">
                       {freelancer.freelancerName}
                     </span>
                   </div>
@@ -101,15 +111,45 @@ const TaskCard: React.FC<TaskCardProps> = ({
               ) : (
                 <Badge
                   variant="secondary"
-                  className="bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+                  className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center"
                 >
-                  <AlertCircle className="mr-1 h-3.5 w-3.5" />
+                  <AlertCircle className="mr-1 h-3 w-3" />
                   Unassigned
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-start gap-2">
+            <div className="flex items-center gap-1 shrink-0">
+              {onRefineTask && !isFreelancer && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 border border-border/50 transition-all shadow-2xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRefineTask();
+                  }}
+                  title="Refine task with AI"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                </Button>
+              )}
+              {onDeleteTask && !isFreelancer && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-border/50 transition-all shadow-2xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteTask();
+                  }}
+                  title="Delete task"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                </Button>
+              )}
               <TaskActionsDropdown
                 task={task}
                 milestoneId={milestoneId}
@@ -430,35 +470,42 @@ const TaskActionsDropdown: React.FC<TaskActionsDropdownProps> = ({
   };
 
   const isUpdateDisabled = isFreelancer
-    ? task?.freelancers[0]?.rejectionFreelancer ||
-      !task?.freelancers[0]?.acceptanceFreelancer ||
-      (task?.freelancers[0]?.updatePermissionFreelancer &&
-        !task?.freelancers[0]?.updatePermissionBusiness)
+    ? task?.freelancers?.[0]?.rejectionFreelancer ||
+      !task?.freelancers?.[0]?.acceptanceFreelancer ||
+      (task?.freelancers?.[0]?.updatePermissionFreelancer &&
+        !task?.freelancers?.[0]?.updatePermissionBusiness)
     : false;
+
+  // Show pencil edit button ONLY on dashboard for real DB milestones (not pre-launch LiveRoom preview)
+  const showDashboardEditButton = Boolean(
+    milestoneId && !milestoneId.startsWith('milestone-'),
+  );
 
   return (
     <>
-      <Button
-        type="button"
-        variant="link"
-        size="icon"
-        className="rounded-md text-muted-foreground hover:text-foreground justify-center"
-        disabled={
-          isFreelancer
-            ? task?.freelancers[0]?.freelancerId !== user?.uid ||
-              isUpdateDisabled
-            : false
-        }
-        onClick={() => {
-          if (isFreelancer) {
-            handleRequestPermission();
-            return;
+      {showDashboardEditButton && (
+        <Button
+          type="button"
+          variant="link"
+          size="icon"
+          className="rounded-md text-muted-foreground hover:text-foreground justify-center"
+          disabled={
+            isFreelancer
+              ? task?.freelancers?.[0]?.freelancerId !== user?.uid ||
+                isUpdateDisabled
+              : false
           }
-          setShowPermissionDialog(true);
-        }}
-      >
-        <Pencil />
-      </Button>
+          onClick={() => {
+            if (isFreelancer) {
+              handleRequestPermission();
+              return;
+            }
+            setShowPermissionDialog(true);
+          }}
+        >
+          <Pencil />
+        </Button>
+      )}
 
       <TaskUpdateDeatilDialog
         fetchMilestones={fetchMilestones}
