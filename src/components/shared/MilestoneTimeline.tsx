@@ -211,7 +211,10 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
             <CardTitle className="text-base md:text-lg font-bold">
               Milestone timeline
             </CardTitle>
-            <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground">
+            <Badge
+              variant="secondary"
+              className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+            >
               {milestones.length} total
             </Badge>
           </div>
@@ -224,7 +227,10 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
               disabled={selectedIndex === 0 || selectedIndex === null}
               onClick={() => {
                 if (selectedIndex !== null && selectedIndex > 0) {
-                  handleStorySelect(milestones[selectedIndex - 1], selectedIndex - 1);
+                  handleStorySelect(
+                    milestones[selectedIndex - 1],
+                    selectedIndex - 1,
+                  );
                 }
               }}
               className="h-8 px-2.5 text-xs font-medium gap-1.5 rounded-lg border-border/60 hover:bg-accent disabled:opacity-40"
@@ -240,8 +246,14 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                 selectedIndex === null || selectedIndex >= milestones.length - 1
               }
               onClick={() => {
-                if (selectedIndex !== null && selectedIndex < milestones.length - 1) {
-                  handleStorySelect(milestones[selectedIndex + 1], selectedIndex + 1);
+                if (
+                  selectedIndex !== null &&
+                  selectedIndex < milestones.length - 1
+                ) {
+                  handleStorySelect(
+                    milestones[selectedIndex + 1],
+                    selectedIndex + 1,
+                  );
                 }
               }}
               className="h-8 px-2.5 text-xs font-medium gap-1.5 rounded-lg border-border/60 hover:bg-accent disabled:opacity-40"
@@ -275,7 +287,9 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                     className={`flex flex-col items-center group shrink-0 cursor-pointer min-w-[260px] md:min-w-[280px] max-w-[340px] h-[360px] relative z-10 ${
                       isDummy ? 'invisible' : ''
                     }`}
-                    onClick={() => !isDummy && handleStorySelect(milestone, index)}
+                    onClick={() =>
+                      !isDummy && handleStorySelect(milestone, index)
+                    }
                   >
                     {/* TOP ROW: Height 135px (Holds top card or empty space) */}
                     <div className="w-full h-[135px] flex items-end justify-center px-3">

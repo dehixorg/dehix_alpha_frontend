@@ -10,8 +10,8 @@ import {
   Edit3,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { notifyError, notifySuccess } from '@/utils/toastMessage';
 
+import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   Dialog,
   DialogContent,
@@ -59,11 +59,8 @@ function generateLocalSummaryForStory(
   const t = storyTitle.toLowerCase();
   const projName =
     blueprint?.project_title || blueprint?.title || 'the project';
-  const stack =
-    (blueprint?.technical_architecture?.recommended_stack || {}) as Record<
-      string,
-      string
-    >;
+  const stack = (blueprint?.technical_architecture?.recommended_stack ||
+    {}) as Record<string, string>;
   const fe = stack.frontend || 'React';
   const be = stack.backend || 'Node.js';
 
@@ -124,11 +121,8 @@ function generateLocalTasksForStory(
   blueprint: Record<string, any>,
 ): { title: string; summary: string; taskStatus: string }[] {
   const t = storyTitle.toLowerCase();
-  const stack =
-    (blueprint?.technical_architecture?.recommended_stack || {}) as Record<
-      string,
-      string
-    >;
+  const stack = (blueprint?.technical_architecture?.recommended_stack ||
+    {}) as Record<string, string>;
   const fe = stack.frontend || 'React';
   const be = stack.backend || 'Node.js';
   const db = stack.database || 'the database';
@@ -144,10 +138,28 @@ function generateLocalTasksForStory(
     t.includes('figma')
   ) {
     tasks = [
-      { title: 'Create user flow diagrams', summary: 'Map out all key user journeys and interaction paths for this feature', taskStatus: 'NOT_STARTED' },
-      { title: 'Design low-fidelity wireframes', summary: 'Sketch wireframes for all screens in scope before high-fi design', taskStatus: 'NOT_STARTED' },
-      { title: 'Build high-fidelity UI mockups', summary: `Design pixel-perfect mockups using ${fe} component patterns and design tokens`, taskStatus: 'NOT_STARTED' },
-      { title: 'Stakeholder review and iterations', summary: 'Present designs, collect feedback, and refine before handoff', taskStatus: 'NOT_STARTED' },
+      {
+        title: 'Create user flow diagrams',
+        summary:
+          'Map out all key user journeys and interaction paths for this feature',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Design low-fidelity wireframes',
+        summary:
+          'Sketch wireframes for all screens in scope before high-fi design',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Build high-fidelity UI mockups',
+        summary: `Design pixel-perfect mockups using ${fe} component patterns and design tokens`,
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Stakeholder review and iterations',
+        summary: 'Present designs, collect feedback, and refine before handoff',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else if (
     t.includes('auth') ||
@@ -157,11 +169,35 @@ function generateLocalTasksForStory(
     t.includes('password')
   ) {
     tasks = [
-      { title: 'Implement user registration endpoint', summary: `Create POST /auth/register with input validation and secure hashing on ${be}`, taskStatus: 'NOT_STARTED' },
-      { title: 'Implement login and JWT issuance', summary: 'Create login flow with access/refresh token generation and secure cookie handling', taskStatus: 'NOT_STARTED' },
-      { title: 'Build auth middleware for protected routes', summary: 'Verify JWT on every protected API route and return 401 on invalid tokens', taskStatus: 'NOT_STARTED' },
-      { title: `Build ${fe} login and registration screens`, summary: 'Create forms with client-side validation, error messages, and loading states', taskStatus: 'NOT_STARTED' },
-      { title: 'Write auth unit and integration tests', summary: 'Cover registration, login, token refresh, and unauthorised access scenarios', taskStatus: 'NOT_STARTED' },
+      {
+        title: 'Implement user registration endpoint',
+        summary: `Create POST /auth/register with input validation and secure hashing on ${be}`,
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Implement login and JWT issuance',
+        summary:
+          'Create login flow with access/refresh token generation and secure cookie handling',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Build auth middleware for protected routes',
+        summary:
+          'Verify JWT on every protected API route and return 401 on invalid tokens',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: `Build ${fe} login and registration screens`,
+        summary:
+          'Create forms with client-side validation, error messages, and loading states',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Write auth unit and integration tests',
+        summary:
+          'Cover registration, login, token refresh, and unauthorised access scenarios',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else if (
     t.includes('setup') ||
@@ -171,10 +207,30 @@ function generateLocalTasksForStory(
     t.includes('scaffold')
   ) {
     tasks = [
-      { title: `Initialize ${fe} project structure`, summary: 'Bootstrap project with TypeScript, ESLint, Prettier, and folder conventions', taskStatus: 'NOT_STARTED' },
-      { title: `Configure ${be} server and API skeleton`, summary: 'Set up server framework with middleware, health check endpoint, and routing structure', taskStatus: 'NOT_STARTED' },
-      { title: `Configure ${db} connection and base schemas`, summary: 'Connect to database, define base models/entities, and run initial migrations', taskStatus: 'NOT_STARTED' },
-      { title: 'Set up CI/CD pipeline and environments', summary: 'Configure automated testing and deployment workflows for dev/staging/prod', taskStatus: 'NOT_STARTED' },
+      {
+        title: `Initialize ${fe} project structure`,
+        summary:
+          'Bootstrap project with TypeScript, ESLint, Prettier, and folder conventions',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: `Configure ${be} server and API skeleton`,
+        summary:
+          'Set up server framework with middleware, health check endpoint, and routing structure',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: `Configure ${db} connection and base schemas`,
+        summary:
+          'Connect to database, define base models/entities, and run initial migrations',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Set up CI/CD pipeline and environments',
+        summary:
+          'Configure automated testing and deployment workflows for dev/staging/prod',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else if (
     t.includes('dashboard') ||
@@ -183,10 +239,30 @@ function generateLocalTasksForStory(
     t.includes('interface')
   ) {
     tasks = [
-      { title: 'Build main layout and navigation component', summary: 'Create primary page shell with sidebar/topbar navigation and route guards', taskStatus: 'NOT_STARTED' },
-      { title: 'Implement key data tables and charts', summary: 'Build data visualization components with sorting, filtering, and pagination', taskStatus: 'NOT_STARTED' },
-      { title: 'Connect dashboard widgets to API endpoints', summary: 'Wire up all display components to live backend data with react-query/SWR', taskStatus: 'NOT_STARTED' },
-      { title: 'Add loading states, empty states, and error boundaries', summary: 'Implement skeleton loaders and user-friendly error handling throughout', taskStatus: 'NOT_STARTED' },
+      {
+        title: 'Build main layout and navigation component',
+        summary:
+          'Create primary page shell with sidebar/topbar navigation and route guards',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Implement key data tables and charts',
+        summary:
+          'Build data visualization components with sorting, filtering, and pagination',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Connect dashboard widgets to API endpoints',
+        summary:
+          'Wire up all display components to live backend data with react-query/SWR',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Add loading states, empty states, and error boundaries',
+        summary:
+          'Implement skeleton loaders and user-friendly error handling throughout',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else if (
     t.includes('api') ||
@@ -196,10 +272,30 @@ function generateLocalTasksForStory(
     t.includes('rest')
   ) {
     tasks = [
-      { title: 'Define API contracts and schemas', summary: 'Document all endpoints with request/response types and validation rules', taskStatus: 'NOT_STARTED' },
-      { title: 'Implement CRUD business logic', summary: 'Build Create, Read, Update, Delete operations with proper validation and error handling', taskStatus: 'NOT_STARTED' },
-      { title: 'Add request validation middleware', summary: 'Validate all inputs server-side and return standardised error responses', taskStatus: 'NOT_STARTED' },
-      { title: 'Write API integration tests', summary: 'Test all endpoints with valid inputs, boundary cases, and invalid inputs', taskStatus: 'NOT_STARTED' },
+      {
+        title: 'Define API contracts and schemas',
+        summary:
+          'Document all endpoints with request/response types and validation rules',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Implement CRUD business logic',
+        summary:
+          'Build Create, Read, Update, Delete operations with proper validation and error handling',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Add request validation middleware',
+        summary:
+          'Validate all inputs server-side and return standardised error responses',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Write API integration tests',
+        summary:
+          'Test all endpoints with valid inputs, boundary cases, and invalid inputs',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else if (
     t.includes('test') ||
@@ -208,10 +304,30 @@ function generateLocalTasksForStory(
     t.includes('coverage')
   ) {
     tasks = [
-      { title: 'Write unit tests for core business logic', summary: 'Target ≥ 80% code coverage for critical modules and utility functions', taskStatus: 'NOT_STARTED' },
-      { title: 'Implement end-to-end test scenarios', summary: 'Cover critical user journeys with Playwright or Cypress E2E tests', taskStatus: 'NOT_STARTED' },
-      { title: 'Cross-browser and device compatibility testing', summary: 'Verify on Chrome, Firefox, Safari, and key mobile viewport sizes', taskStatus: 'NOT_STARTED' },
-      { title: 'Performance and regression testing', summary: 'Run load tests and ensure no performance regressions vs baseline', taskStatus: 'NOT_STARTED' },
+      {
+        title: 'Write unit tests for core business logic',
+        summary:
+          'Target ≥ 80% code coverage for critical modules and utility functions',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Implement end-to-end test scenarios',
+        summary:
+          'Cover critical user journeys with Playwright or Cypress E2E tests',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Cross-browser and device compatibility testing',
+        summary:
+          'Verify on Chrome, Firefox, Safari, and key mobile viewport sizes',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Performance and regression testing',
+        summary:
+          'Run load tests and ensure no performance regressions vs baseline',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else if (
     t.includes('deploy') ||
@@ -220,19 +336,57 @@ function generateLocalTasksForStory(
     t.includes('release')
   ) {
     tasks = [
-      { title: 'Configure production server and SSL', summary: 'Set up production environment with domain, SSL certificates, and environment vars', taskStatus: 'NOT_STARTED' },
-      { title: 'Set up monitoring and error tracking', summary: 'Configure uptime monitoring, error logging (Sentry/similar), and performance alerts', taskStatus: 'NOT_STARTED' },
-      { title: 'Run pre-launch security and QA checklist', summary: 'Verify HTTPS, CORS, auth guards, and critical user paths in production', taskStatus: 'NOT_STARTED' },
-      { title: 'Document deployment and rollback runbook', summary: 'Write step-by-step deployment, rollback, and incident response procedures', taskStatus: 'NOT_STARTED' },
+      {
+        title: 'Configure production server and SSL',
+        summary:
+          'Set up production environment with domain, SSL certificates, and environment vars',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Set up monitoring and error tracking',
+        summary:
+          'Configure uptime monitoring, error logging (Sentry/similar), and performance alerts',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Run pre-launch security and QA checklist',
+        summary:
+          'Verify HTTPS, CORS, auth guards, and critical user paths in production',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Document deployment and rollback runbook',
+        summary:
+          'Write step-by-step deployment, rollback, and incident response procedures',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   } else {
     const short =
       storyTitle.length > 50 ? storyTitle.slice(0, 50) + '…' : storyTitle;
     tasks = [
-      { title: `Analyse and document requirements`, summary: `Review requirements for "${short}", clarify edge cases, and define acceptance criteria`, taskStatus: 'NOT_STARTED' },
-      { title: 'Implement core feature logic', summary: 'Build the main functionality as described in the story with clean, testable code', taskStatus: 'NOT_STARTED' },
-      { title: 'Add input validation and error handling', summary: 'Ensure all inputs are validated and errors surface clearly to the user', taskStatus: 'NOT_STARTED' },
-      { title: 'Write unit and integration tests', summary: 'Verify correct behaviour and protect against regressions', taskStatus: 'NOT_STARTED' },
+      {
+        title: `Analyse and document requirements`,
+        summary: `Review requirements for "${short}", clarify edge cases, and define acceptance criteria`,
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Implement core feature logic',
+        summary:
+          'Build the main functionality as described in the story with clean, testable code',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Add input validation and error handling',
+        summary:
+          'Ensure all inputs are validated and errors surface clearly to the user',
+        taskStatus: 'NOT_STARTED',
+      },
+      {
+        title: 'Write unit and integration tests',
+        summary: 'Verify correct behaviour and protect against regressions',
+        taskStatus: 'NOT_STARTED',
+      },
     ];
   }
 
@@ -353,18 +507,18 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 
   const isDateValid = Boolean(
     startDate &&
-      endDate &&
-      !isNaN(new Date(startDate).getTime()) &&
-      !isNaN(new Date(endDate).getTime()) &&
-      new Date(startDate) < new Date(endDate),
+    endDate &&
+    !isNaN(new Date(startDate).getTime()) &&
+    !isNaN(new Date(endDate).getTime()) &&
+    new Date(startDate) < new Date(endDate),
   );
 
   const isInvalidRange = Boolean(
     startDate &&
-      endDate &&
-      !isNaN(new Date(startDate).getTime()) &&
-      !isNaN(new Date(endDate).getTime()) &&
-      new Date(startDate) >= new Date(endDate),
+    endDate &&
+    !isNaN(new Date(startDate).getTime()) &&
+    !isNaN(new Date(endDate).getTime()) &&
+    new Date(startDate) >= new Date(endDate),
   );
 
   useEffect(() => {
@@ -741,11 +895,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 
   const durationInfo = getDurationInfo();
 
-  const handleEditStory = (
-    storyId: string,
-    title: string,
-    summary: string,
-  ) => {
+  const handleEditStory = (storyId: string, title: string, summary: string) => {
     setMilestones((prev) =>
       prev.map((m) => {
         const stories = (m.stories ?? []).map((s) =>
@@ -1036,8 +1186,8 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               Milestones &amp; Timeline Review
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-3xl">
-              Review AI-generated milestones, stories, and tasks. Edit stories or
-              refine tasks with AI before finding talent.
+              Review AI-generated milestones, stories, and tasks. Edit stories
+              or refine tasks with AI before finding talent.
             </p>
           </div>
 
@@ -1057,7 +1207,9 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
               className="whitespace-nowrap flex items-center gap-1.5 h-10 px-4 text-xs font-semibold"
             >
               <Edit3 className="h-3.5 w-3.5" />
-              {startDate && endDate ? 'Edit Tentative Dates' : 'Set Tentative Dates'}
+              {startDate && endDate
+                ? 'Edit Tentative Dates'
+                : 'Set Tentative Dates'}
             </Button>
             <Button
               onClick={handleApproveClick}
@@ -1134,7 +1286,8 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
                     onClick={() => setShowDateDialog(true)}
                     className="bg-primary text-primary-foreground font-bold"
                   >
-                    <Calendar className="mr-2 h-4 w-4" /> Set Project Tentative Dates
+                    <Calendar className="mr-2 h-4 w-4" /> Set Project Tentative
+                    Dates
                   </Button>
                 </div>
               </div>

@@ -5758,7 +5758,6 @@ function BlueprintReviewSection({
                 );
               })()}
           </div>
-          {/* @ts-ignore */}
           {tabInfo?.description && (
             <p className="text-sm text-muted-foreground mt-2.5 leading-relaxed ml-11 relative z-10">
               {tabInfo.description}

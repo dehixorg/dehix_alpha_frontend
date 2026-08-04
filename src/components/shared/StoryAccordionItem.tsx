@@ -75,7 +75,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
   const [editTaskSummary, setEditTaskSummary] = useState('');
 
   // Refine-task modal state
-  const [refiningTaskIndex, setRefiningTaskIndex] = useState<number | null>(null);
+  const [refiningTaskIndex, setRefiningTaskIndex] = useState<number | null>(
+    null,
+  );
   const [refineInstruction, setRefineInstruction] = useState('');
   const [refineLoading, setRefineLoading] = useState(false);
 
@@ -97,7 +99,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
   };
 
   const taskCount = story?.tasks?.length ?? 0;
-  const localTaskMode = !isLiveRoomPreview && Boolean(onEditTask || onDeleteTask);
+  const localTaskMode =
+    !isLiveRoomPreview && Boolean(onEditTask || onDeleteTask);
 
   const { text: projectStatus } = getStatusBadge(story.storyStatus);
   const normalizedTaskStatuses: string[] = (story?.tasks ?? [])
@@ -607,10 +610,14 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
             </DialogHeader>
             <div className="space-y-3 py-2">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <label
+                  htmlFor="edit-task-title"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
                   Title
                 </label>
                 <input
+                  id="edit-task-title"
                   value={editTaskTitle}
                   onChange={(e) => setEditTaskTitle(e.target.value)}
                   className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -618,10 +625,14 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <label
+                  htmlFor="edit-task-summary"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
                   Summary
                 </label>
                 <textarea
+                  id="edit-task-summary"
                   value={editTaskSummary}
                   onChange={(e) => setEditTaskSummary(e.target.value)}
                   rows={3}
@@ -664,65 +675,75 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
             </DialogTitle>
           </DialogHeader>
 
-          {refiningTaskIndex !== null && (story.tasks ?? [])[refiningTaskIndex] && (
-            <div className="space-y-4 mt-2">
-              <div className="p-3 rounded-lg bg-muted/40 border border-border/50 text-xs space-y-1">
-                <div className="font-semibold text-foreground">
-                  Task: {(story.tasks ?? [])[refiningTaskIndex].title}
+          {refiningTaskIndex !== null &&
+            (story.tasks ?? [])[refiningTaskIndex] && (
+              <div className="space-y-4 mt-2">
+                <div className="p-3 rounded-lg bg-muted/40 border border-border/50 text-xs space-y-1">
+                  <div className="font-semibold text-foreground">
+                    Task: {(story.tasks ?? [])[refiningTaskIndex].title}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {(story.tasks ?? [])[refiningTaskIndex].summary ||
+                      'No summary'}
+                  </div>
                 </div>
-                <div className="text-muted-foreground">
-                  {(story.tasks ?? [])[refiningTaskIndex].summary || 'No summary'}
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="ai-refine-instructions"
+                    className="text-xs font-semibold text-foreground/90"
+                  >
+                    AI Refinement Instructions
+                  </label>
+                  <textarea
+                    id="ai-refine-instructions"
+                    value={refineInstruction}
+                    onChange={(e) => setRefineInstruction(e.target.value)}
+                    placeholder="Describe how to refine this task (e.g. 'Use OAuth2 and Google login', 'Add backend validation details')..."
+                    className="w-full min-h-[90px] bg-background text-foreground text-xs p-3 rounded-lg border border-border outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRefiningTaskIndex(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={!refineInstruction.trim() || refineLoading}
+                    onClick={async () => {
+                      if (refiningTaskIndex === null) return;
+                      setRefineLoading(true);
+                      try {
+                        await onRefineTask?.(
+                          refiningTaskIndex,
+                          refineInstruction,
+                        );
+                        setRefiningTaskIndex(null);
+                      } finally {
+                        setRefineLoading(false);
+                      }
+                    }}
+                    className="bg-primary text-primary-foreground font-bold flex items-center gap-1.5"
+                  >
+                    {refineLoading ? (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 animate-spin" />{' '}
+                        Refining…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" /> Refine Task
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground/90">
-                  AI Refinement Instructions
-                </label>
-                <textarea
-                  value={refineInstruction}
-                  onChange={(e) => setRefineInstruction(e.target.value)}
-                  placeholder="Describe how to refine this task (e.g. 'Use OAuth2 and Google login', 'Add backend validation details')..."
-                  className="w-full min-h-[90px] bg-background text-foreground text-xs p-3 rounded-lg border border-border outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setRefiningTaskIndex(null)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={!refineInstruction.trim() || refineLoading}
-                  onClick={async () => {
-                    if (refiningTaskIndex === null) return;
-                    setRefineLoading(true);
-                    try {
-                      await onRefineTask?.(refiningTaskIndex, refineInstruction);
-                      setRefiningTaskIndex(null);
-                    } finally {
-                      setRefineLoading(false);
-                    }
-                  }}
-                  className="bg-primary text-primary-foreground font-bold flex items-center gap-1.5"
-                >
-                  {refineLoading ? (
-                    <>
-                      <Sparkles className="h-3.5 w-3.5 animate-spin" /> Refining…
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-3.5 w-3.5" /> Refine Task
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
         </DialogContent>
       </Dialog>
     </AccordionItem>

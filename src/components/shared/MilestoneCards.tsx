@@ -47,9 +47,7 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
     <div
       className={cn(
         'relative flex flex-col items-center transition-all w-full',
-        isMobile
-          ? 'max-w-[280px]'
-          : 'min-w-[220px] max-w-[300px] h-[130px]',
+        isMobile ? 'max-w-[280px]' : 'min-w-[220px] max-w-[300px] h-[130px]',
       )}
       style={{
         visibility: title === 'dummy' ? 'hidden' : 'visible',

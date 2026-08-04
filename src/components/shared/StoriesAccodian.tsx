@@ -187,7 +187,10 @@ const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
                 className="text-base md:text-lg font-bold tracking-tight text-foreground truncate min-w-0"
                 title={`Stories for ${milestone.title}`}
               >
-                Stories for <span className="text-primary font-semibold">{milestone.title}</span>
+                Stories for{' '}
+                <span className="text-primary font-semibold">
+                  {milestone.title}
+                </span>
               </h3>
               <Badge
                 variant="secondary"
@@ -356,20 +359,28 @@ const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
             </DialogHeader>
             <div className="space-y-3 py-2">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <label
+                  htmlFor="edit-story-title"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
                   Title
                 </label>
                 <input
+                  id="edit-story-title"
                   value={editStoryTitle}
                   onChange={(e) => setEditStoryTitle(e.target.value)}
                   className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <label
+                  htmlFor="edit-story-summary"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
                   Summary
                 </label>
                 <textarea
+                  id="edit-story-summary"
                   value={editStorySummary}
                   onChange={(e) => setEditStorySummary(e.target.value)}
                   rows={3}
