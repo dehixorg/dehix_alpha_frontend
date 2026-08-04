@@ -52,8 +52,8 @@ export function useBusinessTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-talent-header',
-      title: 'Hire Talent',
-      text: 'This is your talent hub where you can discover, review, and manage candidates for your business needs.',
+      title: '👥 Talent Pool & Recruitment Hub',
+      text: 'Welcome to your internal Talent Hub. From this workspace, your company manages currently engaged contractors, pending project invitations, shortlisted candidate bookmarks, and historical developer relationships.',
       when: withProgress(tour),
       buttons: [
         {
@@ -72,8 +72,8 @@ export function useBusinessTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-talent-tabs',
-      title: 'Overview & Applications',
-      text: 'Switch between the overview of available talent and applications received from candidates.',
+      title: '📂 Recruitment Pipeline Tabs',
+      text: 'Switch between status panels to coordinate recruitment: "Active" tracks currently contracted developers, "Invited" lists outstanding project offers, and "Shortlisted" shows bookmarked candidate profiles.',
       attachTo: {
         element: '[data-tour="business-talent-tabs"]',
         on: 'bottom',
@@ -87,8 +87,8 @@ export function useBusinessTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'hire-talent-skill',
-      title: 'Fill the Requirements',
-      text: 'Select required skills and domains here to find candidates with the right technical expertise.',
+      title: '🛠️ Skill & Domain Matching Requirements',
+      text: "Click here to add desired skill tags and specify domains. Matching filters allow you to identify developers matching your company's exact technical criteria.",
       attachTo: {
         element: '[data-tour="requirements"]',
         on: 'bottom',
@@ -102,8 +102,8 @@ export function useBusinessTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-talent-filter',
-      title: 'Filter Talent',
-      text: 'Use filters to narrow down talent based on specific skills or domains.',
+      title: '⚡ Filter Talent Pool',
+      text: 'Use these filters to refine your candidate searches based on verification level, hourly rate ranges, and project rating parameters.',
       attachTo: {
         element: '[data-tour="business-talent-filter"]',
         on: 'bottom',
@@ -117,8 +117,8 @@ export function useBusinessTalentTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-talent-list',
-      title: 'Talent List',
-      text: 'Browse through talent profiles here and take action to connect or move forward with the right candidates.',
+      title: '✨ Contact & Invite Candidates',
+      text: 'Inspect developer records here. Actions allow you to view complete profiles, start chat conversations, schedule technical screenings, or extend direct project contracts.',
       attachTo: {
         element: '[data-tour="business-talent-list"]',
         on: 'top',
@@ -127,7 +127,7 @@ export function useBusinessTalentTour(isReady: boolean) {
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

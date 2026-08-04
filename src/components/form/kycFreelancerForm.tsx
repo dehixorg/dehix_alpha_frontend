@@ -244,7 +244,6 @@ export default function KYCForm({ user_id }: { user_id: string }) {
     const ext = (extFromType || 'jpg').split(';')[0];
     const { url } = await uploadFileViaSignedUrl(file, {
       key: `kyc/${user_id}/${fieldName}.${ext}`,
-      methods: ['upload', 'get'],
     });
     return url;
   };

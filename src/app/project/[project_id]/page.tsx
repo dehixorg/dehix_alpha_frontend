@@ -13,6 +13,7 @@ import {
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { useProjectDetailsTour } from '@/components/tour/freelancer/useProjectDetailsTour';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { Milestone } from '@/utils/types/Milestone';
 import { toast } from '@/components/ui/use-toast';
@@ -62,6 +63,7 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true); // Add loading state
+  useProjectDetailsTour(!loading);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -122,7 +124,7 @@ export default function Dashboard() {
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3 mt-6">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div>
+            <div data-tour="project-info">
               <ProjectDetailCard
                 projectName={project.projectName}
                 description={project.description}
@@ -139,7 +141,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6" data-tour="project-profiles">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                 <Users className="h-5 w-5" />

@@ -55,13 +55,44 @@ export function useProjectTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'current-projects',
-      title: 'Your Projects',
-      text: 'Track your projects by status and respond to invitations here.',
+      id: 'current-projects-intro',
+      title: '📁 Project Deliverables & Contracts Pipeline',
+      text: 'Welcome to your Active Contracts space. This workspace aggregates all your active client projects, pending project bids, and successfully completed milestones. Keeping track of your work pipelines ensures prompt contract execution.',
       when: withProgress(tour),
       buttons: [
         {
-          text: 'Got it',
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'project-tabs-step',
+      title: '📂 Project Pipeline Stages',
+      text: 'Use these tabs to filter your project list by status: "Active" shows ongoing contracts, "Pending" lists proposals currently under review by clients, and "Completed" houses your history of finished contracts.',
+      attachTo: { element: '[data-tour="current-projects"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'project-cards-step',
+      title: '📄 Interactive Project Contracts',
+      text: 'Each project row/card displays company details, overall milestone completion bars, and current budget payouts. Click any project card to open the Milestone management window, submit active files, or initiate peer verification processes.',
+      attachTo: { element: '[data-tour="current-projects"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        {
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

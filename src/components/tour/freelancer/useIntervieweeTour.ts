@@ -56,8 +56,8 @@ export function useIntervieweeTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewee-header',
-      title: 'Interviewee',
-      text: 'Track your current interviews, bids, and interview history from this page.',
+      title: '🎓 Interviewee Board',
+      text: 'Welcome to your Candidate Interview dashboard. When client organizations invite you to technical screenings or verification interviews, all matching meeting requests, links, and evaluations are managed from this workspace.',
       attachTo: {
         element: '[data-tour="interviewee-header"]',
         on: 'bottom',
@@ -80,8 +80,8 @@ export function useIntervieweeTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewee-tabs',
-      title: 'Interview Stages',
-      text: 'Switch between current interviews, bids you have placed, and your past interview history.',
+      title: '📁 Screening Pipeline Stages',
+      text: 'Toggle between the status views: "Active" lists upcoming scheduled meetings, "Bids" shows meeting proposals awaiting confirmation, and "History" shows past results and scorecard logs.',
       attachTo: { element: '[data-tour="tab-list"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -92,8 +92,8 @@ export function useIntervieweeTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewee-filter',
-      title: 'Filter Interviews',
-      text: 'Use this filter to view interviews by category or type.',
+      title: '⚡ Filter Screenings',
+      text: 'Use these filters to narrow down listed sessions by type: technical screenings, culture fit checkpoints, peer evaluations, or hiring reviews.',
       attachTo: { element: '[data-tour="all"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -104,8 +104,8 @@ export function useIntervieweeTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewee-view-toggle',
-      title: 'Change View',
-      text: 'Switch between table and card views based on how you prefer to browse interviews.',
+      title: '🔄 Layout Toggle',
+      text: 'Switch between a table view (useful for lists of files and scores) and a card view (ideal for date-oriented schedules).',
       attachTo: { element: '[data-tour="table"]', on: 'left' },
       when: withProgress(tour),
       buttons: [
@@ -116,8 +116,8 @@ export function useIntervieweeTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewee-empty',
-      title: 'Recent Interviews',
-      text: 'Your scheduled interviews will appear here once they are created or assigned.',
+      title: '📄 Scheduled Sessions List',
+      text: 'Your active invitations and links to join live rooms will display here. Make sure to review the required topic notes before launching the meeting room.',
       attachTo: {
         element: '[data-tour="interviewee-empty"]',
         on: 'top',
@@ -131,8 +131,8 @@ export function useIntervieweeTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewee-sections',
-      title: 'Interview Categories',
-      text: 'Your interviews are grouped by purpose — talent, interviewer, projects, peer sessions, hiring, and growth.',
+      title: '📂 Skill Verifications & Growth',
+      text: 'Interviews on Dehix help verify skills. Completing technical evaluations adds verified badges to your profile, increasing client trust.',
       attachTo: {
         element: '[data-tour="interviewee-sections"]',
         on: 'top',
@@ -141,7 +141,7 @@ export function useIntervieweeTour(isReady: boolean) {
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

@@ -16,6 +16,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import StatCard from '@/components/shared/statCard';
+import { useStreakTour } from '@/components/tour/freelancer-profile/useStreakTour';
 
 interface StreakInfo {
   freelancerId: string;
@@ -193,6 +194,8 @@ export default function StreakPage() {
     queryFn: fetchStreakRewards,
     staleTime: 1000 * 60 * 5,
   });
+
+  useStreakTour(!(!user.uid || isLoading || isLoadingRewards));
 
   const claimRewardMutation = useMutation({
     mutationFn: (milestone?: number) => claimStreakReward(milestone),

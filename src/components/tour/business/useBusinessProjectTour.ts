@@ -51,15 +51,33 @@ export function useBusinessProjectTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'business-projects',
-      title: 'Manage your projects',
+      id: 'business-projects-intro',
+      title: '📁 Corporate Projects Manager',
+      text: 'Welcome to your projects list. All active client contracts, drafted project requirements, and completed historical milestones are cataloged here. Use this interface to track active team sizes, inspect overall completion percentages, and release developer payouts.',
       scrollTo: false,
-      text: 'All your active and completed business projects are managed from here. Track progress, update details, and take action on projects easily.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-projects-actions',
+      title: '⚡ Contract Administration Options',
+      text: 'Click any project item card to drill down into milestone management, view code or document deliverables uploaded by freelancers, manage assigned roles, and release contract payments.',
+      scrollTo: false,
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

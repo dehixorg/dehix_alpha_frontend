@@ -54,9 +54,9 @@ export function useExperienceTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'professional experience',
-      title: 'Academic and Work experience',
-      text: 'Fill your academic and work details correctly.',
+      id: 'professional-experience-intro',
+      title: '💼 Professional Experience & Education History',
+      text: 'This dashboard allows you to record your previous work employment history, academic certifications, and portfolio projects. Keeping these sections updated directly enhances your matchmaking index with corporate clients.',
       when: withProgress(tour),
       buttons: [
         {
@@ -74,15 +74,27 @@ export function useExperienceTour(isReady: boolean) {
     });
 
     tour.addStep({
-      id: 'add',
-      title: 'Add Experience',
-      text: 'Add your professional experience from here.',
+      id: 'experience-tabs',
+      title: '📂 History Categorization Tabs',
+      text: 'Toggle between the different panels to organize your profile structure: "Experience" (employment history), "Education" (academic certifications), and "Projects" (custom developer portfolio showcases).',
+      attachTo: { element: '[data-tour="experience"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'add-experience-details',
+      title: '➕ Add Credentials',
+      text: 'Click this button to launch input modals for creating new experiences, educational degrees, or project cards. You will be prompted to enter company logos, timelines, roles, and project links.',
       attachTo: { element: '[data-tour="add-details"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

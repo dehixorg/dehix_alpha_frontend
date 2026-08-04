@@ -57,8 +57,8 @@ export function usePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'header-search',
-      title: 'Global Search',
-      text: 'Search across the entire platform from here.',
+      title: '🔍 Global Platform Search',
+      text: 'Our powerful search bar allows you to scan the entire Dehix ecosystem instantly. You can type keywords, technology names (like React or Solidity), or specific user handles to locate matching projects, freelancer talent pools, or verified business profiles across the platform.',
       attachTo: { element: '[data-tour="search"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -78,8 +78,8 @@ export function usePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'header-connects',
-      title: 'Wallet & Connects',
-      text: 'View and manage your connects here.',
+      title: '💎 Wallet & Connects Balance',
+      text: 'This display tracks your current balance of Dehix Connects (DHX). Connects act as the utility currency on our platform. Freelancers use them to place project bids and apply for listings, while businesses consume them to post opportunities, list talent positions, or direct-hire freelancers. You can click here to purchase more connects or review your detailed transactional log.',
       attachTo: { element: '[data-tour="header-connects"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -90,8 +90,8 @@ export function usePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'header-notifications',
-      title: 'Notifications',
-      text: 'All important alerts and updates appear here.',
+      title: '🔔 Live Notifications & Alerts',
+      text: 'Stay updated with your activities in real time. The notifications bell highlights any unread messages, new project milestones awaiting approval, interview schedule changes, or application invitations. Clicking the bell displays a dropdown preview where you can read, clear, or navigate directly to the origin of the event.',
       attachTo: { element: '[data-tour="header-notifications"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -102,8 +102,8 @@ export function usePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'header-profile',
-      title: 'Profile & Settings',
-      text: 'Manage your account and preferences here.',
+      title: '👤 Account Settings & Session Management',
+      text: 'Clicking your avatar opens the quick session control dropdown. From here, you can navigate directly to your public-facing profile preview, open comprehensive system settings, toggle dark and light modes, or securely log out. Keep your personal data and profiles updated here to boost your platform credibility.',
       attachTo: { element: '[data-tour="header-profile"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -112,21 +112,10 @@ export function usePlatformTour(isReady: boolean) {
       ],
     });
 
-    // tour.addStep({
-    //   id: 'sidebar',
-    //   title: 'Navigation Sidebar',
-    //   text: 'Use this sidebar to move across the platform.',
-    //   attachTo: { element: '[data-tour="sidebar"]', on: 'right' },
-    //   buttons: [
-    //     { text: 'Back', action: tour.back },
-    //     { text: 'Next', action: tour.next },
-    //   ],
-    // });
-
     tour.addStep({
       id: 'nav-dashboard',
-      title: 'Dashboard',
-      text: 'Your overview of activity, progress, and stats.',
+      title: '📊 Central Activity Dashboard',
+      text: 'Your main control center on Dehix. Depending on your role, this page aggregates all key performance indicators including active contracts, outstanding payments, profile strength parameters, upcoming milestones, and overall platform analytics in a visual card format.',
       attachTo: { element: '[data-tour="nav-dashboard"]', on: 'right' },
       when: withProgress(tour),
       buttons: [
@@ -137,8 +126,8 @@ export function usePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'nav-market',
-      title: 'Marketplace',
-      text: 'Explore projects, opportunities, and listings.',
+      title: '🛍️ Dehix Opportunities Marketplace',
+      text: 'The open market hub where work matches are made. Freelancers can browse through active client projects, filter by technology tags, and place competitive bids. Business profiles can navigate here to discover top-rated developer profiles and extend direct interview requests.',
       attachTo: { element: '[data-tour="nav-market"]', on: 'right' },
       when: withProgress(tour),
       buttons: [

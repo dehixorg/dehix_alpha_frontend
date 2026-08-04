@@ -52,8 +52,8 @@ export function useBusinessMarketTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-market-header',
-      title: 'Business Marketplace',
-      text: 'Browse and discover freelancers for your business needs.',
+      title: '🛍️ Dehix Talent Marketplace',
+      text: 'Welcome to the Client-side Discovery Marketplace. This is where your company can browse and search through all verified freelancer profiles active on Dehix. You can inspect hourly rates, skill sets, portfolio projects, and peer-reviewed credentials.',
       when: withProgress(tour),
       buttons: [
         {
@@ -72,9 +72,8 @@ export function useBusinessMarketTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-market-filters',
-      title: 'Filters',
-      scrollTo: false,
-      text: 'Use filters to narrow down freelancers by skills, experience, and location.',
+      title: '⚡ Advanced Candidate Filters',
+      text: 'Use these sidebar filters to narrow down candidate results. You can filter by technology tags (e.g. Next.js, Rust), experience levels, country locations, and min/max hourly rates to locate the ideal freelancer.',
       attachTo: {
         element: '[data-tour="business-market-filters"]',
         on: 'right',
@@ -88,9 +87,8 @@ export function useBusinessMarketTour(isReady: boolean) {
 
     tour.addStep({
       id: 'business-market-list',
-      title: 'Freelancer list',
-      scrollTo: false,
-      text: 'Explore freelancer profiles and choose the best fit for your project.',
+      title: '👥 Candidate Cards & Profiles',
+      text: 'Explore candidate cards. Each card displays key details: ratings, top skills, completed projects count, and location. Click on any profile to view full portfolios, inspect resume documents, open a chat window, or extend a direct interview scheduling request.',
       attachTo: {
         element: '[data-tour="business-market-list"]',
         on: 'top',
@@ -99,7 +97,7 @@ export function useBusinessMarketTour(isReady: boolean) {
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

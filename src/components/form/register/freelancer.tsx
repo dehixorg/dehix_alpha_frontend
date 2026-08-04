@@ -462,9 +462,6 @@ function FreelancerRegisterForm({
   const [dialogEmail, setDialogEmail] = useState<string>('');
   const searchParams = useSearchParams();
   const [isTermsDialog, setIsTermsDialog] = useState(false);
-  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
-    null,
-  );
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -505,18 +502,59 @@ function FreelancerRegisterForm({
         'confirmPassword',
       ]);
       if (isValid) {
-        // Check if email is already verified and matches the verified email
-        const currentEmail = form.getValues('email');
-        if (isEmailVerified && verifiedEmail === currentEmail) {
-          // Email already verified and matches, proceed to next step
-          setCurrentStep((s: number) => s + 1);
-        } else {
-          // Email not verified or doesn't match the verified email, open OTP dialog
-          const email = currentEmail;
-          if (email) {
-            setDialogEmail(email);
-            setIsEmailOtpDialogOpen(true);
+        const { userName, email } = form.getValues();
+        setIsVerified(true);
+        try {
+          // 1. Check duplicate username
+          const usernameResponse = await axiosInstance.get(
+            `/public/username/check-duplicate?username=${encodeURIComponent(userName)}&is_freelancer=true`,
+          );
+          if (usernameResponse.data.duplicate === true) {
+            notifyError(
+              'This username is already taken. Please choose another one.',
+              'User Already Exists',
+            );
+            return;
           }
+
+          // 2. Check duplicate email
+          const emailResponse = await axiosInstance.get(
+            `/public/user_email?user=${encodeURIComponent(email)}`,
+          );
+          if (emailResponse.data && !emailResponse.data.error) {
+            notifyError(
+              'This email is already registered. Please choose another one.',
+              'Email Already Registered',
+            );
+            return;
+          }
+
+          const latestValues = form.getValues();
+          if (
+            latestValues.userName !== userName ||
+            latestValues.email !== email
+          ) {
+            return;
+          }
+
+          // 3. Email verification OTP
+          if (isEmailVerified && verifiedEmail === email) {
+            // Email already verified and matches, proceed to next step
+            setCurrentStep((s: number) => s + 1);
+          } else {
+            // Email not verified or doesn't match the verified email, open OTP dialog
+            if (email) {
+              setDialogEmail(email);
+              setIsEmailOtpDialogOpen(true);
+            }
+          }
+        } catch (error: any) {
+          notifyError(
+            'There was an error while checking the email or username.',
+            'API Error',
+          );
+        } finally {
+          setIsVerified(false);
         }
       } else {
         notifyError(
@@ -533,36 +571,7 @@ function FreelancerRegisterForm({
         'workExperience',
       ]);
       if (isValid) {
-        const { userName } = form.getValues();
-        setIsVerified(true);
-        try {
-          const username = userName;
-          if (username === lastCheckedUsername) {
-            setCurrentStep(currentStep + 1);
-            return;
-          }
-
-          const response = await axiosInstance.get(
-            `/public/username/check-duplicate?username=${username}&is_freelancer=true`,
-          );
-
-          if (response.data.duplicate === false) {
-            setCurrentStep(currentStep + 1);
-          } else {
-            notifyError(
-              'This username is already taken. Please choose another one.',
-              'User Already Exists',
-            );
-            setLastCheckedUsername(username);
-          }
-        } catch (error: any) {
-          notifyError(
-            'There was an error while checking the username.',
-            'API Error',
-          );
-        } finally {
-          setIsVerified(false);
-        }
+        setCurrentStep(currentStep + 1);
       } else {
         notifyError(
           'Please fill in all required fields before proceeding.',
@@ -964,7 +973,7 @@ function FreelancerRegisterForm({
                             max={300}
                             step={1}
                             placeholder="0"
-                            value={field.value ?? 0}
+                            value={field.value === 0 ? '' : (field.value ?? '')}
                             onChange={(e) => {
                               const v = e.target.value;
                               field.onChange(v === '' ? 0 : Number(v));

@@ -56,20 +56,47 @@ export function useNotesTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'notes',
-      title: 'Notes',
+      id: 'notes-intro',
+      title: '📝 Personal Notes Board',
       text:
         userType === 'business'
-          ? 'Use this space to keep business notes, ideas, and important references in one place.'
-          : 'Use this section to write down ideas, reminders, and personal notes.',
-      // attachTo: {
-      //   element: '[data-tour="notes"]',
-      //   on: 'top',
-      // },
+          ? 'Welcome to your Personal Notes space. This module allows you to write down business ideas, draft requirements, list developer requirements, or store quick bookmarks during candidate evaluations.'
+          : 'Welcome to your Notes workspace. Use this board to write down reminders, store code snippets, draft project requirements, or track progress checklists for your active milestones.',
       when: withProgress(tour),
       buttons: [
         {
-          text: 'Got it',
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'notes-grid-step',
+      title: '🎨 Color-Coded Note Cards',
+      text: 'Your notes are displayed in a clean card grid. You can assign custom colors (e.g. blue, green, yellow), add tags, and filter notes by creation dates or categories.',
+      attachTo: { element: '[data-tour="notes"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'notes-options-step',
+      title: '📁 Note Management & Archiving',
+      text: 'Hover over any card to pin it to the top of your feed, send it to the Archive tab, or move it to the Trash. Notes moved to the trash are automatically deleted after 30 days.',
+      attachTo: { element: '[data-tour="notes"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        {
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

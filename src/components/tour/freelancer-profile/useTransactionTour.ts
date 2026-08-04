@@ -54,16 +54,45 @@ export function useTransactionTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'transaction',
-      title: 'Transaction History',
-      text: 'Track your connect transactions and balance changes.',
+      id: 'transaction-intro',
+      title: '💳 Financial Ledger & Invoicing',
+      text: 'Welcome to your Transaction History. This page lists all platform currency updates. You can track payouts received for completed milestones, connects spent placing bids, or withdraw cash balances directly to external payment systems.',
       scrollTo: false,
-      // attachTo: { element: '[data-tour="transaction"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'transaction-filters-step',
+      title: '⚡ Filter Transaction Logs',
+      text: 'Refine large lists by selecting filter fields: choose date ranges, search specific project transaction IDs, or filter credit/debit states.',
+      attachTo: { element: '[data-tour="transaction"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'transaction-summary-step',
+      title: '📊 Transaction Summary Cards',
+      text: 'These cards display summary details: "Available Balance" for withdrawable cash, "Pending Earnings" tracking milestones under review, and "Net Income" for lifetime earnings.',
+      attachTo: { element: '[data-tour="transaction"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

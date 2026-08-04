@@ -38,6 +38,9 @@ export type InterviewItemCardItem = {
   intervieweeCompletionConfirmed?: boolean;
   interviewerFeedback?: string;
   interviewerRating?: number;
+  creatorId?: string;
+  interviewerId?: string;
+  price?: string;
 };
 
 type InterviewItemCardProps = {
@@ -269,6 +272,31 @@ export default function InterviewItemCard({
                 <div className="truncate">{dateLabel}</div>
               </div>
             </div>
+
+            {item.interviewType === 'PROJECT' &&
+            item.interviewerId === item.creatorId ? (
+              <div className="flex items-start gap-2 text-sm col-span-2 border-t pt-2 mt-1">
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-muted-foreground">
+                    Interview Pay
+                  </div>
+                  <div className="text-xs text-amber-600 dark:text-amber-400 font-semibold italic mt-0.5">
+                    This interview is for your project only (No fee)
+                  </div>
+                </div>
+              </div>
+            ) : item.price ? (
+              <div className="flex items-start gap-2 text-sm border-t pt-2 mt-1">
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-muted-foreground">
+                    Interviewer Reward
+                  </div>
+                  <div className="font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                    {item.price} connects
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {item?.description ? (

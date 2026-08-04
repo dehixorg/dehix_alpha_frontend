@@ -57,19 +57,32 @@ export function useProjectInvitationTour(isReady: boolean) {
 
     if (userType === 'business') {
       tour.addStep({
-        id: 'business-invitation',
-        title: 'Project Invitations',
-        text:
-          'Manage and track all your project invitations in one place. ' +
-          'Review requests, respond quickly, and keep collaborations moving forward.',
-        // attachTo: {
-        //   element: '[data-tour="business-invitation"]',
-        //   on: 'top',
-        // },
+        id: 'business-invitation-intro',
+        title: '✉️ Sent Project Invitations',
+        text: 'Welcome to your Outgoing Invitations dashboard. This dashboard tracks all invitation requests your business has extended to developers. You can review response states, send quick reminders, and check matches in real time.',
         when: withProgress(tour),
         buttons: [
           {
-            text: 'Got it',
+            text: 'Skip',
+            action: () => {
+              tour.cancel();
+              dispatch(clearTour());
+            },
+          },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'business-invitation-status',
+        title: '📋 Response Tracking & Stages',
+        text: 'Invitations are organized by status categories: "Pending" indicates candidates currently reviewing your invitation offer, "Accepted" lists users ready to initiate project milestones, and "Declined" displays responses with candidate feedback.',
+        attachTo: { element: '[data-tour="business-invitation"]', on: 'top' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          {
+            text: 'Complete',
             action: () => {
               tour.complete();
               dispatch(clearTour());
@@ -81,17 +94,32 @@ export function useProjectInvitationTour(isReady: boolean) {
 
     if (userType === 'freelancer') {
       tour.addStep({
-        id: 'freelancer-invitation',
-        title: 'Project Invitations',
-        text: 'Here you can see projects where clients have directly invited you to apply.',
-        // attachTo: {
-        //   element: '[data-tour="freelancer-invitation"]',
-        //   on: 'top',
-        // },
+        id: 'freelancer-invitation-intro',
+        title: '✉️ Incoming Project Invitations',
+        text: 'Welcome to your Project Invitations dashboard. When client organizations view your profile in the talent market and wish to work with you directly, their incoming invitations appear here.',
         when: withProgress(tour),
         buttons: [
           {
-            text: 'Got it',
+            text: 'Skip',
+            action: () => {
+              tour.cancel();
+              dispatch(clearTour());
+            },
+          },
+          { text: 'Next', action: tour.next },
+        ],
+      });
+
+      tour.addStep({
+        id: 'freelancer-invitation-action',
+        title: '✅ Accept or Decline Offers',
+        text: 'Review the proposed budget details, role definitions, and milestones for each incoming invitation. You can click Accept to open a contract directly, or click Decline to send optional feedback to the company.',
+        attachTo: { element: '[data-tour="freelancer-invitation"]', on: 'top' },
+        when: withProgress(tour),
+        buttons: [
+          { text: 'Back', action: tour.back },
+          {
+            text: 'Complete',
             action: () => {
               tour.complete();
               dispatch(clearTour());

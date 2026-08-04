@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 
 import FreelancerSettingsLayout from '@/components/layout/FreelancerSettingsLayout';
 import { RootState } from '@/lib/store';
+import { usePublicProfileTour } from '@/components/tour/shared/usePublicProfileTour';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
@@ -55,6 +56,7 @@ export default function FreelancerPublicProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [publicUrl, setPublicUrl] = useState('');
+  usePublicProfileTour(!loading);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -152,7 +154,7 @@ export default function FreelancerPublicProfileSettings() {
     >
       <div className="w-full max-w-4xl mx-auto space-y-6">
         {/* Share Link Card */}
-        <Card className="border shadow-sm">
+        <Card className="border shadow-sm" data-tour="profile-share">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" />
@@ -213,7 +215,7 @@ export default function FreelancerPublicProfileSettings() {
         </Card>
 
         {/* Profile Preview */}
-        <div>
+        <div data-tour="profile-preview">
           <p className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
             Profile Preview — how visitors see your profile
           </p>

@@ -61,6 +61,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 import StatItem from '@/components/shared/StatItem';
 import { formatCurrency } from '@/utils/format';
+import { Input } from '@/components/ui/input';
 // Constants - Backend expects uppercase values
 const BID_STATUSES = [
   'PENDING',
@@ -762,6 +763,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   );
   const [interviewTime, setInterviewTime] = useState<string>('10:00');
   const [interviewDescription, setInterviewDescription] = useState('');
+  const [interviewerFee, setInterviewerFee] = useState('');
   const [isSubmittingInterview, setIsSubmittingInterview] = useState(false);
 
   // Memoized bid counts
@@ -1106,6 +1108,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setInterviewMode('DIRECT');
     setInterviewDate(undefined);
     setInterviewTime('');
+    setInterviewerFee('');
     setSelectedBidForInterview(null);
     setIsSubmittingInterview(false);
   }, []);
@@ -1121,6 +1124,20 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       return;
     }
 
+    if (interviewMode === 'HIRE') {
+      if (
+        !interviewerFee ||
+        Number.isNaN(Number(interviewerFee)) ||
+        Number(interviewerFee) <= 0
+      ) {
+        notifyError(
+          'Please enter a valid interviewer budget/fee in connects.',
+          'Error',
+        );
+        return;
+      }
+    }
+
     try {
       setIsSubmittingInterview(true);
       const { bid, profile } = selectedBidForInterview;
@@ -1132,7 +1149,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         finalDate.setHours(hours || 0, minutes || 0, 0, 0);
       }
 
-      const payload = {
+      const payload: any = {
         intervieweeId: bid.bidder_id || bid.freelancer?._id,
         interviewType: interviewMode === 'HIRE' ? 'HIRE' : 'PROJECT',
         description: interviewDescription,
@@ -1140,7 +1157,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         talentId: profile.domain_id || profile._id,
         interviewDate: finalDate,
         interviewStatus: interviewMode === 'HIRE' ? 'BIDDING' : 'SCHEDULED',
+        projectId: id,
       };
+
+      if (interviewMode === 'HIRE') {
+        payload.price = String(interviewerFee);
+      }
 
       const response = await axiosInstance.post('/interview', payload);
 
@@ -1773,6 +1795,29 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   label="Interview Date & Time"
                 />
               </div>
+
+              {interviewMode === 'HIRE' && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="interviewerFee"
+                    className="text-sm font-semibold"
+                  >
+                    Interviewer Budget / Fee (Connects)
+                  </Label>
+                  <Input
+                    id="interviewerFee"
+                    type="number"
+                    min="1"
+                    placeholder="Enter connects to pay the interviewer (e.g. 100)"
+                    value={interviewerFee}
+                    onChange={(e) => setInterviewerFee(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Specify how many connects you will pay the freelancer who
+                    takes the interview on your behalf.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="desc" className="text-sm font-semibold">
