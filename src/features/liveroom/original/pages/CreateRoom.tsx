@@ -44,6 +44,7 @@ import { liveRoomApiFetch as fetch } from '../api/runtime';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import MilestoneReviewSection from '../components/MilestoneReviewSection';
+// eslint-disable-next-line import/no-named-as-default
 import TalentRequirementPlanner, {
   type TalentRequirement,
 } from '../components/TalentRequirementPlanner';
@@ -1659,7 +1660,7 @@ function renderRoadmap(value: unknown): ReactNode {
     });
   } else if (typeof value === 'object' && value !== null) {
     phasesList = Object.entries(value as Record<string, unknown>).map(
-      ([key, phase], idx) => {
+      ([key, phase], _idx) => {
         const rec = asRecord(phase);
         const title = String(
           rec.phase_name ?? rec.name ?? rec.title ?? humanizeKey(key),
@@ -2812,7 +2813,7 @@ const BLUEPRINT_SECTION_DESCRIPTIONS: Record<string, string> = {
   final_verdict: 'Build decision and confidence signal.',
 };
 
-function getBlueprintFieldValue(
+function _getBlueprintFieldValue(
   blueprint: any,
   sectionId: string,
   fieldKey: string,
@@ -2880,15 +2881,15 @@ function getBlueprintFieldValue(
 
 function BlueprintReviewSection({
   blueprint,
-  region,
+  region: _region,
   onUpdateField,
   onRefineField,
   isRefining,
   suggestingId,
-  onConfirmFinal,
+  onConfirmFinal: _onConfirmFinal,
   setSuggestingId,
   setIsRefiningBlueprintSection,
-  sessionData,
+  sessionData: _sessionData,
   activeTab,
   setActiveTab,
   onSectionChange,
@@ -3245,8 +3246,8 @@ function BlueprintReviewSection({
 
   const renderTargetUsersReview = () => {
     const users = asRecord(blueprint.target_users);
-    const primary = asRecordList(users.primary_users);
-    const secondary = asRecordList(users.secondary_users);
+    const _primary = asRecordList(users.primary_users);
+    const _secondary = asRecordList(users.secondary_users);
 
     const updatePersona = (
       field: 'primary_users' | 'secondary_users',
@@ -4295,7 +4296,7 @@ function BlueprintReviewSection({
       return { number: trimmed, unit: 'weeks' };
     };
 
-    const cleanPhaseName = (rawName: string, index: number) => {
+    const cleanPhaseName = (rawName: string, _index: number) => {
       return rawName.replace(/^Phase\s*\d+\s*[-:]?\s*/i, '');
     };
 
@@ -4771,7 +4772,7 @@ function BlueprintReviewSection({
         recommended.filter((_, i) => i !== idx),
       );
 
-    const updateMinRole = (idx: number, val: string) => {
+    const _updateMinRole = (idx: number, val: string) => {
       const list = [...minimum];
       list[idx] = val;
       const minKey = getMinFieldKey();
@@ -4781,7 +4782,7 @@ function BlueprintReviewSection({
         onUpdateField('team_requirements', minKey, list);
       }
     };
-    const addMinRole = () => {
+    const _addMinRole = () => {
       const list = [...minimum, ''];
       const minKey = getMinFieldKey();
       if (blueprint[minKey] !== undefined) {
@@ -4790,7 +4791,7 @@ function BlueprintReviewSection({
         onUpdateField('team_requirements', minKey, list);
       }
     };
-    const removeMinRole = (idx: number) => {
+    const _removeMinRole = (idx: number) => {
       const list = minimum.filter((_, i) => i !== idx);
       const minKey = getMinFieldKey();
       if (blueprint[minKey] !== undefined) {
@@ -5770,7 +5771,7 @@ function BlueprintReviewSection({
           <nav className="space-y-1">
             {TABS.map((tab) => {
               const active = activeTab === tab.id;
-              const hasContent = sectionHasContent(tab.id);
+              const _hasContent = sectionHasContent(tab.id);
               return (
                 <button
                   key={tab.id}
@@ -7067,7 +7068,7 @@ export default function CreateRoom() {
   const [usedAiSuggest, setUsedAiSuggest] = useState<Record<string, boolean>>(
     {},
   );
-  const [improveAnswerCounts, setImproveAnswerCounts] = useState<
+  const [_improveAnswerCounts, _setImproveAnswerCounts] = useState<
     Record<string, number>
   >({});
   const [refineInputs, setRefineInputs] = useState<Record<string, string>>({});

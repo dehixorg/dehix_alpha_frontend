@@ -60,7 +60,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
     isFreelancer = false,
     freelancerId,
     fetchMilestones,
-    isLiveRoomPreview = false,
+    isLiveRoomPreview: _isLiveRoomPreview = false,
     onEditStory,
     onDeleteStory,
     onEditTask,
