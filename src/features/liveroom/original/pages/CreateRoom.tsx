@@ -44,7 +44,7 @@ import { liveRoomApiFetch as fetch } from '../api/runtime';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import MilestoneReviewSection from '../components/MilestoneReviewSection';
-import {
+import TalentRequirementPlanner, {
   type TalentRequirement,
 } from '../components/TalentRequirementPlanner';
 
@@ -1086,7 +1086,7 @@ function _JobProgressPanel({
   );
 }
 
-function LoadingProgressScreen({
+function PremiumLoader({
   title,
   subtitle,
 }: {
