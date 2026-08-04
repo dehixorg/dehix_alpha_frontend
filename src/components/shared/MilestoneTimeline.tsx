@@ -12,7 +12,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
@@ -23,7 +22,6 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from '@/components/ui/carousel';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import type { Milestone } from '@/utils/types/Milestone';
 
 interface MilestoneTimelineProps {

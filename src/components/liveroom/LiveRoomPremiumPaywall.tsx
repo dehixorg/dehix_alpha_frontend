@@ -79,7 +79,7 @@ const PLAN_BENEFITS = [
 
 export default function LiveRoomPremiumPaywall({
   onSuccess,
-  userId,
+  userId: _userId,
 }: LiveRoomPremiumPaywallProps) {
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
@@ -134,14 +134,11 @@ export default function LiveRoomPremiumPaywall({
         }) => {
           try {
             // Step 3: Verify Payment on Backend
-            const verifyRes = await axiosInstance.post(
-              '/liveroom/subscription/verify-payment',
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              },
-            );
+            await axiosInstance.post('/liveroom/subscription/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
 
             notifySuccess(
               'Your Live Room Monthly Plan (₹499/month) is now active!',

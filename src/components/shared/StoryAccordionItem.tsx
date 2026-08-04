@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Info, FileText, Edit2, Trash2, Sparkles } from 'lucide-react';
-import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -29,7 +28,6 @@ import {
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
-import { ScrollBar } from '@/components/ui/scroll-area';
 
 interface StoryAccordionItemProps {
   milestoneId: string | undefined;
@@ -81,12 +79,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
   const [refineInstruction, setRefineInstruction] = useState('');
   const [refineLoading, setRefineLoading] = useState(false);
 
-  const openEditTask = (originalIdx: number, task: any) => {
-    setEditingTaskIndex(originalIdx);
-    setEditTaskTitle(task.title ?? '');
-    setEditTaskSummary(task.summary ?? task.description ?? '');
-  };
-
   const handleEditTaskSave = () => {
     if (editingTaskIndex === null) return;
     onEditTask?.(editingTaskIndex, editTaskTitle, editTaskSummary);
@@ -99,8 +91,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
   };
 
   const taskCount = story?.tasks?.length ?? 0;
-  const localTaskMode =
-    !isLiveRoomPreview && Boolean(onEditTask || onDeleteTask);
 
   const { text: projectStatus } = getStatusBadge(story.storyStatus);
   const normalizedTaskStatuses: string[] = (story?.tasks ?? [])

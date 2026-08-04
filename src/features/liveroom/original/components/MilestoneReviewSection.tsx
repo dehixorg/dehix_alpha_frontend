@@ -501,7 +501,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
   const [hasConfirmedDates, setHasConfirmedDates] = useState(false);
 
   // AI Refine state
-  const [isRefining, setIsRefining] = useState(false);
+  const [_isRefining, setIsRefining] = useState(false);
   const [refinePrompt, setRefinePrompt] = useState('');
   const [refineLoading, setRefineLoading] = useState(false);
 
@@ -777,7 +777,7 @@ const MilestoneReviewSection: React.FC<MilestoneReviewSectionProps> = ({
 
   // ── Refine with AI submission ──
 
-  const handleRefineSubmit = async () => {
+  const _handleRefineSubmit = async () => {
     if (!refinePrompt.trim() || refineLoading) return;
     setRefineLoading(true);
     try {

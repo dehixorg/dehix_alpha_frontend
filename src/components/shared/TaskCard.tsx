@@ -57,7 +57,7 @@ const TaskCard: React.FC<TaskCardProps> = (props) => {
     fetchMilestones,
     milestoneId,
     storyId,
-    taskBadgeStyle,
+    taskBadgeStyle: _taskBadgeStyle,
     onRefineTask,
     onDeleteTask,
   } = props;

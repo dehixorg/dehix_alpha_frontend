@@ -71,6 +71,7 @@ function UserAvatar({
 
   if (avatarSrc) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={avatarSrc}
         alt={user?.name || 'User'}

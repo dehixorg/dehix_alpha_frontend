@@ -11,7 +11,7 @@ interface SubscriptionStatusBadgeProps {
 
 export default function SubscriptionStatusBadge({
   expiresAt,
-  onUpgradeClick,
+  onUpgradeClick: _onUpgradeClick,
   compact = false,
 }: SubscriptionStatusBadgeProps) {
   const formattedDate = expiresAt

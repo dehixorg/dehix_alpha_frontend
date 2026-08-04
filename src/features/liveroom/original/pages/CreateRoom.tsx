@@ -10,15 +10,12 @@ import {
   AlertCircle,
   AlertTriangle,
   ShieldCheck,
-  RefreshCw,
   ChevronRight,
-  HelpCircle,
   ArrowRight,
   ArrowUp,
   X,
   Globe,
   Edit3,
-  Layers,
   Cpu,
   FileText,
   Layout,
@@ -30,16 +27,12 @@ import {
   DollarSign,
   Users,
   Briefcase,
-  Check,
   Clock,
-  Github,
   Trash2,
   Plus,
-  Hash,
   Database,
   Code2,
   Server,
-  GripVertical,
   Filter,
   ArrowUpDown,
   Loader2,
@@ -51,15 +44,9 @@ import { liveRoomApiFetch as fetch } from '../api/runtime';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import MilestoneReviewSection from '../components/MilestoneReviewSection';
-import TalentRequirementPlanner, {
+import {
   type TalentRequirement,
 } from '../components/TalentRequirementPlanner';
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from '../../../../components/ui/tooltip';
 
 import LiveRoomPremiumPaywall from '@/components/liveroom/LiveRoomPremiumPaywall';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -1074,7 +1061,7 @@ function ReportReader({
   );
 }
 
-function JobProgressPanel({
+function _JobProgressPanel({
   title,
   description,
 }: {
@@ -1099,7 +1086,7 @@ function JobProgressPanel({
   );
 }
 
-function PremiumLoader({
+function LoadingProgressScreen({
   title,
   subtitle,
 }: {
@@ -1174,6 +1161,7 @@ function PremiumLoader({
       {/* Cybernetic Pulse Spinner with new logo style */}
       <div className="relative flex items-center justify-center w-24 h-24 mb-10 mt-2">
         <div className="w-14 h-14 rounded-xl bg-black dark:bg-white border border-neutral-800 dark:border-neutral-200 flex items-center justify-center shadow-lg hover:scale-105 transition-all duration-300 relative z-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/dehix.png"
             alt="Dehix"

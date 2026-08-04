@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ClipboardPlus, Edit2, Plus, Trash2 } from 'lucide-react';
+import { ClipboardPlus, Plus } from 'lucide-react';
 
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -174,8 +174,6 @@ const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
       return;
     onDeleteStory?.(storyId);
   };
-
-  const localMode = Boolean(onEditStory || onDeleteStory);
 
   return (
     <div className="w-full px-0 md:px-0 lg:px-0 rounded-lg">

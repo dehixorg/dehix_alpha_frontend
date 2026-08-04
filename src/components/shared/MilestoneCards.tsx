@@ -37,7 +37,7 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
   date,
   title,
   summary,
-  position,
+  position: _position,
   isMobile,
   isSelected,
 }) => {
