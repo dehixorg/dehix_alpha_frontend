@@ -1058,7 +1058,7 @@ export default function LiveRoomPage() {
     );
   };
 
-  const canSendOfferToParticipant = (participant: any) => {
+  const hasInterviewChannel = (participant: any) => {
     const person = participant.user ?? participant.userId;
     const freelancerId = String(
       person?._id ?? participant.talentId ?? participant.userId,
@@ -1067,7 +1067,10 @@ export default function LiveRoomPage() {
       workspace?.channels.some(
         (channel) =>
           channel.type === 'interview' &&
-          channel.participantIds.map(String).includes(freelancerId),
+          (channel.participantIds.map(String).includes(freelancerId) ||
+            ((channel as any).targetParticipantId &&
+              String((channel as any).targetParticipantId) ===
+                String(participant._id))),
       ) ?? false
     );
   };
@@ -1081,9 +1084,42 @@ export default function LiveRoomPage() {
       workspace?.channels.some(
         (channel) =>
           channel.type === 'direct' &&
-          channel.participantIds.map(String).includes(freelancerId),
+          (channel.participantIds.map(String).includes(freelancerId) ||
+            ((channel as any).targetParticipantId &&
+              String((channel as any).targetParticipantId) ===
+                String(participant._id))),
       ) ?? false
     );
+  };
+
+  const getParticipantOffer = (participant: any) => {
+    const person = participant.user ?? participant.userId;
+    const freelancerId = String(
+      person?._id ?? participant.talentId ?? participant.userId,
+    );
+    return (workspace?.offers ?? []).find((offer: any) => {
+      const targetId = String(
+        offer.freelancerId?._id ?? offer.freelancerId ?? offer.userId ?? '',
+      );
+      return targetId === freelancerId;
+    });
+  };
+
+  const canSendOfferToParticipant = (participant: any) => {
+    if (!hasInterviewChannel(participant)) return false;
+
+    const offer = getParticipantOffer(participant);
+    if (!offer) return true;
+
+    const status = String(offer.status || '').toLowerCase();
+    if (
+      status === 'rejected' ||
+      status === 'decline' ||
+      status === 'declined'
+    ) {
+      return true;
+    }
+    return false;
   };
 
   const handleMessageParticipant = (participant: any) => {
@@ -3168,10 +3204,14 @@ export default function LiveRoomPage() {
                                     disabled={
                                       !['joined', 'accepted'].includes(
                                         participant.status,
-                                      )
+                                      ) || hasInterviewChannel(participant)
                                     }
                                     className="w-full text-center rounded-md border border-border/60 bg-background/50 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] truncate"
-                                    title="Create interview"
+                                    title={
+                                      hasInterviewChannel(participant)
+                                        ? 'Interview channel already created'
+                                        : 'Create interview'
+                                    }
                                   >
                                     Interview
                                   </button>
@@ -3182,20 +3222,43 @@ export default function LiveRoomPage() {
                                     disabled={
                                       !['joined', 'accepted'].includes(
                                         participant.status,
-                                      )
+                                      ) || hasDmChannel(participant)
                                     }
                                     className="w-full text-center rounded-md border border-border/60 bg-background/50 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] truncate"
-                                    title="Send direct message"
+                                    title={
+                                      hasDmChannel(participant)
+                                        ? 'Direct message channel already created'
+                                        : 'Send direct message'
+                                    }
                                   >
                                     Message
                                   </button>
                                   <button
                                     onClick={() => openOfferForm(participant)}
                                     disabled={
+                                      !['joined', 'accepted'].includes(
+                                        participant.status,
+                                      ) ||
                                       !canSendOfferToParticipant(participant)
                                     }
                                     className="w-full text-center rounded-md border border-border/60 bg-background/50 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] truncate"
-                                    title="Send offer after completed interview"
+                                    title={
+                                      !hasInterviewChannel(participant)
+                                        ? 'Create an interview channel first'
+                                        : getParticipantOffer(participant) &&
+                                            ![
+                                              'rejected',
+                                              'decline',
+                                              'declined',
+                                            ].includes(
+                                              String(
+                                                getParticipantOffer(participant)
+                                                  ?.status,
+                                              ).toLowerCase(),
+                                            )
+                                          ? 'Offer already sent to this freelancer'
+                                          : 'Send offer'
+                                    }
                                   >
                                     Offer
                                   </button>

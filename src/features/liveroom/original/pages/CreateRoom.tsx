@@ -7213,21 +7213,18 @@ Output: the final answer text only.`;
           'Core MVP features',
       );
 
-      await Promise.all(
-        unanswered.map(async (question) => {
-          try {
-            const qIndex = allQuestions.findIndex(
-              (q) => q._id === question._id,
-            );
-            const isMandatory = mandatoryQuestions.some(
-              (q) => q._id === question._id,
-            );
-            const index = qIndex >= 0 ? qIndex + 1 : 1;
-            const total = allQuestions.length || 5;
-            const kind = isMandatory ? 'Mandatory' : 'Optional';
-            const currentAnswer = answers[question._id]?.trim() || '';
+      for (const question of unanswered) {
+        try {
+          const qIndex = allQuestions.findIndex((q) => q._id === question._id);
+          const isMandatory = mandatoryQuestions.some(
+            (q) => q._id === question._id,
+          );
+          const index = qIndex >= 0 ? qIndex + 1 : 1;
+          const total = allQuestions.length || 5;
+          const kind = isMandatory ? 'Mandatory' : 'Optional';
+          const currentAnswer = answers[question._id]?.trim() || '';
 
-            const prompt = `You are DEHIX AI, a senior CTO and startup product architect helping a founder build their startup.
+          const prompt = `You are DEHIX AI, a senior CTO and startup product architect helping a founder build their startup.
 
 Context:
 - Business Idea: "${description || sessionData?.rawIdea || ''}"
@@ -7248,27 +7245,28 @@ Rules:
 
 Output: the final answer text only.`;
 
-            const res = await fetch('/api/ai/chat', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${getToken()}`,
-              },
-              body: JSON.stringify({
-                message: prompt,
-                launchSessionId: sessionData?._id,
-                clientContext: `Business idea: ${description || sessionData?.rawIdea || ''} | Region: ${region} | Features: ${coreFeatures}`,
-              }),
-            });
+          const res = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify({
+              message: prompt,
+              launchSessionId: sessionData?._id,
+              clientContext: `Business idea: ${description || sessionData?.rawIdea || ''} | Region: ${region} | Features: ${coreFeatures}`,
+            }),
+          });
 
-            if (res.ok) {
-              const data = await res.json();
-              let reply = data.reply || '';
-              reply = reply
-                .replace(/```[a-zA-Z]*\n?/g, '')
-                .replace(/\n?```/g, '')
-                .trim();
+          if (res.ok) {
+            const data = await res.json();
+            let reply = data.reply || '';
+            reply = reply
+              .replace(/```[a-zA-Z]*\n?/g, '')
+              .replace(/\n?```/g, '')
+              .trim();
 
+            if (reply) {
               setAnswers((prev) => ({
                 ...prev,
                 [question._id]: reply,
@@ -7278,14 +7276,14 @@ Output: the final answer text only.`;
                 [question._id]: true,
               }));
             }
-          } catch (e) {
-            console.error(
-              `Failed to suggest answer for question ${question._id}:`,
-              e,
-            );
           }
-        }),
-      );
+        } catch (e) {
+          console.error(
+            `Failed to suggest answer for question ${question._id}:`,
+            e,
+          );
+        }
+      }
       toast.success('Suggested answers generated for all questions!');
     } catch (err: any) {
       toast.error('Failed to generate suggestions for all');
