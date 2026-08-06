@@ -110,8 +110,12 @@ export default function BusinessDashboard() {
   const [checkingSub, setCheckingSub] = useState(true);
   const [subStatus, setSubStatus] = useState<{
     isSubscribed: boolean;
+    isActiveSubscription?: boolean;
     expiresAt?: string;
     status?: string;
+    roomsCreated?: number;
+    roomsRemaining?: number;
+    roomLimit?: number;
   } | null>(null);
 
   const fetchSubscriptionStatus = async () => {
@@ -158,9 +162,22 @@ export default function BusinessDashboard() {
   }
 
   if (!subStatus?.isSubscribed) {
+    const reason =
+      subStatus?.status === 'EXPIRED'
+        ? 'EXPIRED'
+        : subStatus?.status === 'LIMIT_REACHED'
+          ? 'LIMIT_REACHED'
+          : 'NOT_SUBSCRIBED';
     return (
       <LiveRoomPremiumPaywall
         userId={user?._id}
+        reason={reason}
+        subContext={{
+          roomsCreated: subStatus?.roomsCreated,
+          roomsRemaining: subStatus?.roomsRemaining,
+          roomLimit: subStatus?.roomLimit,
+          expiresAt: subStatus?.expiresAt,
+        }}
         onSuccess={() => fetchSubscriptionStatus()}
       />
     );
@@ -360,7 +377,20 @@ export default function BusinessDashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => navigate('/room/create')}>
+            <Button
+              size="sm"
+              onClick={() => navigate('/room/create')}
+              disabled={
+                !subStatus?.isSubscribed ||
+                (subStatus?.roomsRemaining !== undefined &&
+                  subStatus.roomsRemaining <= 0)
+              }
+              title={
+                subStatus?.roomsRemaining === 0
+                  ? 'Monthly room limit reached. Purchase a new subscription.'
+                  : undefined
+              }
+            >
               New Live Room
             </Button>
           </div>
@@ -368,7 +398,11 @@ export default function BusinessDashboard() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10">
-        <SubscriptionStatusBadge expiresAt={subStatus?.expiresAt} />
+        <SubscriptionStatusBadge
+          expiresAt={subStatus?.expiresAt}
+          roomsCreated={subStatus?.roomsCreated ?? 0}
+          roomLimit={subStatus?.roomLimit ?? 2}
+        />
 
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight">

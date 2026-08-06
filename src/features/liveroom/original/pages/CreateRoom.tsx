@@ -6983,8 +6983,12 @@ export default function CreateRoom() {
   const [checkingSub, setCheckingSub] = useState(true);
   const [subStatus, setSubStatus] = useState<{
     isSubscribed: boolean;
+    isActiveSubscription?: boolean;
     expiresAt?: string;
     status?: string;
+    roomsCreated?: number;
+    roomsRemaining?: number;
+    roomLimit?: number;
   } | null>(null);
 
   const fetchSubscriptionStatus = async () => {
@@ -8868,9 +8872,22 @@ Please return ONLY the modified text itself, without any introductory or convers
   }
 
   if (!subStatus?.isSubscribed) {
+    const reason =
+      subStatus?.status === 'EXPIRED'
+        ? 'EXPIRED'
+        : subStatus?.status === 'LIMIT_REACHED'
+          ? 'LIMIT_REACHED'
+          : 'NOT_SUBSCRIBED';
     return (
       <LiveRoomPremiumPaywall
         userId={user?._id}
+        reason={reason}
+        subContext={{
+          roomsCreated: subStatus?.roomsCreated,
+          roomsRemaining: subStatus?.roomsRemaining,
+          roomLimit: subStatus?.roomLimit,
+          expiresAt: subStatus?.expiresAt,
+        }}
         onSuccess={() => fetchSubscriptionStatus()}
       />
     );
