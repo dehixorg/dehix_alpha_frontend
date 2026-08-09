@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Info, FileText } from 'lucide-react';
-import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
+import { Plus, Info, FileText, Edit2, Trash2, Sparkles } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -8,6 +7,12 @@ import { Button } from '../ui/button';
 import TaskDetailsDialog from './TaskDetailsDialog';
 import TaskCard from './TaskCard';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
   AccordionItem,
@@ -23,7 +28,6 @@ import {
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
-import { ScrollBar } from '@/components/ui/scroll-area';
 
 interface StoryAccordionItemProps {
   milestoneId: string | undefined;
@@ -34,33 +38,61 @@ interface StoryAccordionItemProps {
   isFreelancer: boolean;
   freelancerId?: string;
   fetchMilestones: () => void;
+  isLiveRoomPreview?: boolean;
+  /** Optional local-mode story edit/delete callbacks */
+  onEditStory?: () => void;
+  onDeleteStory?: () => void;
+  /** Optional local-mode task edit/delete/refine callbacks */
+  onEditTask?: (taskIndex: number, title: string, summary: string) => void;
+  onDeleteTask?: (taskIndex: number) => void;
+  onRefineTask?: (taskIndex: number, instruction: string) => void;
 }
 
-const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
-  milestoneId,
-  story,
-  idx,
-  milestoneStoriesLength,
-  setIsTaskDialogOpen,
-  isFreelancer = false,
-  freelancerId,
-  fetchMilestones,
-}) => {
-  const HorizontalScrollArea: React.FC<{
-    className?: string;
-    children: React.ReactNode;
-  }> = ({ className, children }) => (
-    <ScrollAreaPrimitive.Root className={className}>
-      <ScrollAreaPrimitive.Viewport className="w-full rounded-[inherit]">
-        {children}
-      </ScrollAreaPrimitive.Viewport>
-      <ScrollBar orientation="horizontal" />
-      <ScrollAreaPrimitive.Corner />
-    </ScrollAreaPrimitive.Root>
+const MAX_TASKS_PER_STORY = 5;
+
+const StoryAccordionItem: React.FC<StoryAccordionItemProps> = (props) => {
+  const {
+    milestoneId,
+    story,
+    idx,
+    milestoneStoriesLength,
+    setIsTaskDialogOpen,
+    isFreelancer = false,
+    freelancerId,
+    fetchMilestones,
+    isLiveRoomPreview: _isLiveRoomPreview = false,
+    onEditStory,
+    onDeleteStory,
+    onEditTask,
+    onDeleteTask,
+    onRefineTask,
+  } = props;
+  // Edit-task modal state
+  const [editingTaskIndex, setEditingTaskIndex] = useState<number | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskSummary, setEditTaskSummary] = useState('');
+
+  // Refine-task modal state
+  const [refiningTaskIndex, setRefiningTaskIndex] = useState<number | null>(
+    null,
   );
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [refineLoading, setRefineLoading] = useState(false);
+
+  const handleEditTaskSave = () => {
+    if (editingTaskIndex === null) return;
+    onEditTask?.(editingTaskIndex, editTaskTitle, editTaskSummary);
+    setEditingTaskIndex(null);
+  };
+
+  const handleDeleteTaskClick = (originalIdx: number) => {
+    if (!window.confirm('Delete this task?')) return;
+    onDeleteTask?.(originalIdx);
+  };
+
+  const taskCount = story?.tasks?.length ?? 0;
 
   const { text: projectStatus } = getStatusBadge(story.storyStatus);
-  const taskCount = story?.tasks?.length ?? 0;
   const normalizedTaskStatuses: string[] = (story?.tasks ?? [])
     .map((task: any) => (task?.taskStatus ?? '').toString().toUpperCase())
     .filter((status: string) => Boolean(status));
@@ -162,19 +194,12 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const handleAcceptTask = async (taskId: string) => {
     try {
       if (!milestoneId || !story._id) {
-        console.warn('Missing milestone or story ID in handleAcceptTask');
         notifyError('Missing milestone or story ID', 'Error');
-        return;
+        return false;
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
-        {
-          acceptanceFreelancer: true,
-          rejectionFreelancer: false,
-          updatePermissionFreelancer: false,
-          updatePermissionBusiness: false,
-        },
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/accept`,
       );
 
       // Add to acted upon tasks to hide buttons immediately
@@ -184,37 +209,25 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return newSet;
       });
 
-      notifySuccess('Task accepted!');
+      notifySuccess('Task accepted successfully!');
       fetchMilestones(); // Refresh milestones
-      window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
+      return true;
     } catch (error) {
       console.error('Error accepting task:', error);
       notifyError('Failed to accept task.', 'Error');
-      // Remove from acted upon tasks if the request failed
-      setActedUponTasks((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(taskId);
-        return newSet;
-      });
+      return false;
     }
   };
 
   const handleRejectTask = async (taskId: string) => {
     try {
       if (!milestoneId || !story._id) {
-        console.warn('Missing milestone or story ID in handleRejectTask');
         notifyError('Missing milestone or story ID', 'Error');
-        return;
+        return false;
       }
 
       await axiosInstance.patch(
-        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/permission`,
-        {
-          acceptanceFreelancer: false,
-          rejectionFreelancer: true,
-          updatePermissionFreelancer: false,
-          updatePermissionBusiness: false,
-        },
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}/reject`,
       );
 
       // Add to acted upon tasks to hide buttons immediately
@@ -224,18 +237,13 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return newSet;
       });
 
-      notifySuccess('Task rejected and update requests removed!');
+      notifySuccess('Task rejected successfully!');
       fetchMilestones(); // Refresh milestones
-      window.dispatchEvent(new CustomEvent('taskAssignmentUpdated'));
+      return true;
     } catch (error) {
       console.error('Error rejecting task:', error);
       notifyError('Failed to reject task.', 'Error');
-      // Remove from acted upon tasks if the request failed
-      setActedUponTasks((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(taskId);
-        return newSet;
-      });
+      return false;
     }
   };
 
@@ -244,9 +252,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   ): Promise<boolean> => {
     try {
       if (!milestoneId || !story._id) {
-        console.warn(
-          'Missing milestone or story ID in handleApproveUpdatePermission',
-        );
         notifyError('Missing milestone or story ID', 'Error');
         return false;
       }
@@ -257,8 +262,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         payload = {
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
-          rejectionFreelancer: true,
-          acceptanceFreelancer: false,
+          acceptanceFreelancer: true,
         };
       } else {
         payload = {
@@ -287,9 +291,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   ): Promise<boolean> => {
     try {
       if (!milestoneId || !story._id) {
-        console.warn(
-          'Missing milestone or story ID in handleRejectUpdatePermission',
-        );
         notifyError('Missing milestone or story ID', 'Error');
         return false;
       }
@@ -332,19 +333,19 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       className={`${idx === milestoneStoriesLength - 1 ? 'border-b-0' : 'border-b'} transition-colors`}
     >
       <AccordionTrigger
-        className={`flex hover:no-underline items-center px-3 w-full`}
+        className={`flex hover:no-underline items-center px-4 py-3.5 w-full border-b border-border/20 hover:bg-muted/15 transition-all`}
       >
-        <div className="flex justify-between items-center w-full px-2 rounded-xl transition-colors">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex justify-between items-center w-full min-w-0 gap-3">
+          <div className="flex items-center gap-2.5 min-w-0 pr-2">
             <h3
-              className="text-base md:text-lg font-semibold truncate"
+              className="text-sm md:text-base font-bold tracking-tight text-foreground truncate min-w-0"
               title={story.title}
             >
               {story.title}
             </h3>
             <Badge
               variant="secondary"
-              className="rounded-full px-2 py-0.5 text-xs"
+              className="rounded-full px-2.5 py-0.5 text-xs font-semibold shrink-0 whitespace-nowrap bg-muted text-muted-foreground border border-border/40"
             >
               {taskCount} tasks
             </Badge>
@@ -353,79 +354,121 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-1 h-auto ml-1 rounded-full"
+                  className="h-6 w-6 p-0 rounded-full shrink-0 text-muted-foreground hover:text-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
                   aria-label="View story summary"
                 >
-                  <Info className="w-4 h-4" />
+                  <Info className="w-3.5 h-3.5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed">
+              <PopoverContent className="w-80 text-sm whitespace-pre-wrap leading-relaxed p-4 bg-card border border-border shadow-xl rounded-xl">
                 <div className="space-y-1">
-                  <h4 className="font-semibold">{story.title}</h4>
-                  <p>{story.summary || 'No summary provided.'}</p>
+                  <h4 className="font-bold text-foreground">{story.title}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {story.summary || 'No summary provided.'}
+                  </p>
                 </div>
               </PopoverContent>
             </Popover>
           </div>
 
-          <Badge
-            className={`${profileTypeOutlineClasses(projectStatus)} hidden md:flex rounded-full`}
-          >
-            {projectStatus}
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0 ml-auto mr-3 sm:mr-4">
+            {onEditStory && !isFreelancer && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0 rounded-lg border border-border/60 bg-muted/30 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all shadow-xs shrink-0 flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditStory();
+                }}
+                title="Edit Story"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            {onDeleteStory && !isFreelancer && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0 rounded-lg border border-border/60 bg-muted/30 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive transition-all shadow-xs shrink-0 flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteStory();
+                }}
+                title="Delete Story"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            <Badge
+              className={`${profileTypeOutlineClasses(projectStatus)} flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider shrink-0 mr-1`}
+            >
+              {projectStatus}
+            </Badge>
+          </div>
         </div>
       </AccordionTrigger>
 
       <AccordionContent className="w-full px-4">
         {story?.tasks?.length > 0 ? (
-          <HorizontalScrollArea className="relative -mx-2 overflow-hidden">
-            <div className="flex gap-3 min-w-max px-2 pb-1">
-              {taskColumns.map((column) => {
-                const tasksInColumn = (story?.tasks ?? []).filter(
-                  (task: any) =>
-                    (task?.taskStatus ?? '').toString().toUpperCase() ===
-                    column.key,
-                );
-                const accent = getKanbanAccentClasses(column.key);
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-2 w-full">
+            {taskColumns.map((column) => {
+              const tasksInColumn = (story?.tasks ?? []).filter(
+                (task: any) =>
+                  (task?.taskStatus ?? '').toString().toUpperCase() ===
+                  column.key,
+              );
+              const accent = getKanbanAccentClasses(column.key);
 
-                return (
+              return (
+                <div key={column.key} className="w-full">
                   <div
-                    key={column.key}
-                    className="w-[280px] shrink-0 sm:w-[320px] lg:w-[340px]"
+                    className={`rounded-xl border border-border/60 pb-1 ${accent.border} ${accent.headerBg}`}
                   >
                     <div
-                      className={`rounded-xl border border-border/60 pb-1 ${accent.border} ${accent.headerBg}`}
+                      className={`flex items-center justify-between gap-2 px-3 py-2`}
                     >
-                      <div
-                        className={`flex items-center justify-between gap-2 px-3 py-2`}
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm truncate capitalize">
-                              {column.title.toUpperCase()}
-                            </h4>
-                            <Badge
-                              variant="secondary"
-                              className="rounded-full px-2 py-0.5 text-xs"
-                            >
-                              {tasksInColumn.length}
-                            </Badge>
-                          </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm truncate capitalize">
+                            {column.title.toUpperCase()}
+                          </h4>
+                          <Badge
+                            variant="secondary"
+                            className="rounded-full px-2 py-0.5 text-xs"
+                          >
+                            {tasksInColumn.length}
+                          </Badge>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="px-1 pb-2">
-                        {tasksInColumn.length > 0 ? (
-                          tasksInColumn.map((task: any) => {
-                            const { className: taskBadgeStyle } =
-                              getStatusBadge(task.taskStatus);
+                    <div className="px-1 pb-2">
+                      {tasksInColumn.length > 0 ? (
+                        tasksInColumn.map((task: any) => {
+                          const { className: taskBadgeStyle } = getStatusBadge(
+                            task.taskStatus,
+                          );
+                          // Find original index for edit/delete callbacks
+                          const originalIdx = (story.tasks ?? []).findIndex(
+                            (t: any) =>
+                              t === task ||
+                              (task._id && t._id === task._id) ||
+                              (t.title === task.title &&
+                                t.summary === task.summary),
+                          );
 
-                            return (
+                          return (
+                            <div
+                              key={task._id ?? originalIdx}
+                              className="relative group/task"
+                            >
                               <TaskCard
-                                key={task._id}
                                 task={task}
                                 isFreelancer={isFreelancer}
                                 onTaskClick={(t) => setSelectedTask(t)}
@@ -444,38 +487,58 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                 milestoneId={milestoneId}
                                 storyId={story._id}
                                 taskBadgeStyle={taskBadgeStyle}
+                                onRefineTask={
+                                  onRefineTask && originalIdx >= 0
+                                    ? () => {
+                                        setRefiningTaskIndex(originalIdx);
+                                        setRefineInstruction('');
+                                      }
+                                    : undefined
+                                }
+                                onDeleteTask={
+                                  onDeleteTask && originalIdx >= 0
+                                    ? () => handleDeleteTaskClick(originalIdx)
+                                    : undefined
+                                }
                               />
-                            );
-                          })
-                        ) : (
-                          <div className="px-3 pb-2 text-xs text-muted-foreground">
-                            No tasks
-                          </div>
-                        )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="px-3 pb-2 text-xs text-muted-foreground">
+                          No tasks
+                        </div>
+                      )}
 
-                        {!isFreelancer && (
-                          <div className="px-2 pt-1">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="w-full justify-center"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsTaskDialogOpen(true);
-                              }}
-                            >
-                              <Plus className="mr-1 h-4 w-4" /> Add
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                      {!isFreelancer && taskCount < MAX_TASKS_PER_STORY && (
+                        <div className="px-2 pt-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="w-full justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsTaskDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="mr-1 h-4 w-4" /> Add
+                          </Button>
+                        </div>
+                      )}
+                      {!isFreelancer && taskCount >= MAX_TASKS_PER_STORY && (
+                        <div className="px-2 pt-1">
+                          <p className="text-center text-[10px] text-muted-foreground py-1">
+                            Max {MAX_TASKS_PER_STORY} tasks reached
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </HorizontalScrollArea>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div className="p-6 rounded-xl border bg-muted/20 text-center">
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -500,7 +563,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 </p>
               </>
             )}
-            {!isFreelancer && (
+            {!isFreelancer && taskCount < MAX_TASKS_PER_STORY && (
               <div className="mt-4">
                 <Button
                   variant="secondary"
@@ -527,6 +590,152 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           handleRejectUpdatePermission(taskId)
         }
       />
+
+      {/* Edit Task Dialog */}
+      {editingTaskIndex !== null && (
+        <Dialog open onOpenChange={() => setEditingTaskIndex(null)}>
+          <DialogContent className="max-w-md bg-card border-border rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">Edit Task</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div>
+                <label
+                  htmlFor="edit-task-title"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
+                  Title
+                </label>
+                <input
+                  id="edit-task-title"
+                  value={editTaskTitle}
+                  onChange={(e) => setEditTaskTitle(e.target.value)}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  placeholder="Task title"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-task-summary"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
+                  Summary
+                </label>
+                <textarea
+                  id="edit-task-summary"
+                  value={editTaskSummary}
+                  onChange={(e) => setEditTaskSummary(e.target.value)}
+                  rows={3}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                  placeholder="Brief description of what needs to be done"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingTaskIndex(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleEditTaskSave}
+                disabled={!editTaskTitle.trim()}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Refine task with AI modal */}
+      <Dialog
+        open={refiningTaskIndex !== null}
+        onOpenChange={(open) => {
+          if (!open) setRefiningTaskIndex(null);
+        }}
+      >
+        <DialogContent className="max-w-md bg-card border-border shadow-xl rounded-xl p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary text-base font-bold">
+              <Sparkles className="h-4 w-4 text-primary" /> Refine Task with AI
+            </DialogTitle>
+          </DialogHeader>
+
+          {refiningTaskIndex !== null &&
+            (story.tasks ?? [])[refiningTaskIndex] && (
+              <div className="space-y-4 mt-2">
+                <div className="p-3 rounded-lg bg-muted/40 border border-border/50 text-xs space-y-1">
+                  <div className="font-semibold text-foreground">
+                    Task: {(story.tasks ?? [])[refiningTaskIndex].title}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {(story.tasks ?? [])[refiningTaskIndex].summary ||
+                      'No summary'}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="ai-refine-instructions"
+                    className="text-xs font-semibold text-foreground/90"
+                  >
+                    AI Refinement Instructions
+                  </label>
+                  <textarea
+                    id="ai-refine-instructions"
+                    value={refineInstruction}
+                    onChange={(e) => setRefineInstruction(e.target.value)}
+                    placeholder="Describe how to refine this task (e.g. 'Use OAuth2 and Google login', 'Add backend validation details')..."
+                    className="w-full min-h-[90px] bg-background text-foreground text-xs p-3 rounded-lg border border-border outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRefiningTaskIndex(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={!refineInstruction.trim() || refineLoading}
+                    onClick={async () => {
+                      if (refiningTaskIndex === null) return;
+                      setRefineLoading(true);
+                      try {
+                        await onRefineTask?.(
+                          refiningTaskIndex,
+                          refineInstruction,
+                        );
+                        setRefiningTaskIndex(null);
+                      } finally {
+                        setRefineLoading(false);
+                      }
+                    }}
+                    className="bg-primary text-primary-foreground font-bold flex items-center gap-1.5"
+                  >
+                    {refineLoading ? (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 animate-spin" />{' '}
+                        Refining…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" /> Refine Task
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+        </DialogContent>
+      </Dialog>
     </AccordionItem>
   );
 };

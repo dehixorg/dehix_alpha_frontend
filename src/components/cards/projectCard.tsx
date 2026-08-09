@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -67,6 +68,11 @@ interface ProjectType {
     status?: string;
   }[];
   status?: StatusEnum;
+  isLiveRoomProject?: boolean;
+  liveRoomId?: string;
+  liveRoomLaunchSessionId?: string;
+  marketplaceStatus?: 'HIDDEN' | 'LIVE' | string;
+  marketplacePublishedAt?: Date;
   team?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -85,10 +91,18 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const [openReport, setOpenReport] = useState(false);
   const [pendingTaskCount, setPendingTaskCount] = useState(0);
+  const [marketplaceStatus, setMarketplaceStatus] = useState(
+    project.marketplaceStatus || 'LIVE',
+  );
+  const [publishing, setPublishing] = useState(false);
   const lastDialogCloseAt = React.useRef<number>(0);
   const pathname = usePathname();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    setMarketplaceStatus(project.marketplaceStatus || 'LIVE');
+  }, [project.marketplaceStatus]);
 
   // Fetch pending task count for freelancers
   useEffect(() => {
@@ -160,6 +174,32 @@ export function ProjectCard({
   };
 
   const projectUrl = `${user?.type === 'business' ? '/business' : ''}/project/${project._id}`;
+  const isHiddenLiveRoomProject =
+    user?.type === 'business' &&
+    project.isLiveRoomProject &&
+    String(marketplaceStatus).toUpperCase() !== 'LIVE';
+
+  const publishToMarketplace = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (publishing) return;
+    setPublishing(true);
+    try {
+      const response = await axiosInstance.put(
+        `/project/${project._id}/marketplace/publish`,
+      );
+      setMarketplaceStatus('LIVE');
+      toast.success(
+        response.data?.alreadyPublished
+          ? 'Project is already live'
+          : 'Project published to marketplace',
+      );
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to publish project');
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   // Status configuration
   const statusConfig = {
@@ -313,6 +353,20 @@ export function ProjectCard({
                   </Tooltip>
                 </TooltipProvider>
               )}
+              {project.isLiveRoomProject && (
+                <Badge
+                  variant="outline"
+                  className={
+                    String(marketplaceStatus).toUpperCase() === 'LIVE'
+                      ? 'border-emerald-500/30 text-emerald-600'
+                      : 'border-muted-foreground/30 text-muted-foreground'
+                  }
+                >
+                  {String(marketplaceStatus).toUpperCase() === 'LIVE'
+                    ? 'LiveRoom live'
+                    : 'LiveRoom hidden'}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               <Briefcase className="h-3.5 w-3.5" />
@@ -385,6 +439,17 @@ export function ProjectCard({
               )}
             </div>
           </Card>
+        )}
+
+        {isHiddenLiveRoomProject && (
+          <Button
+            size="sm"
+            className="w-full"
+            disabled={publishing}
+            onClick={publishToMarketplace}
+          >
+            {publishing ? 'Publishing...' : 'Publish to Marketplace'}
+          </Button>
         )}
 
         {/* Report Dialog */}

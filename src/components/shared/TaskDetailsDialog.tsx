@@ -86,13 +86,13 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                 <StatItem
                   icon={<User className="h-4 w-4" />}
                   label="Freelancer"
-                  value={task?.freelancers[0]?.freelancerName || '—'}
+                  value={task?.freelancers?.[0]?.freelancerName || '—'}
                   color="green"
                 />
                 <StatItem
                   icon={<CreditCard className="h-4 w-4" />}
                   label="Payment status"
-                  value={task?.freelancers[0]?.paymentStatus || '—'}
+                  value={task?.freelancers?.[0]?.paymentStatus || '—'}
                   color="amber"
                 />
               </div>
@@ -102,7 +102,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
           {!isFreelancer && task.taskStatus !== 'SUMMARY' && (
             <div className="mt-5">
               <h4 className="font-semibold mb-2">Update Task Request</h4>
-              {task.freelancers.some(
+              {(task?.freelancers ?? []).some(
                 (f: any) =>
                   f.updatePermissionFreelancer && !f.updatePermissionBusiness,
               ) ? (
@@ -118,7 +118,7 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {task.freelancers
+                    {(task?.freelancers ?? [])
                       .filter(
                         (f: any) =>
                           f.updatePermissionFreelancer &&

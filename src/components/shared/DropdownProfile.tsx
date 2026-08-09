@@ -75,6 +75,11 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   const reportType = getReportTypeFromPath(pathname);
 
+  const isLiveRoom =
+    pathname &&
+    (pathname.startsWith('/business/liveroom') ||
+      pathname.startsWith('/freelancer/liveroom'));
+
   useEffect(() => {
     if (user?.type) {
       setUserType(user.type);
@@ -297,25 +302,26 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
               </DropdownMenuItem>
             </Link>
 
-            {userType === 'freelancer' ? (
-              <Link href="/freelancer/settings/personal-info">
-                <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
-                  <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-              </Link>
-            ) : userType === 'business' ? (
-              <Link href="/business/settings/business-info">
-                <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
-                  <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>Business Settings</span>
-                </DropdownMenuItem>
-              </Link>
-            ) : (
-              <div className="px-3 py-2">
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            )}
+            {!isLiveRoom &&
+              (userType === 'freelancer' ? (
+                <Link href="/freelancer/settings/personal-info">
+                  <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
+                    <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                </Link>
+              ) : userType === 'business' ? (
+                <Link href="/business/settings/business-info">
+                  <DropdownMenuItem className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50">
+                    <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Business Settings</span>
+                  </DropdownMenuItem>
+                </Link>
+              ) : (
+                <div className="px-3 py-2">
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))}
 
             <DropdownMenuItem
               className="rounded-lg p-0 hover:bg-muted/50"
@@ -363,15 +369,17 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
             </DropdownMenuItem>
           </DropdownMenuGroup>
 
-          <DropdownMenuSeparator className="my-2" />
+          {!isLiveRoom && <DropdownMenuSeparator className="my-2" />}
 
-          <DropdownMenuItem
-            onClick={handleLogout}
-            className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Sign out</span>
-          </DropdownMenuItem>
+          {!isLiveRoom && (
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="rounded-lg px-3 py-2 cursor-pointer hover:bg-muted/50"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sign out</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

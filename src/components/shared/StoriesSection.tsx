@@ -12,15 +12,38 @@ interface StoriesSectionProps {
   handleStorySubmit: any;
   isFreelancer?: boolean;
   freelancerId?: string;
+  isLiveRoomPreview?: boolean;
+  /** Optional local-mode edit/delete callbacks (used in pre-launch planner) */
+  onEditStory?: (storyId: string, title: string, summary: string) => void;
+  onDeleteStory?: (storyId: string) => void;
+  onEditTask?: (
+    storyId: string,
+    taskIndex: number,
+    title: string,
+    summary: string,
+  ) => void;
+  onDeleteTask?: (storyId: string, taskIndex: number) => void;
+  onRefineTask?: (
+    storyId: string,
+    taskIndex: number,
+    instruction: string,
+  ) => void;
 }
 
-const StoriesSection: React.FC<StoriesSectionProps> = ({
-  milestone,
-  fetchMilestones,
-  handleStorySubmit,
-  isFreelancer = false,
-  freelancerId,
-}) => {
+const StoriesSection: React.FC<StoriesSectionProps> = (props) => {
+  const {
+    milestone,
+    fetchMilestones,
+    handleStorySubmit,
+    isFreelancer = false,
+    freelancerId,
+    isLiveRoomPreview = false,
+    onEditStory,
+    onDeleteStory,
+    onEditTask,
+    onDeleteTask,
+    onRefineTask,
+  } = props;
   if (!milestone) {
     return (
       <div className="flex justify-center items-center h-[50vh] overflow-hidden">
@@ -38,6 +61,12 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
         handleStorySubmit={handleStorySubmit}
         isFreelancer={isFreelancer}
         freelancerId={freelancerId}
+        isLiveRoomPreview={isLiveRoomPreview}
+        onEditStory={onEditStory}
+        onDeleteStory={onDeleteStory}
+        onEditTask={onEditTask}
+        onDeleteTask={onDeleteTask}
+        onRefineTask={onRefineTask}
       />
     </div>
   );
