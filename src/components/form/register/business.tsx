@@ -15,7 +15,7 @@ import {
   Shield,
   User,
 } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Link from 'next/link';
@@ -25,7 +25,6 @@ import countries from '../../../country-codes.json';
 import PhoneNumberForm from './phoneNumberChecker';
 
 import TextInput from '@/components/shared/input';
-import OtpLogin from '@/components/shared/otpDialog';
 import PasswordStrength, {
   getPasswordStrength,
 } from '@/components/form/PasswordStrength';
@@ -328,7 +327,7 @@ function BusinessRegisterForm({
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const router = useRouter();
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const [isTermsDialog, setIsTermsDialog] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
@@ -391,16 +390,28 @@ function BusinessRegisterForm({
             return;
           }
 
-          // 2. Check duplicate email
-          const emailResponse = await axiosInstance.get(
-            `/public/user_email?user=${encodeURIComponent(email)}`,
-          );
-          if (emailResponse.data && !emailResponse.data.error) {
-            notifyError(
-              'This email is already registered. Please choose another one.',
-              'Email Already Registered',
+          // 2. Check duplicate email using /public/user_email
+          try {
+            const emailResponse = await axiosInstance.get(
+              `/public/user_email?user=${encodeURIComponent(email)}`,
             );
-            return;
+            // If it succeeds, the user exists!
+            if (emailResponse.data) {
+              notifyError(
+                'An account with this email already exists. Please login or use a different email.',
+                'User Already Exists',
+              );
+              return;
+            }
+          } catch (emailError: any) {
+            // If it fails with 404, it means the user doesn't exist. This is the desired path, so we proceed.
+            if (emailError.response?.status !== 404) {
+              notifyError(
+                'There was an error while checking the email.',
+                'API Error',
+              );
+              return;
+            }
           }
 
           const latestValues = form.getValues();
@@ -411,7 +422,7 @@ function BusinessRegisterForm({
             return;
           }
 
-          // 3. Email verification
+          // 2. Email verification
           if (!isEmailVerified || verifiedEmail !== email) {
             if (email) {
               setDialogEmail(email);
@@ -496,10 +507,10 @@ function BusinessRegisterForm({
     try {
       await axiosInstance.post(url, formData);
       notifySuccess(
-        'Your business account has been created.',
+        'Your account has been created! Please log in to verify your phone number.',
         'Account created successfully!',
       );
-      setIsModalOpen(true);
+      router.push('/auth/login');
     } catch (error: any) {
       console.error('API Error:', error);
       notifyError(
@@ -896,11 +907,7 @@ function BusinessRegisterForm({
             </div>
           </div>
         </div>
-        <OtpLogin
-          phoneNumber={phone}
-          isModalOpen={isModalOpen}
-          setIsModalOpen={setIsModalOpen}
-        />
+        {/* Phone OTP verification is handled at the login page */}
         <EmailOtpDialog
           email={dialogEmail}
           isOpen={isEmailOtpDialogOpen}

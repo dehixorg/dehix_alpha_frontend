@@ -16,7 +16,7 @@ import {
   Shield,
   User,
 } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,7 +59,6 @@ import {
   InputGroupText,
 } from '@/components/ui/input-group';
 import { Slider } from '@/components/ui/slider';
-import OtpLogin from '@/components/shared/otpDialog';
 import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
 import TermsDialog from '@/components/shared/FreelancerTermsDialog';
 import EmailOtpDialog from '@/components/shared/emailOtpDialog';
@@ -451,8 +450,8 @@ function FreelancerRegisterForm({
     rules: { label: string; passed: boolean }[];
   }>({ label: '', color: '', level: 0, rules: [] });
   const [code, setCode] = useState<string>('IN');
-  const [phone, setPhone] = useState<string>('');
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const router = useRouter();
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
@@ -517,16 +516,28 @@ function FreelancerRegisterForm({
             return;
           }
 
-          // 2. Check duplicate email
-          const emailResponse = await axiosInstance.get(
-            `/public/user_email?user=${encodeURIComponent(email)}`,
-          );
-          if (emailResponse.data && !emailResponse.data.error) {
-            notifyError(
-              'This email is already registered. Please choose another one.',
-              'Email Already Registered',
+          // 2. Check duplicate email using /public/user_email
+          try {
+            const emailResponse = await axiosInstance.get(
+              `/public/user_email?user=${encodeURIComponent(email)}`,
             );
-            return;
+            // If it succeeds, the user exists!
+            if (emailResponse.data) {
+              notifyError(
+                'An account with this email already exists. Please login or use a different email.',
+                'User Already Exists',
+              );
+              return;
+            }
+          } catch (emailError: any) {
+            // If it fails with 404, it means the user doesn't exist. This is the desired path, so we proceed.
+            if (emailError.response?.status !== 404) {
+              notifyError(
+                'There was an error while checking the email.',
+                'API Error',
+              );
+              return;
+            }
           }
 
           const latestValues = form.getValues();
@@ -537,7 +548,7 @@ function FreelancerRegisterForm({
             return;
           }
 
-          // 3. Email verification OTP
+          // 2. Email verification OTP
           if (isEmailVerified && verifiedEmail === email) {
             // Email already verified and matches, proceed to next step
             setCurrentStep((s: number) => s + 1);
@@ -600,9 +611,7 @@ function FreelancerRegisterForm({
     const encodedReferralCode = referralCode
       ? encodeURIComponent(referralCode)
       : null;
-    setPhone(
-      `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-    );
+
 
     setIsLoading(true);
     const formData = {
@@ -634,10 +643,10 @@ function FreelancerRegisterForm({
     try {
       await axiosInstance.post(url, formData);
       notifySuccess(
-        'Redirecting to login page...',
+        'Your account has been created! Please log in to verify your phone number.',
         'Account created successfully!',
       );
-      setIsModalOpen(true);
+      router.push('/auth/login');
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
@@ -1113,12 +1122,7 @@ function FreelancerRegisterForm({
               </div>
             </div>
 
-            {/* OTP Login */}
-            <OtpLogin
-              phoneNumber={phone}
-              isModalOpen={isModalOpen}
-              setIsModalOpen={setIsModalOpen}
-            />
+            {/* Phone OTP verification is handled at the login page */}
             {/* Email OTP Dialog */}
             <EmailOtpDialog
               email={dialogEmail}
