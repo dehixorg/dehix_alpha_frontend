@@ -54,16 +54,44 @@ export function useLevelTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'level & badges',
-      title: 'Level & Badges',
-      text: 'Track your progress and earn rewards as you complete tasks and level up.',
-      scrollTo: false,
-      // attachTo: { element: '[data-tour="level-badges"]', on: 'top' },
+      id: 'level-intro',
+      title: '🏆 Level & Badges Center',
+      text: 'Welcome to your Levels & Achievements overview. The gamification mechanics on Dehix track your contributions, reward you with platform levels, and unlock premium developer benefits (such as reduced fees and increased bid visibility).',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'level-xp-step',
+      title: '⚡ Level Milestones & XP Progression',
+      text: 'This card displays your current level, active XP points, and progression requirements. The level requirements checker tracks metrics like total bids placed, milestones completed, streak achievements, and peer interviews taken.',
+      attachTo: { element: '[data-tour="level-badges"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'badges-claim-step',
+      title: '🥇 Claim Achievements & Badges',
+      text: 'Toggle the tabs below to check available achievements: "Collected Badges" show items you already own, and "All Badges" lists locked credentials. Click "Check Eligibility" on any badge card to see if you have met the requirements and claim connects rewards.',
+      attachTo: { element: '[data-tour="level-badges"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

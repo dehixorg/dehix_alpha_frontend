@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Mail, Phone, Linkedin, Earth } from 'lucide-react';
 
+import { useBusinessProfileViewTour } from '@/components/tour/shared/useBusinessProfileViewTour';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -39,6 +40,7 @@ interface ProfileData {
 const BusinessProfile: React.FC = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const { business_id } = useParams<{ business_id: string }>();
+  useBusinessProfileViewTour(profileData !== null);
 
   useEffect(() => {
     if (business_id) {
@@ -88,7 +90,7 @@ const BusinessProfile: React.FC = () => {
           <p className="text-xs">Connects</p>
         </div>
         <Separator orientation="vertical" className="h-6 bg-gray-400" />
-        <div className="text-center">
+        <div className="text-center" data-tour="biz-profile-view-projects">
           <p className="text-xl font-semibold">
             {profileData.ProjectList.length}
           </p>
@@ -102,7 +104,10 @@ const BusinessProfile: React.FC = () => {
       </CardContent>
 
       {/* Contact Information */}
-      <CardContent className="flex flex-col items-center space-y-4">
+      <CardContent
+        className="flex flex-col items-center space-y-4"
+        data-tour="biz-profile-view-actions"
+      >
         <h3 className="text-lg font-bold text-center">Contact Information</h3>
         <div className="flex justify-between w-full">
           {/* Left Side */}

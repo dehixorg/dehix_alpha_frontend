@@ -139,12 +139,12 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   };
 
   const updatePermissionFreelancer =
-    task?.freelancers[0]?.updatePermissionFreelancer;
+    task?.freelancers?.[0]?.updatePermissionFreelancer;
 
   const updatePermissionBusiness =
-    task?.freelancers[0]?.updatePermissionBusiness;
+    task?.freelancers?.[0]?.updatePermissionBusiness;
 
-  const rejectionFreelancer = task?.freelancers[0]?.rejectionFreelancer;
+  const rejectionFreelancer = task?.freelancers?.[0]?.rejectionFreelancer;
 
   const isUpdatePermissionAllowed =
     userType === 'business'

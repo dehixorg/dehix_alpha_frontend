@@ -56,8 +56,8 @@ export function useOracleTour(isReady: boolean) {
 
     tour.addStep({
       id: 'oracle-intro',
-      title: 'Oracle Dashboard',
-      text: 'Review and manage verification requests across different categories from this dashboard.',
+      title: '👁️ Dehix Oracle Review Board',
+      text: 'Welcome to the Oracle Dashboard. As an active oracle or reviewer on Dehix, you play an essential role in maintaining platform trust. This board lists validation claims submitted by users seeking verification badges for their profiles.',
       when: withProgress(tour),
       buttons: [
         {
@@ -73,8 +73,8 @@ export function useOracleTour(isReady: boolean) {
 
     tour.addStep({
       id: 'oracle-business',
-      title: 'Business Verification',
-      text: 'View and review business verification requests submitted by companies.',
+      title: '🏢 Verification Queue & Submissions',
+      text: 'This main section displays outstanding validation cards. You can inspect business registries, educational credentials, work histories, or project deliverables submitted for peer verification.',
       attachTo: { element: '[data-tour="oracle-page"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
@@ -85,14 +85,14 @@ export function useOracleTour(isReady: boolean) {
 
     tour.addStep({
       id: 'oracle-tabs',
-      title: 'Verification Categories',
-      text: 'Use these tabs to switch between Business, Experience, Projects, and Education verifications.',
+      title: '📂 Validation Categories & Earnings',
+      text: 'Use these tabs to switch between queues: "Business Verification" (legal structures), "Experience Validation" (work history checks), "Project Verification" (code checks), and "Education Credentials". Verifying claims successfully earns you Dehix Connects rewards!',
       attachTo: { element: '[data-tour="oracle-tabs"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

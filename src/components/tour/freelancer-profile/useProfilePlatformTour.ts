@@ -54,9 +54,9 @@ export function useProfilePlatformTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'sidebar',
-      title: 'Settings Menu',
-      text: 'Use this sidebar to navigate all your freelancer settings.',
+      id: 'sidebar-intro',
+      title: '📁 Freelancer Settings Sidebar',
+      text: 'Welcome to your Settings Workspace. Use this sidebar to navigate all your personal configurations, verification procedures, streak trackings, resumes, and payment histories.',
       attachTo: {
         element: '[data-tour="sidebar"]',
         on: 'right',
@@ -79,8 +79,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-personal-info',
-      title: 'Personal Information',
-      text: 'Start here to fill in your basic personal details.',
+      title: '👤 Identity Details & Bio',
+      text: 'Start by filling in your basic personal details: upload your profile avatar, write a professional bio, add description tags, and configure your phone numbers.',
       attachTo: {
         element: '[data-tour="sidebar-personal-info"]',
         on: 'right',
@@ -94,8 +94,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-profile',
-      title: 'My Profile',
-      text: 'Manage your public profile and how clients see you.',
+      title: '💼 Experience & Portfolios',
+      text: 'Maintain your academic history, list previous employment roles, and link custom developer projects to enhance client matchmaking.',
       attachTo: {
         element: '[data-tour="sidebar-profile"]',
         on: 'right',
@@ -109,8 +109,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-kyc',
-      title: 'KYC Verification',
-      text: 'Complete KYC to unlock payments and higher limits.',
+      title: '🆔 Identity KYC Verification',
+      text: 'Mandatory verification portal. Upload government-issued identification cards and capture webcam selfies to unlock payouts and verified badges.',
       attachTo: {
         element: '[data-tour="sidebar-kyc"]',
         on: 'right',
@@ -124,8 +124,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-levels',
-      title: 'Levels & Badges',
-      text: 'Track your progress and unlock new freelancer levels.',
+      title: '🏆 Level & Badges Progression',
+      text: 'Track your XP progress, check qualifications, claim connects rewards, and unlock platform benefits.',
       attachTo: {
         element: '[data-tour="sidebar-levels"]',
         on: 'right',
@@ -139,8 +139,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-streak',
-      title: 'Streak',
-      text: 'Maintain activity streaks to boost your visibility.',
+      title: '🔥 Daily Activity Streaks',
+      text: 'Monitor your login streak, check heatmap charts, and claim milestone rewards.',
       attachTo: {
         element: '[data-tour="sidebar-streak"]',
         on: 'right',
@@ -154,8 +154,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-transactions',
-      title: 'Transactions',
-      text: 'View all your earnings, withdrawals, and payment history.',
+      title: '💳 Financial Ledger & Withdrawal',
+      text: 'Review connects transactions, track outstanding project payouts, and initiate cash withdrawals.',
       attachTo: {
         element: '[data-tour="sidebar-transactions"]',
         on: 'right',
@@ -169,8 +169,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-profiles',
-      title: 'Profiles',
-      text: 'Manage multiple profiles for different roles or skills.',
+      title: '📁 Specialized Sub-Profiles',
+      text: 'Manage multiple sub-profiles to target separate roles (e.g. smart contract developer vs frontend developer).',
       attachTo: {
         element: '[data-tour="sidebar-profiles"]',
         on: 'right',
@@ -184,8 +184,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-resume',
-      title: 'Resume',
-      text: 'Upload and manage your resume for quick applications.',
+      title: '📄 Resume Builder Center',
+      text: 'Generate and compile resume templates dynamically using your profile metadata.',
       attachTo: {
         element: '[data-tour="sidebar-resume"]',
         on: 'right',
@@ -199,8 +199,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-feedback',
-      title: 'Feedback',
-      text: 'Share your experience and help us improve the platform.',
+      title: '✍️ Submit Platform Feedback',
+      text: 'Share UI bugs, suggest adjustments, or submit feature requests directly to the team.',
       attachTo: {
         element: '[data-tour="sidebar-feedback"]',
         on: 'right',
@@ -214,8 +214,8 @@ export function useProfilePlatformTour(isReady: boolean) {
 
     tour.addStep({
       id: 'sidebar-reports',
-      title: 'Reports',
-      text: 'View platform reports and account summaries.',
+      title: '📁 Support & Dispute Logs',
+      text: 'Raise formal milestone disputes, coordinate contract revisions, or report compliance violations. Your settings tour is complete!',
       attachTo: {
         element: '[data-tour="sidebar-reports"]',
         on: 'right',
@@ -224,7 +224,7 @@ export function useProfilePlatformTour(isReady: boolean) {
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

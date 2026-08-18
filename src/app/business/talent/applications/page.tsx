@@ -6,6 +6,7 @@ import TalentLayout from '@/components/marketComponents/TalentLayout';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { FreelancerApplication } from '@/types/talent';
 import { useToast } from '@/components/ui/use-toast';
+import { useBusinessTalentTour } from '@/components/tour/business/useBusinessTalentTour';
 
 interface HireTalentItem {
   _id: string;
@@ -80,6 +81,7 @@ export default function Page() {
     FreelancerApplication[]
   >([]);
   const [loading, setLoading] = useState(true);
+  useBusinessTalentTour(!loading);
   const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
 

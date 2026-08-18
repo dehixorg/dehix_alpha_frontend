@@ -53,6 +53,7 @@ type BiddableInterview = {
   interviewDate?: string;
   interviewType?: string;
   creatorType?: string;
+  price?: string;
 };
 
 type MyBid = {
@@ -74,6 +75,7 @@ type BiddedInterview = {
   description?: string;
   myBid?: MyBid;
   interviewBids?: MyBid[];
+  price?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -250,13 +252,29 @@ export default function InterviewerBids() {
           (iv) => String(iv.talentId || '') === selectedTalentId,
         );
 
-  const approvedAttributes = attributes.filter((a) =>
-    String(a.interviewerStatus || '')
-      .toUpperCase()
-      .includes('APPROVED'),
-  );
+  const approvedAttributes = attributes.filter((a) => {
+    const status = String(a.interviewerStatus || '').toUpperCase();
+    const activeStatus = String(a.interviewerActiveStatus || '').toUpperCase();
+    return (
+      (status === 'APPROVED' || status === 'ACTIVE') &&
+      activeStatus === 'ACTIVE'
+    );
+  });
 
   const handleOpenBid = (iv: BiddableInterview) => {
+    // Check if the domain is verified (i.e. exists in approvedAttributes with matching type_id)
+    const isVerified = approvedAttributes.some(
+      (a) => String(a.type_id || '') === String(iv.talentId || ''),
+    );
+
+    if (!isVerified) {
+      notifyError(
+        'Your domain for this interview opportunity must be verified/approved before you can place a bid.',
+        'Verification Required',
+      );
+      return;
+    }
+
     setSelected(iv);
     setFee('');
     setBidDescription('');
@@ -570,12 +588,22 @@ export default function InterviewerBids() {
                                 Available
                               </Badge>
                               {iv.interviewType === 'HIRE' ? (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px] bg-blue-50 border-blue-200 text-blue-600"
-                                >
-                                  Business Opportunity
-                                </Badge>
+                                <>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] bg-blue-50 border-blue-200 text-blue-600"
+                                  >
+                                    Business Opportunity
+                                  </Badge>
+                                  {iv.price && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 font-semibold"
+                                    >
+                                      Budget: {iv.price} Connects
+                                    </Badge>
+                                  )}
+                                </>
                               ) : (
                                 <Badge
                                   variant="outline"
@@ -671,6 +699,17 @@ export default function InterviewerBids() {
                 disabled
               />
             </div>
+
+            {selected?.price && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-sm dark:border-emerald-900/50 dark:bg-emerald-950/20">
+                <span className="font-medium text-emerald-800 dark:text-emerald-300">
+                  Interviewer Budget / Pay:
+                </span>{' '}
+                <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                  {selected.price} connects
+                </span>
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="fee">Bid fee</Label>

@@ -14,6 +14,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/header/header';
 import { Button } from '@/components/ui/button';
+import { useBusinessProfileViewTour } from '@/components/tour/shared/useBusinessProfileViewTour';
 
 interface UserProfile {
   _id: string;
@@ -31,6 +32,7 @@ export default function BusinessProfile() {
   const { business_id } = useParams<{ business_id: string }>();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  useBusinessProfileViewTour(!loading);
 
   useEffect(() => {
     if (business_id) {
@@ -107,7 +109,10 @@ export default function BusinessProfile() {
               )}
             </Card>
             {/* Projects List */}
-            <Card className="w-full max-w-4xl shadow-lg">
+            <Card
+              className="w-full max-w-4xl shadow-lg"
+              data-tour="biz-profile-view-projects"
+            >
               <CardHeader>
                 <CardTitle>Projects</CardTitle>
               </CardHeader>
@@ -125,7 +130,10 @@ export default function BusinessProfile() {
                 )}
               </CardContent>
             </Card>
-            <Card className="w-full max-w-4xl shadow-lg">
+            <Card
+              className="w-full max-w-4xl shadow-lg"
+              data-tour="biz-profile-view-actions"
+            >
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
               </CardHeader>

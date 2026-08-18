@@ -51,15 +51,45 @@ export function useTransactionsTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'business-transactions',
-      title: 'Business Transaction History',
+      id: 'business-transactions-intro',
+      title: '💳 Corporate Financial Ledger',
+      text: 'Welcome to your Transaction History. This workspace catalogs all platform balance modifications: cash deposits, developer milestone payouts released, connects packages purchased, and tax invoice exports.',
       scrollTo: false,
-      text: 'View all your connect transactions and balance changes',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-transactions-filters',
+      title: '⚡ Filter Invoices',
+      text: 'Filter through transaction lists: sort by date intervals, enter exact project transaction numbers, or check credit/debit states.',
+      attachTo: { element: '[data-tour="transaction"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-transactions-summary',
+      title: '📊 Financial Summary Cards',
+      text: 'These cards display details: "Deposited Balance" available for contract releases, "Milestone Escrow" tracking ongoing projects, and "Export CSV" to download invoices.',
+      attachTo: { element: '[data-tour="transaction"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

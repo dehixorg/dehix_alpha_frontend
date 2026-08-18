@@ -83,7 +83,6 @@ const ProfilePictureUpload = ({
       const ext = (extFromType || 'jpg').split(';')[0];
       const { url } = await uploadFileViaSignedUrl(selectedProfilePicture, {
         key: `profile/${uid}/profile-picture.${ext}`,
-        methods: ['upload', 'get'],
       });
 
       dispatch(setUser({ ...user, photoURL: url }));

@@ -203,12 +203,16 @@ export const NotificationButton = () => {
       fallbackInterval = setInterval(fetchFromApi, FALLBACK_POLL_INTERVAL);
     }
 
-    // API: one-time seed fetch for notifications that may not yet be in Firestore
+    // API: fetch immediately and listen to manual refresh events
     fetchFromApi();
+    window.addEventListener('refreshNotifications', fetchFromApi);
 
     return () => {
       unsubscribe?.();
-      if (fallbackInterval) clearInterval(fallbackInterval);
+      window.removeEventListener('refreshNotifications', fetchFromApi);
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
     };
   }, [user?.uid, fetchFromApi, maybeRefreshConnects]);
 

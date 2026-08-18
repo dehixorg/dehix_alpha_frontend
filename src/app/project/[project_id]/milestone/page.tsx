@@ -18,6 +18,7 @@ import { Milestone, Story } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMilestoneTour } from '@/components/tour/freelancer/useMilestoneTour';
 
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
@@ -29,6 +30,7 @@ const Page = () => {
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<
     number | null
   >(0);
+  useMilestoneTour(!loading);
 
   // Handle chat with other freelancers
   const handleChatClick = useCallback(
@@ -244,7 +246,10 @@ const Page = () => {
           ) : milestones.length > 0 ? (
             <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
               {/* Left Part: FreelancerList */}
-              <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
+              <div
+                className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full"
+                data-tour="milestone-freelancers"
+              >
                 <FreelancerList
                   projectId={project_id}
                   onChatClick={handleChatClick}
@@ -255,29 +260,33 @@ const Page = () => {
               {/* Right Part */}
               <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
                 {/* Top: MilestoneTimeline */}
-                <MilestoneTimeline
-                  fetchMilestones={fetchMilestones}
-                  milestones={milestones}
-                  handleStorySubmit={handleStorySubmit}
-                  selectedIndex={selectedMilestoneIndex}
-                  onMilestoneSelect={(index) =>
-                    setSelectedMilestoneIndex(index)
-                  }
-                />
+                <div data-tour="milestone-timeline">
+                  <MilestoneTimeline
+                    fetchMilestones={fetchMilestones}
+                    milestones={milestones}
+                    handleStorySubmit={handleStorySubmit}
+                    selectedIndex={selectedMilestoneIndex}
+                    onMilestoneSelect={(index) =>
+                      setSelectedMilestoneIndex(index)
+                    }
+                  />
+                </div>
 
                 {/* Bottom: StoriesSection (milestone cards) */}
                 {selectedMilestoneIndex !== null && (
-                  <StoriesSection
-                    key={
-                      milestones[selectedMilestoneIndex]?._id ??
-                      selectedMilestoneIndex
-                    }
-                    milestone={milestones[selectedMilestoneIndex]}
-                    fetchMilestones={fetchMilestones}
-                    handleStorySubmit={handleStorySubmit}
-                    isFreelancer={true}
-                    freelancerId={user?.uid}
-                  />
+                  <div data-tour="milestone-stories">
+                    <StoriesSection
+                      key={
+                        milestones[selectedMilestoneIndex]?._id ??
+                        selectedMilestoneIndex
+                      }
+                      milestone={milestones[selectedMilestoneIndex]}
+                      fetchMilestones={fetchMilestones}
+                      handleStorySubmit={handleStorySubmit}
+                      isFreelancer={true}
+                      freelancerId={user?.uid}
+                    />
+                  </div>
                 )}
               </div>
             </div>

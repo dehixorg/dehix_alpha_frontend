@@ -56,8 +56,8 @@ export function useInterviewerProfileTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interviewer-header',
-      title: 'Interviews',
-      text: 'Apply as an interviewer, manage your profile, and track interviews from here.',
+      title: '🎙️ Peer Interviewer Dashboard',
+      text: 'Welcome to your Interviewer Profile. Verified developers on Dehix can register as peer interviewers. Conducting technical screenings and culture-fit assessments for other candidates earns you connects rewards and boosts your platform level.',
       attachTo: {
         element: '[data-tour="interviewer-header"]',
         on: 'bottom',
@@ -80,8 +80,8 @@ export function useInterviewerProfileTour(isReady: boolean) {
 
     tour.addStep({
       id: 'interview-lifecycle',
-      title: 'Interview Lifecycle',
-      text: 'Start with your profile. Once approved, you can manage active interviews, bids, and view your history here.',
+      title: '📁 Interview Pipeline Navigation',
+      text: 'Use these tabs to coordinate your interviewer tasks: "Active" shows scheduled screenings, "Bids" lists candidate slots you have requested, and "History" details all evaluations you have submitted.',
       attachTo: {
         element: '[data-tour="interviewer-tabs"]',
         on: 'bottom',
@@ -101,8 +101,8 @@ export function useInterviewerProfileTour(isReady: boolean) {
 
     tour.addStep({
       id: 'apply-interviewer',
-      title: 'Apply as an Interviewer',
-      text: 'Apply using your verified skills or domains. Once approved, you can start taking interviews.',
+      title: '✍️ Apply as an Interviewer',
+      text: 'Click here to submit an interviewer application. You will select specific tech stacks or domains (e.g. Frontend, Smart Contracts) you are qualified to screen candidates for.',
       attachTo: {
         element: '[data-tour="apply-interviewer"]',
         on: 'bottom',
@@ -122,8 +122,8 @@ export function useInterviewerProfileTour(isReady: boolean) {
 
     tour.addStep({
       id: 'manage-availability',
-      title: 'Manage Availability',
-      text: 'Set when you are available to take interviews after approval. This helps companies schedule you faster.',
+      title: '📅 Manage Screening Availability',
+      text: 'Once approved as an interviewer, use this calendar module to publish your weekly availability slots. Client organizations will schedule matching candidates directly within your specified hours.',
       attachTo: {
         element: '[data-tour="manage-availability"]',
         on: 'bottom',
@@ -135,7 +135,7 @@ export function useInterviewerProfileTour(isReady: boolean) {
           action: tour.back,
         },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

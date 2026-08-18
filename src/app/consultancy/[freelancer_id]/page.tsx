@@ -52,6 +52,7 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
 import { notifyError } from '@/utils/toastMessage';
 import { toast } from '@/components/ui/use-toast';
+import { useConsultancyTour } from '@/components/tour/freelancer/useConsultancyTour';
 
 interface Skill {
   label: string;
@@ -92,6 +93,7 @@ export default function ConsultancyPage() {
   const [domains, setDomains] = useState<Domain[]>([]);
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]);
+  useConsultancyTour(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -206,7 +208,9 @@ export default function ConsultancyPage() {
             <div className="lg:col-span-2 xl:col-span-2 space-y-4">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>Add Consultancy</Button>
+                  <Button data-tour="add-consultancy-btn">
+                    Add Consultancy
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -371,7 +375,10 @@ export default function ConsultancyPage() {
                   </Form>
                 </DialogContent>
               </Dialog>
-              <div className="flex flex-wrap gap-8">
+              <div
+                className="flex flex-wrap gap-8"
+                data-tour="consultancy-list"
+              >
                 {consultants.length == 0 ? (
                   <div className="flex flex-col items-center justify-center w-full">
                     <PackageOpen className="text-gray-500" size="100" />
@@ -394,7 +401,10 @@ export default function ConsultancyPage() {
                 )}
               </div>
               <Separator className="my-1" />
-              <div className="grid grid-cols-1 gap-4">
+              <div
+                className="grid grid-cols-1 gap-4"
+                data-tour="consultancy-projects"
+              >
                 <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                   Current Projects {`(${pendingProjects.length})`}
                 </h2>
@@ -443,7 +453,10 @@ export default function ConsultancyPage() {
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-1 xl:col-span-1 space-y-4">
+            <div
+              className="lg:col-span-1 xl:col-span-1 space-y-4"
+              data-tour="consultancy-invitations"
+            >
               <CardTitle className="group flex items-center gap-2 text-2xl">
                 Consultancy Invitations
               </CardTitle>

@@ -51,15 +51,56 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'business-kyc',
-      title: 'Business KYC Verification',
-      scrollTo: false,
-      text: 'Please Complete the Mandatory KYC and earn reward.',
+      id: 'business-kyc-intro',
+      title: '🆔 Business KYC Verification',
+      text: 'Welcome to your Compliance & Verification page. Completing KYC is mandatory for corporate profiles to release milestone payments to freelancers, post larger project listings, and receive verified badges.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-kyc-stepper',
+      title: '🪜 Verification Process Stepper',
+      text: 'Track your progress through the 3 validation steps: Basic Legal Details input, Government Business ID uploads, and Owner/Representative face match capture.',
+      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-kyc-upload',
+      title: '📁 Business Document Uploads',
+      text: 'Drag and drop high-resolution copies of your company registration certificates, utility bills, or tax IDs here. Files must be legible and under 5MB.',
+      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'business-kyc-submit',
+      title: '🚀 Submit Verification Files',
+      text: 'Click this button to lock your documents and submit them to the review team. Applications are processed within 24-48 hours.',
+      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

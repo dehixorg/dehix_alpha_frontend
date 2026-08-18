@@ -17,6 +17,8 @@ export type TourTarget =
   | 'chat'
   | 'notes'
   | 'navigation'
+  | 'project-details'
+  | 'milestones'
 
   // Freelancer settings
   | 'personal-info-form'
@@ -36,11 +38,20 @@ export type TourTarget =
   | 'business-market'
   | 'business-projects'
   | 'business-talent'
+  | 'add-project'
+  | 'biz-project-details'
 
   // Business settings
   | 'business-transactions'
   | 'business-info'
   | 'business-kyc'
+  | 'public-profile'
+  | 'freelancer-profile-view'
+  | 'business-interviews'
+  | 'business-profile-view'
+  | 'consultancy'
+  | 'single-profile-edit'
+  | 'manage-talent'
   | null;
 
 export type TourState = {

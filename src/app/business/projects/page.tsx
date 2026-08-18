@@ -38,7 +38,6 @@ import {
 } from '@/components/ui/tooltip';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
-import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
 import { Card } from '@/components/ui/card';
 import { statusOutlineClasses } from '@/utils/common/getBadgeStatus';
@@ -223,11 +222,6 @@ const BusinessProjectsPage: React.FC = () => {
         console.error('Failed to fetch projects:', error);
         if (error.response?.status === 404) {
           setProjects([]);
-          toast({
-            title: 'No projects found',
-            description:
-              'You have no projects currently. Please create a new project to get started.',
-          });
         } else {
           notifyError('Failed to load projects', 'Error');
         }

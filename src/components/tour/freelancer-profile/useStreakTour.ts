@@ -54,16 +54,44 @@ export function useStreakTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'streak',
-      title: 'Login Streak',
-      text: 'Build your streak and claim connect rewards at milestones.',
-      scrollTo: false,
-      // attachTo: { element: '[data-tour="streak"]', on: 'top' },
+      id: 'streak-intro',
+      title: '🔥 Daily Activity Streaks',
+      text: 'Welcome to your Activity Streaks dashboard. Logging in, completing milestone reviews, bidding, or updating profiles daily increases your active streak counter, earning you Dehix Connects rewards.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'streak-heatmap-step',
+      title: '📅 Contribution Heatmap',
+      text: 'This visual grid displays your daily platform activity history. Darker colored cells represent days where you completed multiple tasks (such as submitting project deliverables or evaluations).',
+      attachTo: { element: '[data-tour="streak"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'streak-milestones-step',
+      title: '🎁 Claim Streak Rewards',
+      text: 'Reach milestones (e.g. 7 days, 30 days) to unlock special badges and connects reward packages. Available rewards can be claimed directly from this module.',
+      attachTo: { element: '[data-tour="streak"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

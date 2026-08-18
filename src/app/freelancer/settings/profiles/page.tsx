@@ -155,6 +155,17 @@ export default function ProfilesPage() {
       return;
     }
 
+    if (
+      (!newProfileSkills || newProfileSkills.length === 0) &&
+      (!newProfileDomains || newProfileDomains.length === 0)
+    ) {
+      notifyError(
+        'At least one skill or domain is required',
+        'Validation Error',
+      );
+      return;
+    }
+
     try {
       // Map selected skill/domain option objects to {_id, label} for the API payload
       const skillsPayload = newProfileSkills.map((skill: any) => ({

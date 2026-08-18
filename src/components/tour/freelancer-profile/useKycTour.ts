@@ -54,16 +54,56 @@ export function useKycTour(isReady: boolean) {
     tour.on('complete', () => dispatch(clearTour()));
 
     tour.addStep({
-      id: 'kyc verification',
-      title: 'KYC Verification',
-      text: 'Verify your identity with e-kyc.',
-      scrollTo: false,
-      // attachTo: { element: '[data-tour="kyc"]', on: 'top' },
+      id: 'kyc-intro',
+      title: '🆔 KYC Identity Verification',
+      text: 'Welcome to the KYC verification page. Completing KYC is required to unlock withdrawal capabilities, increase bid limitations, and receive verified badges on your public profiles.',
+      when: withProgress(tour),
+      buttons: [
+        {
+          text: 'Skip',
+          action: () => {
+            tour.cancel();
+            dispatch(clearTour());
+          },
+        },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'kyc-stepper-step',
+      title: '🪜 Verification Process Stepper',
+      text: 'Track your progress through the 3 validation steps: Basic Details input, Government ID document uploads, and Webcam face match capture.',
+      attachTo: { element: '[data-tour="kyc-stepper"]', on: 'bottom' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'kyc-upload-step',
+      title: '📁 Document Upload Panel',
+      text: "Drag and drop high-resolution photographs of your passport, driver's license, or national ID card here. Images must be fully legible and under 5MB in size.",
+      attachTo: { element: '[data-tour="kyc-doc-upload"]', on: 'top' },
+      when: withProgress(tour),
+      buttons: [
+        { text: 'Back', action: tour.back },
+        { text: 'Next', action: tour.next },
+      ],
+    });
+
+    tour.addStep({
+      id: 'kyc-submit-step',
+      title: '🚀 Submit Verification Files',
+      text: 'Once all details are filled out, click this button to submit your verification files to the review team. Applications are processed within 24-48 hours.',
+      attachTo: { element: '[data-tour="kyc"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
         {
-          text: 'Got it',
+          text: 'Complete',
           action: () => {
             tour.complete();
             dispatch(clearTour());

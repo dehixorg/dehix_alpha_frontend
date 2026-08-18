@@ -3,6 +3,7 @@ import { ClipboardPlus, Plus } from 'lucide-react';
 
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 
 import StoryAccordionItem from './StoryAccordionItem';
 import AddTaskDialog from './AddTaskDialog';
@@ -18,24 +19,57 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-const StoriesAccordion = ({
-  milestone,
-  fetchMilestones,
-  handleStorySubmit,
-  isFreelancer = false,
-  freelancerId,
-}: {
+const MAX_TASKS = 5;
+
+interface StoriesAccordionProps {
   milestone: Milestone;
   fetchMilestones: any;
   handleStorySubmit: any;
   isFreelancer: boolean;
   freelancerId?: string;
-}) => {
+  isLiveRoomPreview?: boolean;
+  /** Optional local-mode callbacks */
+  onEditStory?: (storyId: string, title: string, summary: string) => void;
+  onDeleteStory?: (storyId: string) => void;
+  onEditTask?: (
+    storyId: string,
+    taskIndex: number,
+    title: string,
+    summary: string,
+  ) => void;
+  onDeleteTask?: (storyId: string, taskIndex: number) => void;
+  onRefineTask?: (
+    storyId: string,
+    taskIndex: number,
+    instruction: string,
+  ) => void;
+}
+
+const StoriesAccordion: React.FC<StoriesAccordionProps> = (props) => {
+  const {
+    milestone,
+    fetchMilestones,
+    handleStorySubmit,
+    isFreelancer = false,
+    freelancerId,
+    isLiveRoomPreview = false,
+    onEditStory,
+    onDeleteStory,
+    onEditTask,
+    onDeleteTask,
+    onRefineTask,
+  } = props;
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
   );
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isStoryDialogOpen, setIsStoryDialogOpen] = useState(false);
+
+  // Edit-story dialog state
+  const [editingStory, setEditingStory] = useState<Story | null>(null);
+  const [editStoryTitle, setEditStoryTitle] = useState('');
+  const [editStorySummary, setEditStorySummary] = useState('');
+
   const [formData, setFormData] = useState({
     summary: '',
     title: '',
@@ -99,6 +133,11 @@ const StoriesAccordion = ({
         (story: Story) => story._id === openAccordion,
       );
       if (story) {
+        // Max 5 tasks guard
+        if ((story.tasks ?? []).length >= MAX_TASKS) {
+          setIsTaskDialogOpen(false);
+          return;
+        }
         handleStorySubmit(e, story, milestone, true, updatedFormData);
       }
     }
@@ -112,14 +151,49 @@ const StoriesAccordion = ({
     setIsTaskDialogOpen(false);
   };
 
+  // ── Edit story handlers ──
+
+  const openEditStory = (story: Story) => {
+    setEditingStory(story);
+    setEditStoryTitle(story.title ?? '');
+    setEditStorySummary(story.summary ?? '');
+  };
+
+  const handleEditStorySave = () => {
+    if (!editingStory) return;
+    onEditStory?.(editingStory._id!, editStoryTitle, editStorySummary);
+    setEditingStory(null);
+  };
+
+  const handleDeleteStoryClick = (storyId: string) => {
+    if (
+      !window.confirm(
+        'Delete this story and all its tasks? This cannot be undone.',
+      )
+    )
+      return;
+    onDeleteStory?.(storyId);
+  };
+
   return (
     <div className="w-full px-0 md:px-0 lg:px-0 rounded-lg">
       <div className="card border rounded-lg">
         {(milestone.stories ?? []).length > 0 && (
-          <div className="flex p-4 justify-between items-center border-b bg-gradient">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg md:text-xl font-semibold">Stories</h3>
-              <Badge variant="secondary" className="rounded-full">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border-b bg-card">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <h3
+                className="text-base md:text-lg font-bold tracking-tight text-foreground truncate min-w-0"
+                title={`Stories for ${milestone.title}`}
+              >
+                Stories for{' '}
+                <span className="text-primary font-semibold">
+                  {milestone.title}
+                </span>
+              </h3>
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground shrink-0"
+              >
                 {(milestone.stories ?? []).length} total
               </Badge>
             </div>
@@ -131,8 +205,9 @@ const StoriesAccordion = ({
                       size="sm"
                       onClick={() => setIsStoryDialogOpen(true)}
                       aria-label="Add a new story"
+                      className="h-8 px-3 text-xs font-semibold gap-1.5 rounded-lg bg-background text-foreground border border-border/80 hover:bg-accent hover:border-primary/40 shadow-xs transition-all shrink-0"
                     >
-                      <Plus size={13} /> Add Story
+                      <Plus size={14} className="text-primary" /> Add Story
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
@@ -143,6 +218,7 @@ const StoriesAccordion = ({
             )}
           </div>
         )}
+
         <Accordion
           type="single"
           collapsible
@@ -152,15 +228,43 @@ const StoriesAccordion = ({
           {(milestone.stories ?? []).length > 0 ? (
             (milestone.stories ?? []).map((story: Story, idx: number) => (
               <StoryAccordionItem
+                key={story._id ?? idx}
                 fetchMilestones={fetchMilestones}
                 isFreelancer={isFreelancer}
                 freelancerId={freelancerId}
                 milestoneId={milestone._id}
-                key={idx}
                 story={story}
                 idx={idx}
                 milestoneStoriesLength={(milestone.stories ?? []).length}
                 setIsTaskDialogOpen={setIsTaskDialogOpen}
+                isLiveRoomPreview={isLiveRoomPreview}
+                // Pass story edit/delete callbacks for inline header display
+                onEditStory={
+                  onEditStory ? () => openEditStory(story) : undefined
+                }
+                onDeleteStory={
+                  onDeleteStory && story._id
+                    ? () => handleDeleteStoryClick(story._id!)
+                    : undefined
+                }
+                // Pass per-story task callbacks
+                onEditTask={
+                  onEditTask
+                    ? (taskIndex, title, summary) =>
+                        onEditTask(story._id!, taskIndex, title, summary)
+                    : undefined
+                }
+                onDeleteTask={
+                  onDeleteTask
+                    ? (taskIndex) => onDeleteTask(story._id!, taskIndex)
+                    : undefined
+                }
+                onRefineTask={
+                  onRefineTask
+                    ? (taskIndex, instruction) =>
+                        onRefineTask(story._id!, taskIndex, instruction)
+                    : undefined
+                }
               />
             ))
           ) : (
@@ -240,6 +344,66 @@ const StoriesAccordion = ({
           milestones={milestone}
           handleStorySubmit={handleStorySubmit}
         />
+      )}
+
+      {/* Edit Story Dialog */}
+      {editingStory && (
+        <Dialog open onOpenChange={() => setEditingStory(null)}>
+          <DialogContent className="max-w-md bg-card border-border rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">
+                Edit Story
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div>
+                <label
+                  htmlFor="edit-story-title"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
+                  Title
+                </label>
+                <input
+                  id="edit-story-title"
+                  value={editStoryTitle}
+                  onChange={(e) => setEditStoryTitle(e.target.value)}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-story-summary"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                >
+                  Summary
+                </label>
+                <textarea
+                  id="edit-story-summary"
+                  value={editStorySummary}
+                  onChange={(e) => setEditStorySummary(e.target.value)}
+                  rows={3}
+                  className="w-full mt-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingStory(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleEditStorySave}
+                disabled={!editStoryTitle.trim()}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

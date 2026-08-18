@@ -76,7 +76,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
       const ext = (extFromName || extFromType || 'pdf').split(';')[0];
       const { url } = await uploadFileViaSignedUrl(file, {
         key: `resume/${scope}/resume.${ext}`,
-        methods: ['upload', 'get'],
       });
 
       const putResponse = await axiosInstance.put('/freelancer', {

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Wallet } from 'lucide-react';
+import { Wallet, RefreshCw } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
@@ -25,6 +25,7 @@ interface HeaderProps {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
   activeMenu: string;
+  setActive?: (page: string) => void;
   breadcrumbItems?: BreadcrumbMenuItem[];
   searchPlaceholder?: string;
   setActiveConversation?: any;
@@ -41,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({
   menuItemsTop,
   menuItemsBottom,
   activeMenu,
+  setActive,
   breadcrumbItems,
   searchPlaceholder,
   conversations,
@@ -50,6 +52,7 @@ const Header: React.FC<HeaderProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [connects, setConnects] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const pathname = usePathname();
 
   const userType =
@@ -58,32 +61,44 @@ const Header: React.FC<HeaderProps> = ({
       ? (String(user.type).toLowerCase() as 'freelancer' | 'business')
       : undefined;
 
-  const fetchConnects = async () => {
+  const fetchConnects = async (): Promise<number | null> => {
     try {
       const data = localStorage.getItem('DHX_CONNECTS');
-      const parsedData = data ? parseInt(data) : 0;
+      if (data == null) {
+        return null;
+      }
+      const parsedData = parseInt(data);
       if (!isNaN(parsedData)) {
         setConnects(parsedData);
+        return parsedData;
       }
+      return null;
     } catch (error) {
       console.error('Error fetching connects:', error);
+      return null;
     }
   };
 
   const refreshConnectsFromServer = useCallback(async () => {
     if (!user?.uid || !userType) return;
+    setIsRefreshing(true);
+
     try {
       const balance = await fetchAndUpdateConnects(userType, true);
       if (balance != null) {
         setConnects(balance);
-        // notifySuccess('Connects refreshed successfully!', 'Success');
       } else {
-        fetchConnects();
-        // notifySuccess('Connects data updated from cache', 'Updated');
+        await fetchConnects();
       }
+
+      // Refresh notifications only after connects refresh/fallback completes.
+      window.dispatchEvent(new Event('refreshNotifications'));
     } catch (error) {
-      fetchConnects();
+      await fetchConnects();
+      window.dispatchEvent(new Event('refreshNotifications'));
       notifyError('Failed to refresh connects. Please try again.', 'Error');
+    } finally {
+      setIsRefreshing(false);
     }
   }, [user?.uid, userType]);
 
@@ -200,6 +215,7 @@ const Header: React.FC<HeaderProps> = ({
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active={activeMenu}
+        setActive={setActive}
         setActiveConversation={setActiveConversation}
         conversations={conversations}
         activeConversation={activeConversation}
@@ -266,6 +282,18 @@ const Header: React.FC<HeaderProps> = ({
               connects={connects}
               userType={userType}
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshConnectsFromServer}
+              disabled={isRefreshing}
+              className="h-9 w-9 p-0"
+              aria-label="Refresh connects"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+            </Button>
           </div>
         ) : (
           <div data-tour="header-connects">

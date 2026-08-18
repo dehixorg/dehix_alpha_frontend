@@ -29,6 +29,31 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
   setActiveConversation,
   activeConversation,
 }) => {
+  const activateMenuItem = (
+    label: string,
+    href?: string,
+    event?: React.MouseEvent<HTMLAnchorElement>,
+  ) => {
+    setActive(label);
+    if (!href?.includes('#') || typeof window === 'undefined') return;
+
+    const nextUrl = new URL(href, window.location.origin);
+    const currentUrl = new URL(window.location.href);
+    const isSamePage =
+      nextUrl.pathname === currentUrl.pathname &&
+      nextUrl.search === currentUrl.search;
+
+    if (!isSamePage) return;
+
+    event?.preventDefault();
+    window.history.pushState(
+      null,
+      '',
+      `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`,
+    );
+    window.dispatchEvent(new Event('hashchange'));
+  };
+
   const ChatAvatar = ({ conversation }: { conversation: any }) => {
     if (
       !conversation ||
@@ -74,58 +99,65 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="flex flex-col justify-between sm:max-w-xs"
+        className="flex h-[100dvh] w-[min(85vw,320px)] flex-col overflow-hidden p-0 sm:max-w-xs"
       >
-        <nav className="grid gap-6 text-lg font-medium">
-          {menuItemsTop.map((item, index) => (
-            <Link
-              key={index}
-              href={item.href ? item.href : ''}
-              onClick={() => setActive(item.label)}
-              className={`flex items-center gap-4 px-2.5 ${
-                item.label === 'Dehix'
-                  ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
-                  : item.label === active
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {item.icon}
-              {item.label !== 'Dehix' && item.label}
-            </Link>
-          ))}
-          {active === 'Chats' &&
-            setActiveConversation &&
-            conversations &&
-            conversations.map((conv: any) => (
-              <ChatAvatar key={conv.id} conversation={conv} />
-            ))}
-        </nav>
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
+            <nav className="grid gap-6 text-lg font-medium">
+              {menuItemsTop.map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.href ? item.href : ''}
+                  onClick={(event) =>
+                    activateMenuItem(item.label, item.href, event)
+                  }
+                  className={`flex items-center gap-4 px-2.5 ${
+                    item.label === 'Dehix'
+                      ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
+                      : item.label === active
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label !== 'Dehix' && item.label}
+                </Link>
+              ))}
+              {active === 'Chats' &&
+                setActiveConversation &&
+                conversations &&
+                conversations.map((conv: any) => (
+                  <ChatAvatar key={conv.id} conversation={conv} />
+                ))}
+            </nav>
 
-        <nav className="grid gap-6 text-lg font-medium">
-          {/* Check if the current item is "Settings" and add ThemeToggle above it */}
-          <div className="flex items-center px-2.5 text-muted-foreground hover:text-foreground mb-1 ml-auto">
-            <ThemeToggle full />
+            <nav className="mt-8 grid gap-6 text-lg font-medium">
+              <div className="ml-auto flex items-center px-2.5 text-muted-foreground hover:text-foreground mb-1">
+                <ThemeToggle full />
+              </div>
+              {menuItemsBottom.map((item, index) => (
+                <React.Fragment key={index}>
+                  <Link
+                    href={item.href ? item.href : ''}
+                    onClick={(event) =>
+                      activateMenuItem(item.label, item.href, event)
+                    }
+                    className={`flex items-center gap-4 px-2.5 ${
+                      item.label === 'Dehix'
+                        ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
+                        : item.label === active
+                          ? 'text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label !== 'Dehix' && item.label}
+                  </Link>
+                </React.Fragment>
+              ))}
+            </nav>
           </div>
-          {menuItemsBottom.map((item, index) => (
-            <React.Fragment key={index}>
-              <Link
-                href={item.href ? item.href : ''}
-                onClick={() => setActive(item.label)}
-                className={`flex items-center gap-4 px-2.5 ${
-                  item.label === 'Dehix'
-                    ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
-                    : item.label === active
-                      ? 'text-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {item.icon}
-                {item.label !== 'Dehix' && item.label}
-              </Link>
-            </React.Fragment>
-          ))}
-        </nav>
+        </div>
       </SheetContent>
     </Sheet>
   );

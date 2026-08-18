@@ -52,8 +52,8 @@ export function useBusinessDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'welcome',
-      title: 'Welcome',
-      text: 'This is your business dashboard overview.',
+      title: '💼 Client Control Center',
+      text: 'Welcome back to your Dehix Business Dashboard. From this single overview page, you can coordinate your active developments, inspect freelancer applications, monitor team progress, and evaluate technical candidates.',
       attachTo: { element: '[data-tour="business-welcome"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -73,8 +73,8 @@ export function useBusinessDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'stats',
-      title: 'Stats',
-      text: 'Track your projects and progress here.',
+      title: '📊 Business Operational Metrics',
+      text: 'Track key performance statistics at a glance: Total Budget Released/Spent, Active Project Contracts, Open Positions/Bids, and Currently Engaged Freelancer Talents.',
       attachTo: { element: '[data-tour="business-stats"]', on: 'bottom' },
       when: withProgress(tour),
       buttons: [
@@ -85,8 +85,8 @@ export function useBusinessDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'projects',
-      title: 'Projects',
-      text: 'Manage your current and completed projects here.',
+      title: '📁 Project Deliverables Hub',
+      text: 'Review quick cards representing your open contract deliverables. Clicking any project card expands it to show milestone progress percentages, pending deliverable approvals, and current team communications.',
       attachTo: { element: '[data-tour="business-projects"]', on: 'top' },
       when: withProgress(tour),
       buttons: [
@@ -97,8 +97,8 @@ export function useBusinessDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'create-project-primary',
-      title: 'Create Your First Project',
-      text: 'Start by creating a project. This is where you define your requirements and begin collaborating.',
+      title: '✨ Launch New Projects',
+      text: 'Click here to start the Project Creation Wizard. You can draft technical requirement details, select required developer skill categories, allocate milestone budgets, and publish opportunities to the open marketplace.',
       attachTo: {
         element: '[data-tour="create-project-primary"]',
         on: 'top',
@@ -112,13 +112,19 @@ export function useBusinessDashboardTour(isReady: boolean) {
 
     tour.addStep({
       id: 'actions',
-      title: 'Quick actions',
-      text: 'Create and manage projects quickly from here.',
+      title: '⚡ Quick Administrative Controls',
+      text: 'Use these shortcuts to search candidate directories, manage interview evaluations, or handle company invoices and connects balances. Your tour is now complete!',
       attachTo: { element: '[data-tour="business-quick-actions"]', on: 'left' },
       when: withProgress(tour),
       buttons: [
         { text: 'Back', action: tour.back },
-        { text: 'Got it', action: tour.complete },
+        {
+          text: 'Complete',
+          action: () => {
+            tour.complete();
+            dispatch(clearTour());
+          },
+        },
       ],
     });
 

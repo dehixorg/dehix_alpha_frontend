@@ -17,6 +17,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import type { Milestone, Story } from '@/utils/types/Milestone';
 import type { RootState } from '@/lib/store';
+import { useMilestoneTour } from '@/components/tour/freelancer/useMilestoneTour';
 
 const CreateMilestoneDialog = dynamic(
   () =>
@@ -71,6 +72,7 @@ const Page = () => {
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<
     number | null
   >(0);
+  useMilestoneTour(!loading);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
 
   const handleChatClick = useCallback(
@@ -244,6 +246,102 @@ const Page = () => {
     }
   }, [milestones]);
 
+  const handleEditStory = async (
+    storyId: string,
+    title: string,
+    summary: string,
+  ) => {
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
+    const currentMilestone = milestones[selectedMilestoneIndex];
+    const updatedStories = (currentMilestone.stories ?? []).map((s) =>
+      s._id === storyId ? { ...s, title, summary } : s,
+    );
+    try {
+      await axiosInstance.put(`/milestones/${currentMilestone._id}`, {
+        ...currentMilestone,
+        stories: updatedStories,
+      });
+      notifySuccess('Story updated successfully!');
+      fetchMilestones();
+    } catch (err) {
+      console.error('Error updating story:', err);
+      notifyError('Failed to update story.');
+    }
+  };
+
+  const handleDeleteStory = async (storyId: string) => {
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
+    const currentMilestone = milestones[selectedMilestoneIndex];
+    const updatedStories = (currentMilestone.stories ?? []).filter(
+      (s) => s._id !== storyId,
+    );
+    try {
+      await axiosInstance.put(`/milestones/${currentMilestone._id}`, {
+        ...currentMilestone,
+        stories: updatedStories,
+      });
+      notifySuccess('Story deleted successfully!');
+      fetchMilestones();
+    } catch (err) {
+      console.error('Error deleting story:', err);
+      notifyError('Failed to delete story.');
+    }
+  };
+
+  const handleEditTask = async (
+    storyId: string,
+    taskIndex: number,
+    title: string,
+    summary: string,
+  ) => {
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
+    const currentMilestone = milestones[selectedMilestoneIndex];
+    const updatedStories = (currentMilestone.stories ?? []).map((s) => {
+      if (s._id !== storyId) return s;
+      const tasks = [...(s.tasks ?? [])];
+      tasks[taskIndex] = { ...tasks[taskIndex], title, summary };
+      return { ...s, tasks };
+    });
+    try {
+      await axiosInstance.put(`/milestones/${currentMilestone._id}`, {
+        ...currentMilestone,
+        stories: updatedStories,
+      });
+      notifySuccess('Task updated successfully!');
+      fetchMilestones();
+    } catch (err) {
+      console.error('Error updating task:', err);
+      notifyError('Failed to update task.');
+    }
+  };
+
+  const handleDeleteTask = async (storyId: string, taskIndex: number) => {
+    if (selectedMilestoneIndex === null || !milestones[selectedMilestoneIndex])
+      return;
+    const currentMilestone = milestones[selectedMilestoneIndex];
+    const updatedStories = (currentMilestone.stories ?? []).map((s) => {
+      if (s._id !== storyId) return s;
+      return {
+        ...s,
+        tasks: (s.tasks ?? []).filter((_, i) => i !== taskIndex),
+      };
+    });
+    try {
+      await axiosInstance.put(`/milestones/${currentMilestone._id}`, {
+        ...currentMilestone,
+        stories: updatedStories,
+      });
+      notifySuccess('Task deleted successfully!');
+      fetchMilestones();
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      notifyError('Failed to delete task.');
+    }
+  };
+
   return (
     <BusinessDashboardLayout
       active="Projects"
@@ -296,7 +394,10 @@ const Page = () => {
           </div>
         ) : milestones.length > 0 ? (
           <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
-            <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
+            <div
+              className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full"
+              data-tour="milestone-freelancers"
+            >
               <FreelancerList
                 projectId={project_id}
                 onChatClick={handleChatClick}
@@ -305,25 +406,35 @@ const Page = () => {
             </div>
 
             <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
-              <MilestoneTimeline
-                fetchMilestones={fetchMilestones}
-                milestones={milestones}
-                handleStorySubmit={handleStorySubmit}
-                selectedIndex={selectedMilestoneIndex}
-                onMilestoneSelect={(index) => setSelectedMilestoneIndex(index)}
-              />
+              <div data-tour="milestone-timeline">
+                <MilestoneTimeline
+                  fetchMilestones={fetchMilestones}
+                  milestones={milestones}
+                  handleStorySubmit={handleStorySubmit}
+                  selectedIndex={selectedMilestoneIndex}
+                  onMilestoneSelect={(index) =>
+                    setSelectedMilestoneIndex(index)
+                  }
+                />
+              </div>
 
               {selectedMilestoneIndex !== null && (
-                <StoriesSection
-                  key={
-                    milestones[selectedMilestoneIndex]?._id ??
-                    selectedMilestoneIndex
-                  }
-                  milestone={milestones[selectedMilestoneIndex]}
-                  fetchMilestones={fetchMilestones}
-                  handleStorySubmit={handleStorySubmit}
-                  isFreelancer={false}
-                />
+                <div data-tour="milestone-stories">
+                  <StoriesSection
+                    key={
+                      milestones[selectedMilestoneIndex]?._id ??
+                      selectedMilestoneIndex
+                    }
+                    milestone={milestones[selectedMilestoneIndex]}
+                    fetchMilestones={fetchMilestones}
+                    handleStorySubmit={handleStorySubmit}
+                    isFreelancer={false}
+                    onEditStory={handleEditStory}
+                    onDeleteStory={handleDeleteStory}
+                    onEditTask={handleEditTask}
+                    onDeleteTask={handleDeleteTask}
+                  />
+                </div>
               )}
             </div>
           </div>

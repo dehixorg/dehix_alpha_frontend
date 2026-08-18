@@ -15,6 +15,7 @@ import {
 
 import BusinessSettingsLayout from '@/components/layout/BusinessSettingsLayout';
 import { RootState } from '@/lib/store';
+import { usePublicProfileTour } from '@/components/tour/shared/usePublicProfileTour';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { notifyError, notifySuccess } from '@/utils/toastMessage';
 import {
@@ -46,6 +47,7 @@ export default function BusinessPublicProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [publicUrl, setPublicUrl] = useState('');
+  usePublicProfileTour(!loading);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -108,7 +110,10 @@ export default function BusinessPublicProfileSettings() {
     >
       <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 overflow-hidden">
         {/* Share Link Card */}
-        <Card className="border shadow-sm overflow-hidden">
+        <Card
+          className="border shadow-sm overflow-hidden"
+          data-tour="profile-share"
+        >
           <CardHeader className="pb-3 px-3 sm:px-6">
             <div className="flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary shrink-0" />
@@ -167,7 +172,7 @@ export default function BusinessPublicProfileSettings() {
         </Card>
 
         {/* Profile Preview */}
-        <div>
+        <div data-tour="profile-preview">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
             Profile Preview — how visitors see your profile
           </p>

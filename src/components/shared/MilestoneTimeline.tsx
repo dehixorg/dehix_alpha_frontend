@@ -12,7 +12,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
@@ -23,7 +22,6 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from '@/components/ui/carousel';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import type { Milestone } from '@/utils/types/Milestone';
 
 interface MilestoneTimelineProps {
@@ -42,12 +40,60 @@ export const truncateDescription = (text: string, maxLength = 50): string => {
   return text;
 };
 
+export const formatMilestoneDate = (milestone: any): string => {
+  if (!milestone) return '';
+
+  const parseSingleDate = (raw: any): Date | null => {
+    if (!raw) return null;
+    if (typeof raw === 'string' || typeof raw === 'number') {
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+    if (typeof raw === 'object') {
+      if (raw.expected) {
+        const d = new Date(raw.expected);
+        if (!isNaN(d.getTime())) return d;
+      }
+      if (raw.actual) {
+        const d = new Date(raw.actual);
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+    return null;
+  };
+
+  const startD = parseSingleDate(milestone.startDate);
+  const endD = parseSingleDate(milestone.endDate);
+  const createdD = parseSingleDate(milestone.createdAt);
+
+  const formatShort = (d: Date) =>
+    d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+  if (startD && endD) {
+    if (startD.toDateString() === endD.toDateString()) {
+      return formatShort(startD);
+    }
+    return `${formatShort(startD)} - ${formatShort(endD)}`;
+  }
+  if (startD) return formatShort(startD);
+  if (endD) return formatShort(endD);
+  if (createdD) return formatShort(createdD);
+
+  return '';
+};
+
 const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   milestones,
   selectedIndex: externalSelectedIndex,
   onMilestoneSelect,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [internalSelectedIndex, setInternalSelectedIndex] = useState<
     number | null
   >(0);
@@ -58,6 +104,27 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
     externalSelectedIndex !== undefined
       ? externalSelectedIndex
       : internalSelectedIndex;
+
+  const scrollToPhaseOnDesktop = (index: number) => {
+    const itemEl = itemRefs.current[index];
+    const container = scrollRef.current;
+    if (itemEl && container) {
+      const itemLeft = itemEl.offsetLeft;
+      const itemWidth = itemEl.clientWidth;
+      const containerWidth = container.clientWidth;
+      const targetLeft = itemLeft - containerWidth / 2 + itemWidth / 2;
+      container.scrollTo({
+        left: Math.max(0, targetLeft),
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedIndex !== null && selectedIndex !== undefined) {
+      scrollToPhaseOnDesktop(selectedIndex);
+    }
+  }, [selectedIndex]);
 
   useEffect(() => {
     const div = scrollRef.current;
@@ -112,10 +179,11 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
       setInternalSelectedIndex(index);
     }
 
-    // Ensure carousel scrolls to the selected index on mobile
+    // Ensure carousel / scroll container moves to the selected index
     if (api && index !== undefined) {
       api.scrollTo(index);
     }
+    scrollToPhaseOnDesktop(index);
   };
 
   const displayMilestones =
@@ -136,74 +204,168 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   return (
     <Card className="bg-muted-foreground/20 dark:bg-muted/20">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-4">
-          <CardTitle className="text-base md:text-lg">
-            Milestone timeline
-          </CardTitle>
-          <Badge variant="secondary" className="rounded-full">
-            {milestones.length} total
-          </Badge>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-base md:text-lg font-bold">
+              Milestone timeline
+            </CardTitle>
+            <Badge
+              variant="secondary"
+              className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+            >
+              {milestones.length} total
+            </Badge>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={selectedIndex === 0 || selectedIndex === null}
+              onClick={() => {
+                if (selectedIndex !== null && selectedIndex > 0) {
+                  handleStorySelect(
+                    milestones[selectedIndex - 1],
+                    selectedIndex - 1,
+                  );
+                }
+              }}
+              className="h-8 px-2.5 text-xs font-medium gap-1.5 rounded-lg border-border/60 hover:bg-accent disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>Previous Phase</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={
+                selectedIndex === null || selectedIndex >= milestones.length - 1
+              }
+              onClick={() => {
+                if (
+                  selectedIndex !== null &&
+                  selectedIndex < milestones.length - 1
+                ) {
+                  handleStorySelect(
+                    milestones[selectedIndex + 1],
+                    selectedIndex + 1,
+                  );
+                }
+              }}
+              className="h-8 px-2.5 text-xs font-medium gap-1.5 rounded-lg border-border/60 hover:bg-accent disabled:opacity-40"
+            >
+              <span>Next Phase</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         {/* Timeline for larger screens */}
-        <ScrollArea className="w-full max-w-full whitespace-nowrap rounded-md border overflow-hidden relative">
-          {/* Timeline line */}
-          <Separator className="absolute left-0 right-0 top-1/2 -translate-y-1/2 bg-black dark:bg-white" />
+        {milestones && (
+          <div
+            ref={scrollRef}
+            className="hidden md:flex w-full overflow-x-auto overflow-y-hidden py-4 px-2 no-scrollbar scroll-smooth relative rounded-xl border bg-card/30"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            <div className="flex items-start w-max min-w-full relative h-[360px]">
+              {displayMilestones.map((milestone, index) => {
+                const isDummy = milestone.title === 'dummy';
+                const isTopCard = index % 2 === 0;
+                const isSelected = index === selectedIndex;
 
-          {milestones && (
-            <div
-              ref={scrollRef}
-              className="hidden md:block w-full max-w-full overflow-x-auto overflow-y-hidden"
-            >
-              {/* Scrolling Timeline */}
-              <div className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-hidden px-4 py-6 no-scrollbar max-w-full">
-                {displayMilestones.map((milestone, index) => (
+                return (
                   <div
                     key={index}
-                    className={`relative group px-8 lg:px-16 inline-block flex-shrink-0 ${displayMilestones.length === 1 ? 'mx-auto ' : ''}`}
-                    onClick={() => handleStorySelect(milestone, index)}
+                    ref={(el) => {
+                      itemRefs.current[index] = el;
+                    }}
+                    className={`flex flex-col items-center group shrink-0 cursor-pointer min-w-[260px] md:min-w-[280px] max-w-[340px] h-[360px] relative z-10 ${
+                      isDummy ? 'invisible' : ''
+                    }`}
+                    onClick={() =>
+                      !isDummy && handleStorySelect(milestone, index)
+                    }
                   >
-                    {/* Timeline Dot */}
-                    <div
-                      className={`absolute ${milestones.length === 1 && milestone.title === 'dummy' ? 'hidden' : ''} ${
-                        index === selectedIndex
-                          ? 'bg-muted border-card'
-                          : 'border-card'
-                      } top-1/2 transform -translate-y-1/2 w-5 h-5 bg-muted rounded-full border-4 group group-hover:bg-muted group-hover:border-muted] `}
-                      style={{
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                    >
-                      <div
-                        className={`absolute left-1/2 transform -translate-x-1/2 ${
-                          index % 2 === 0 ? '-top-6' : 'top-3'
-                        } ${index === selectedIndex ? 'bg-muted text-muted' : ''}  group-hover:text-[#11a0ff] overflow-hidden `}
-                      >
-                        |
-                      </div>
+                    {/* TOP ROW: Height 135px (Holds top card or empty space) */}
+                    <div className="w-full h-[135px] flex items-end justify-center px-3">
+                      {isTopCard && !isDummy ? (
+                        <MilestoneCards
+                          date={formatMilestoneDate(milestone)}
+                          title={milestone.title}
+                          summary={milestone.description}
+                          position="top"
+                          isSelected={isSelected}
+                        />
+                      ) : (
+                        <div className="h-full w-full" />
+                      )}
                     </div>
 
-                    {/* Milestone Details */}
-                    <MilestoneCards
-                      date={milestone.createdAt || ''}
-                      title={milestone.title}
-                      summary={milestone.description}
-                      position={index % 2 === 0 ? 'bottom' : 'top'}
-                      isSelected={index === selectedIndex}
-                    />
+                    {/* TOP CONNECTOR LINE SLOT: Height 31px */}
+                    <div className="w-full h-[31px] flex justify-center items-stretch relative">
+                      {isTopCard && !isDummy && (
+                        <div
+                          className={`w-0.5 h-full transition-colors ${
+                            isSelected
+                              ? 'bg-primary w-1 shadow-xs'
+                              : 'bg-border/80 group-hover:bg-primary/80'
+                          }`}
+                        />
+                      )}
+                    </div>
 
-                    {milestone._id === 'dummy' && (
-                      <div style={{ display: 'none' }}></div>
-                    )}
+                    {/* CENTER AXIS ROW: Height 28px (Center Dot sits at Y=180px) */}
+                    <div className="w-full h-[28px] flex items-center justify-center relative">
+                      {/* Continuous horizontal timeline line segment across each column */}
+                      {!isDummy && (
+                        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-border/80 dark:bg-muted-foreground/40 z-0" />
+                      )}
+
+                      <div
+                        className={`relative z-10 w-4 h-4 rounded-full border-2 transition-all shadow-xs ${
+                          isSelected
+                            ? 'bg-primary border-background ring-4 ring-primary/30 scale-125'
+                            : 'bg-card border-muted-foreground/60 group-hover:border-primary group-hover:bg-primary/20'
+                        }`}
+                      />
+                    </div>
+
+                    {/* BOTTOM CONNECTOR LINE SLOT: Height 31px */}
+                    <div className="w-full h-[31px] flex justify-center items-stretch relative">
+                      {!isTopCard && !isDummy && (
+                        <div
+                          className={`w-0.5 h-full transition-colors ${
+                            isSelected
+                              ? 'bg-primary w-1 shadow-xs'
+                              : 'bg-border/80 group-hover:bg-primary/80'
+                          }`}
+                        />
+                      )}
+                    </div>
+
+                    {/* BOTTOM ROW: Height 135px (Holds bottom card or empty space) */}
+                    <div className="w-full h-[135px] flex items-start justify-center px-3">
+                      {!isTopCard && !isDummy ? (
+                        <MilestoneCards
+                          date={formatMilestoneDate(milestone)}
+                          title={milestone.title}
+                          summary={milestone.description}
+                          position="bottom"
+                          isSelected={isSelected}
+                        />
+                      ) : (
+                        <div className="h-full w-full" />
+                      )}
+                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
-          <ScrollBar className="cursor-pointer" orientation="horizontal" />
-        </ScrollArea>
+          </div>
+        )}
 
         {/* Carousel for mobile view */}
         <div className="flex pb-4 justify-center items-center md:hidden w-full max-w-full">
@@ -220,16 +382,8 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                       <Card className="p-6 w-full max-w-[85vw]">
                         {/* Card Content */}
                         <div className="text-center">
-                          <p className="text-xs">
-                            {milestone.createdAt &&
-                              new Date(milestone.createdAt).toLocaleDateString(
-                                'en-US',
-                                {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                },
-                              )}
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {formatMilestoneDate(milestone)}
                           </p>
                           <h3 className="font-medium text-lg mt-2">
                             {truncateDescription(milestone.title, 16)}

@@ -678,7 +678,7 @@ export function scoreResume(resumeText: string): RuleBasedResult {
   const isBaseline =
     hasName && hasCoreContent && isLowDepth && raw < BASELINE_FLOOR;
 
-  const overallScore = isBaseline ? Math.max(raw, BASELINE_FLOOR) : raw;
+  const overallScore = raw;
 
   return {
     overallScore,

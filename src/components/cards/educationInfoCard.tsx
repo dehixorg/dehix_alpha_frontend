@@ -12,18 +12,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { DateHistory } from '@/components/shared/DateHistory';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import DeleteIconButton from '@/components/shared/DeleteIconButton';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-
 interface EducationProps {
   _id?: string;
   degree?: string;
@@ -48,7 +37,6 @@ const EducationInfoCard: React.FC<EducationProps> = ({
 }) => {
   const mappedEndDate = endDate === 'current' ? null : endDate;
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const [open, setOpen] = React.useState(false);
 
   const handleDelete = async () => {
     if (!onDelete) return;
@@ -84,46 +72,15 @@ const EducationInfoCard: React.FC<EducationProps> = ({
           </div>
 
           {onDelete && (
-            <>
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <DeleteIconButton
-                    label={isDeleting ? 'Deleting' : 'Delete'}
-                    onDelete={async () => {
-                      setOpen(true);
-                    }}
-                    disabled={isDeleting}
-                  />
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Delete education entry?</DialogTitle>
-                    <DialogDescription>
-                      This action cannot be undone. This will permanently remove
-                      this education record from your profile.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      disabled={isDeleting}
-                      onClick={() => setOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <DeleteIconButton
-                      iconOnly={false}
-                      label={isDeleting ? 'Deleting' : 'Delete'}
-                      onDelete={async () => {
-                        await handleDelete();
-                        setOpen(false);
-                      }}
-                      disabled={isDeleting}
-                    />
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </>
+            <DeleteIconButton
+              ariaLabel="Delete education"
+              onDelete={handleDelete}
+              disabled={isDeleting}
+              confirmTitle="Delete education entry?"
+              confirmDescription="This action cannot be undone. This will permanently remove this education record from your profile."
+              confirmText="Delete"
+              cancelText="Cancel"
+            />
           )}
         </div>
       </CardHeader>

@@ -66,6 +66,7 @@ import { FreelancerProfile } from '@/types/freelancer';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
 import SelectTagPicker from '@/components/shared/SelectTagPicker';
+import { useSingleProfileEditTour } from '@/components/tour/freelancer-profile/useSingleProfileEditTour';
 
 export default function ProfileDetailPage() {
   const user = useSelector((state: RootState) => state.user);
@@ -75,6 +76,7 @@ export default function ProfileDetailPage() {
 
   const [profile, setProfile] = useState<FreelancerProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  useSingleProfileEditTour(!isLoading);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editingProfileData, setEditingProfileData] = useState<any>({});
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
@@ -427,6 +429,17 @@ export default function ProfileDetailPage() {
       return;
     }
 
+    if (
+      (!editingProfileData.skills || editingProfileData.skills.length === 0) &&
+      (!editingProfileData.domains || editingProfileData.domains.length === 0)
+    ) {
+      notifyError(
+        'At least one skill or domain is required',
+        'Validation Error',
+      );
+      return;
+    }
+
     setIsUpdating(true);
     try {
       const updatePayload: any = {
@@ -742,7 +755,10 @@ export default function ProfileDetailPage() {
                   </div>
                 )}
               </div>
-              <div className="flex gap-2 md:flex-none">
+              <div
+                className="flex gap-2 md:flex-none"
+                data-tour="profile-edit-save"
+              >
                 {isEditMode ? (
                   <>
                     <Button
@@ -848,7 +864,7 @@ export default function ProfileDetailPage() {
                   </>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="profile-edit-rate">
                 {isEditMode ? (
                   <>
                     <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
@@ -860,13 +876,18 @@ export default function ProfileDetailPage() {
                         inputMode="decimal"
                         min="0"
                         step="1"
-                        value={editingProfileData.hourlyRate || ''}
-                        onChange={(e) =>
+                        value={
+                          editingProfileData.hourlyRate === 0
+                            ? ''
+                            : editingProfileData.hourlyRate || ''
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
                           handleInputChange(
                             'hourlyRate',
-                            parseFloat(e.target.value) || 0,
-                          )
-                        }
+                            val === '' ? 0 : parseFloat(val) || 0,
+                          );
+                        }}
                         placeholder="50"
                         className="pl-9"
                       />
@@ -1049,7 +1070,7 @@ export default function ProfileDetailPage() {
             {isEditMode && <Separator />}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="profile-edit-git">
                 {isEditMode ? (
                   <>
                     <Label
@@ -1132,7 +1153,10 @@ export default function ProfileDetailPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-muted-foreground/20 dark:bg-muted/20">
+        <Card
+          className="bg-muted-foreground/20 dark:bg-muted/20"
+          data-tour="profile-edit-portfolio"
+        >
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl font-semibold">Projects</CardTitle>

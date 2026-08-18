@@ -11,6 +11,7 @@ import {
   Users2,
   SendHorizontal,
   ArrowLeft,
+  RadioTower,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -47,6 +48,11 @@ export const menuItemsTop: MenuItem[] = [
     icon: <FolderOpen className="h-5 w-5" />,
     label: 'Projects',
     tourId: 'nav-projects',
+  },
+  {
+    href: '/business/liveroom',
+    icon: <RadioTower className="h-5 w-5" />,
+    label: 'LiveRoom',
   },
   {
     href: '/project-invitations',

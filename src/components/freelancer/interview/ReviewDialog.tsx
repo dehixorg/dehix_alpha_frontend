@@ -23,6 +23,7 @@ interface ReviewDialogProps {
   interviewId: string;
   talentName?: string;
   intervieweeName?: string;
+  interviewType?: string;
   onReviewSubmitted: (result: { verified: boolean; rating: number }) => void;
 }
 
@@ -32,6 +33,7 @@ const ReviewDialog: React.FC<ReviewDialogProps> = ({
   interviewId,
   talentName,
   intervieweeName,
+  interviewType,
   onReviewSubmitted,
 }) => {
   const [rating, setRating] = useState(0);
@@ -108,18 +110,32 @@ const ReviewDialog: React.FC<ReviewDialogProps> = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
-            Rate Interview Performance
+            {interviewType === 'HIRE'
+              ? 'Evaluate Candidate Capability'
+              : 'Rate Interview Performance'}
           </DialogTitle>
           <DialogDescription>
-            Rate{' '}
-            <span className="font-medium text-foreground">
-              {intervieweeName || 'the interviewee'}
-            </span>{' '}
-            for their{' '}
-            <span className="font-medium text-foreground">
-              {talentName || 'skill'}
-            </span>{' '}
-            interview.
+            {interviewType === 'HIRE' ? (
+              <>
+                Assess the capability of{' '}
+                <span className="font-medium text-foreground">
+                  {intervieweeName || 'the candidate'}
+                </span>{' '}
+                for the project.
+              </>
+            ) : (
+              <>
+                Rate{' '}
+                <span className="font-medium text-foreground">
+                  {intervieweeName || 'the interviewee'}
+                </span>{' '}
+                for their{' '}
+                <span className="font-medium text-foreground">
+                  {talentName || 'skill'}
+                </span>{' '}
+                interview.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -151,15 +167,33 @@ const ReviewDialog: React.FC<ReviewDialogProps> = ({
                 {getRatingLabel(displayRating)}
               </span>
             </div>
-            {rating >= 3.5 && (
-              <p className="text-xs text-green-600 dark:text-green-400">
-                ✓ A rating of 3.5 or above will verify this skill/domain.
-              </p>
-            )}
-            {rating > 0 && rating < 3.5 && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                A rating below 3.5 means the skill will not be verified.
-              </p>
+            {interviewType === 'HIRE' ? (
+              <>
+                {rating >= 3.5 && (
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    ✓ Recommended (Capable for project requirements)
+                  </p>
+                )}
+                {rating > 0 && rating < 3.5 && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    ✕ Not Recommended (May lack capacity/capabilities for
+                    project)
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                {rating >= 3.5 && (
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    ✓ A rating of 3.5 or above will verify this skill/domain.
+                  </p>
+                )}
+                {rating > 0 && rating < 3.5 && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    A rating below 3.5 means the skill will not be verified.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -172,7 +206,11 @@ const ReviewDialog: React.FC<ReviewDialogProps> = ({
               id="review-feedback"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Share your thoughts about the interviewee's performance..."
+              placeholder={
+                interviewType === 'HIRE'
+                  ? "Share feedback on the candidate's capability and suitability for the project. This will be shared with the business user..."
+                  : "Share your thoughts about the interviewee's performance..."
+              }
               className="min-h-[100px] resize-none"
               disabled={submitting}
             />
