@@ -612,7 +612,6 @@ function FreelancerRegisterForm({
       ? encodeURIComponent(referralCode)
       : null;
 
-
     setIsLoading(true);
     const formData = {
       ...data,
