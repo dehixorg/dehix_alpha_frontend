@@ -325,7 +325,6 @@ function BusinessRegisterForm({
     rules: { label: string; passed: boolean }[];
   }>({ label: '', color: '', level: 0, rules: [] });
   const [code, setCode] = useState<string>('IN');
-  const [phone, setPhone] = useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const router = useRouter();
   const [Isverified, setIsVerified] = useState<boolean>(false);
@@ -483,9 +482,6 @@ function BusinessRegisterForm({
     const referralCodeFromForm = data.referralCode;
 
     const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
-    setPhone(
-      `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-    );
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
